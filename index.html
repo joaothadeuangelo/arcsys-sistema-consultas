@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Consulta de Veículos</title>
+    <style>
+        * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background-color: #0e1621; color: #fff; display: flex; justify-content: center; padding: 40px 20px; margin: 0; }
+        .container { background-color: #17212b; padding: 30px; border-radius: 12px; box-shadow: 0 8px 16px rgba(0,0,0,0.3); width: 100%; max-width: 600px; }
+        h2 { text-align: center; color: #5288c1; margin-top: 0; }
+        .input-group { display: flex; gap: 10px; margin-bottom: 20px; }
+        input { flex: 1; padding: 12px; border: 1px solid #242f3d; border-radius: 8px; background-color: #242f3d; color: white; font-size: 16px; outline: none; text-transform: uppercase;}
+        input:focus { border-color: #5288c1; }
+        button { padding: 12px 24px; background-color: #5288c1; color: white; border: none; border-radius: 8px; font-size: 16px; cursor: pointer; transition: 0.2s; font-weight: bold;}
+        button:hover:not(:disabled) { background-color: #4175ac; }
+        button:disabled { background-color: #3b4c5d; cursor: not-allowed; color: #8aa3ba; }
+        
+        /* Ajustes no box de resultado */
+        .resultado-container { display: none; margin-top: 20px; position: relative; }
+        .resultado { background-color: #0e1621; padding: 20px; border-radius: 8px; font-size: 14px; line-height: 1.6; word-wrap: break-word; color: #e4ebf5; border-left: 4px solid #5288c1; }
+        .loader { text-align: center; display: none; margin: 20px 0; color: #8aa3ba; font-style: italic;}
+        
+        /* Botão de copiar */
+        .btn-copiar { margin-top: 10px; width: 100%; background-color: #2b5278; padding: 12px; border: none; border-radius: 8px; color: white; cursor: pointer; font-weight: bold; transition: 0.2s; }
+        .btn-copiar:hover { background-color: #3b6a9c; }
+        
+        /* Estilos para o texto formatado */
+        .destaque-codigo { color: #a1c181; font-family: monospace; font-size: 1.1em; }
+        .cache-aviso { color: #a1c181; font-size: 0.9em; font-weight: bold; display: block; margin-bottom: 15px; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h2>🕵️ Consulta Rápida</h2>
+        <div class="input-group">
+            <input type="text" id="placaInput" placeholder="Digite a placa (ex: QPK8206)" maxlength="7">
+            <button id="btnConsultar" onclick="fazerConsulta()">Consultar</button>
+        </div>
+        <div id="loader" class="loader">Consultando, aguarde... ⏳</div>
+        
+        <div id="resultadoContainer" class="resultado-container">
+            <div id="resultado" class="resultado"></div>
+            <button class="btn-copiar" onclick="copiarTexto()">📋 Copiar Resultado</button>
+        </div>
+    </div>
+
+    <script>
+        let textoPuro = ""; // Variável para guardar o texto sem HTML para o botão de copiar
+
+        // Função para formatar o Markdown em HTML
+        function formatarTexto(texto) {
+            return texto
+                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') // Transforma **texto** em negrito
+                .replace(/`(.*?)`/g, '<span class="destaque-codigo">$1</span>') // Transforma `texto` em cor verde/monospace
+                .replace(/\n/g, '<br>'); // Quebras de linha
+        }
+
+        function iniciarCooldown(segundos) {
+            const btn = document.getElementById('btnConsultar');
+            let tempoRestante = segundos;
+            btn.disabled = true;
+
+            const intervalo = setInterval(() => {
+                btn.innerText = `Aguarde ${tempoRestante}s`;
+                tempoRestante--;
+
+                if (tempoRestante < 0) {
+                    clearInterval(intervalo);
+                    btn.innerText = "Consultar";
+                    btn.disabled = false;
+                }
+            }, 1000);
+        }
+
+        async function fazerConsulta() {
+            const placa = document.getElementById('placaInput').value.trim();
+            const btn = document.getElementById('btnConsultar');
+            const resultContainer = document.getElementById('resultadoContainer');
+            const resultBox = document.getElementById('resultado');
+            const loader = document.getElementById('loader');
+
+            if (!placa) {
+                alert("Por favor, digite uma placa válida.");
+                return;
+            }
+
+            // Oculta resultado anterior e mostra o loader
+            btn.disabled = true;
+            resultContainer.style.display = 'none';
+            loader.style.display = 'block';
+
+            try {
+                const response = await fetch(`/api/consultar/${placa}`);
+                const data = await response.json();
+
+                if (data.sucesso) {
+                    textoPuro = data.dados; // Salva o original para a cópia
+                    
+                    // Verifica se o resultado veio do cache (banco de dados)
+                    if (data.cache) {
+                        resultBox.innerHTML = "<span class='cache-aviso'>⚡ Recuperado do banco de dados</span>" + formatarTexto(data.dados);
+                        btn.disabled = false; // Libera o botão na hora, sem cooldown
+                    } else {
+                        resultBox.innerHTML = formatarTexto(data.dados); // Renderiza normal
+                        iniciarCooldown(30); // Inicia os 30s de espera
+                    }
+                } else {
+                    textoPuro = data.dados;
+                    resultBox.innerHTML = `<strong>Erro:</strong> ${data.dados}`;
+                    btn.disabled = false; // Se der erro, libera o botão na hora
+                }
+                
+                resultContainer.style.display = 'block';
+            } catch (error) {
+                resultBox.innerHTML = "Erro de conexão com o servidor local.";
+                resultContainer.style.display = 'block';
+                btn.disabled = false;
+            } finally {
+                loader.style.display = 'none';
+            }
+        }
+
+        function copiarTexto() {
+            // Usa a variável textoPuro que não tem as tags HTML <br> ou <strong>
+            navigator.clipboard.writeText(textoPuro).then(() => {
+                alert("Copiado com sucesso!");
+            }).catch(err => {
+                alert("Erro ao copiar: " + err);
+            });
+        }
+
+        document.getElementById('placaInput').addEventListener('keypress', function (e) {
+            // Só deixa apertar Enter se o botão não estiver em cooldown (disabled)
+            if (e.key === 'Enter' && !document.getElementById('btnConsultar').disabled) {
+                fazerConsulta();
+            }
+        });
+    </script>
+</body>
+</html>
