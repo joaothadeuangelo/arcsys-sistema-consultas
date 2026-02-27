@@ -155,11 +155,30 @@ async function fazerConsulta() {
     }
 }
 
+// ==========================================
+// FUNÇÃO DE FAXINA PARA A ÁREA DE TRANSFERÊNCIA
+// ==========================================
+function limparTextoParaCopiar(texto) {
+    let textoLimpo = texto
+        .replace(/\*\*/g, '') // Remove todos os asteriscos de negrito
+        .replace(/`/g, '')    // Remove todas as crases de código
+        .replace(/\n{3,}/g, '\n\n') // Tira o excesso de linhas em branco (deixa no máximo 1)
+        .trim(); // Arranca espaços sobrando no começo e no fim
+
+    // Adiciona uma assinatura elegante no final do texto copiado
+    textoLimpo += "\n\n━━━━━━━━━━━━━━━━━━━━━━\n🔍 Consulta realizada via ARCANGELO SYSTEM";
+    
+    return textoLimpo;
+}
+
 function copiarTexto() {
-    navigator.clipboard.writeText(textoPuro).then(() => {
+    // Passa o texto puro pela faxina antes de mandar pro clipboard
+    const textoFormatado = limparTextoParaCopiar(textoPuro);
+
+    navigator.clipboard.writeText(textoFormatado).then(() => {
         const btnCopiar = document.querySelector('.btn-copiar');
         const textoOriginal = btnCopiar.innerText;
-        btnCopiar.innerText = "✅ Relatório Copiado!";
+        btnCopiar.innerText = "✅ Relatório Copiado Limpo!";
         btnCopiar.style.backgroundColor = "#27ae60";
         
         setTimeout(() => {
