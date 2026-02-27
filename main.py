@@ -93,7 +93,7 @@ async def serve_html():
 async def consultar_placa(placa: str, request: Request):
     placa = placa.upper()
     
-    # Descobre o IP real do usuário (ignorando o proxy do Railway)
+    # Descobre o IP real do usuário
     ip_cliente = request.headers.get("X-Forwarded-For", request.client.host)
     if ip_cliente:
         ip_cliente = ip_cliente.split(",")[0].strip()
@@ -102,12 +102,12 @@ async def consultar_placa(placa: str, request: Request):
     ultimo_tempo = cooldowns_por_ip.get(ip_cliente, 0)
     
     try:
-        # 1. Verifica no banco primeiro (Cache NÃO ativa o cooldown)
+        # 1. Verifica no banco primeiro
         dados_salvos = buscar_consulta(placa)
         if dados_salvos:
             return {"sucesso": True, "dados": dados_salvos, "cache": True}
 
-        # 2. SE NÃO TEM NO CACHE, VERIFICA O COOLDOWN DO IP
+        # 2. Cooldown
         tempo_passado = tempo_atual - ultimo_tempo
         if tempo_passado < TEMPO_COOLDOWN:
             tempo_restante = int(TEMPO_COOLDOWN - tempo_passado)
@@ -117,9 +117,17 @@ async def consultar_placa(placa: str, request: Request):
         cliente_atual = await fila_clientes.get()
         
         try:
+            # --- CORREÇÃO: HEALTH CHECK DA CONEXÃO ---
+            if not cliente_atual.is_connected():
+                print("⚠️ Conta desconectada detectada. Forçando reconexão...")
+                await cliente_atual.connect()
+            # -----------------------------------------
+            
+            # Envia o comando
             await cliente_atual.send_message(bot_username, f'/placa {placa}')
             await asyncio.sleep(4)
             
+            # Pega a resposta
             messages = await cliente_atual.get_messages(bot_username, limit=1)
             
             if messages and messages[0].text:
@@ -130,7 +138,6 @@ async def consultar_placa(placa: str, request: Request):
                     
                 salvar_consulta(placa, resposta)
                 
-                # 4. REGISTRA QUE ESTE IP ACABOU DE FAZER UMA CONSULTA COM SUCESSO
                 cooldowns_por_ip[ip_cliente] = time.time()
                 
                 return {"sucesso": True, "dados": resposta, "cache": False}
@@ -138,7 +145,8 @@ async def consultar_placa(placa: str, request: Request):
                 return {"sucesso": False, "dados": "O bot não respondeu a tempo."}
                 
         finally:
+            # Devolve a conta para a fila
             await fila_clientes.put(cliente_atual)
             
     except Exception as e:
-        return {"sucesso": False, "dados": f"Erro interno: {str(e)}"}
+        return {"sucesso": False, "dados": f"Erro interno de conexão: {str(e)}\nTente novamente em alguns segundos."}
