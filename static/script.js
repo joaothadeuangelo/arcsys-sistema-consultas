@@ -2,13 +2,32 @@ let tempoLeitura = 5;
 let timerInterval;
 
 window.onload = function() {
+    // 1. VERIFICAÇÃO DE MANUTENÇÃO SEMPRE VEM PRIMEIRO
     if (window.SISTEMA_EM_MANUTENCAO) {
         document.querySelector('.container').style.display = 'none';
         document.getElementById('modalAviso').style.display = 'none';
+        
+        // Se existir o modal do Bahia, esconde ele também
+        const modalBahia = document.getElementById('modalBahia');
+        if(modalBahia) modalBahia.style.display = 'none';
+        
         document.getElementById('modalManutencao').style.display = 'flex';
         return; 
     }
 
+    // Se o sistema estiver ON, não fazemos o timer das regras ainda.
+    // O Modal do Bahia Bicos já vai estar aparecendo por padrão no HTML.
+}
+
+// Essa função é chamada quando o cara clica em "Quero só consultar a placa" no popup do Bahia
+function fecharBahiaEabrirRegras() {
+    // 1. Esconde o Bahia
+    document.getElementById('modalBahia').style.display = 'none';
+    
+    // 2. Mostra o Popup de Regras
+    document.getElementById('modalAviso').style.display = 'flex';
+    
+    // 3. AGORA SIM começa a contar o castigo de 5 segundos
     const btn = document.getElementById('btnAceitarModal');
     const checkbox = document.getElementById('checkPromessa');
 
@@ -44,6 +63,7 @@ function verificarCheckbox() {
 function fecharModal() {
     document.getElementById('modalAviso').style.display = 'none';
 }
+
 
 let textoPuro = "";
 let loaderInterval;
