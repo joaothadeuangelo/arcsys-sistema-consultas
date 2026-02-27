@@ -157,7 +157,7 @@
                 } else {
                     clearInterval(timerInterval);
                     btn.innerText = "MARQUE A CAIXINHA ACIMA ⬆️";
-                    checkbox.disabled = false; // Libera o checkbox
+                    checkbox.disabled = false;
                 }
             }, 1000);
         }
@@ -187,9 +187,8 @@
         // LÓGICA DO SISTEMA DE CONSULTA E TROLAGEM
         // ==========================================
         let textoPuro = "";
-        let loaderInterval; // Variável para controlar a animação das frases
+        let loaderInterval;
 
-        // Lista de frases para zoar o usuário enquanto ele espera
         const frasesTroll = [
             "Hackeando os servidores do Detran... 🕵️‍♂️",
             "Procurando multas que você não pagou... 💸",
@@ -227,43 +226,54 @@
         }
 
         async function fazerConsulta() {
-            // 1. Pega o input e já limpa toda a sujeira (espaços, traços, letras minúsculas)
             const input = document.getElementById('placaInput');
+            // Formata o que o usuário digitou: tira espaços, traços e bota tudo maiúsculo
             const placa = input.value.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
-            input.value = placa; // Atualiza o campo visualmente para o usuário
+            input.value = placa; 
 
             const btn = document.getElementById('btnConsultar');
             const resultContainer = document.getElementById('resultadoContainer');
             const resultBox = document.getElementById('resultado');
             const loader = document.getElementById('loader');
 
-            // 2. REGEX ANTI-BURRO (Aceita o padrão Antigo AAA0000 e o Mercosul AAA0A00)
+            // ==========================================
+            // A BARREIRA INTRANSPONÍVEL (FILTRO ANTI-BURRO)
+            // ==========================================
+            // Aceita EXATAMENTE: 3 letras + 1 número + (1 letra OU 1 número) + 2 números
             const regexPlaca = /^[A-Z]{3}[0-9][A-Z0-9][0-9]{2}$/;
 
             if (!regexPlaca.test(placa)) {
-                // Se a placa for inválida, dá o aviso sem mandar pro servidor
-                input.classList.add('shake'); // Aciona a tremedeira
-                setTimeout(() => input.classList.remove('shake'), 400); // Remove após 400ms
+                // Treme a caixa de texto
+                input.classList.add('shake');
+                setTimeout(() => input.classList.remove('shake'), 400);
                 
-                resultBox.innerHTML = "<strong>⚠️ Placa Inválida.</strong><br><br>Por favor, utilize o formato correto:<br><span class='destaque-codigo'>/placa AAA1234</span> ou <span class='destaque-codigo'>/placa AAA1B23</span>";
+                // Exibe a mensagem de erro direto no frontend (NÃO ACIONA O SERVIDOR)
+                resultBox.innerHTML = `
+                    <strong>⚠️ Placa Inválida.</strong><br><br>
+                    Não inventa moda! Utilize um formato válido no Brasil:<br><br>
+                    Padrão Antigo: <span class='destaque-codigo'>ABC1234</span><br>
+                    Padrão Mercosul: <span class='destaque-codigo'>ABC1D23</span>
+                `;
                 resultContainer.style.display = 'block';
-                return; // Corta a função aqui!
+                
+                // ESSE RETURN É O QUE SALVA SUA VIDA. ELE MATA A FUNÇÃO AQUI!
+                return; 
             }
+            // ==========================================
 
-            // 3. Se passou na validação, segue a consulta normal
             btn.disabled = true;
             resultContainer.style.display = 'none';
             loader.style.display = 'block';
 
-            // Inicia o carrossel de frases troll a cada 2.5 segundos
             let fraseIndex = 0;
-            loader.innerText = frasesTroll[0]; // Bota a primeira frase logo de cara
+            loader.innerText = frasesTroll[0];
             loaderInterval = setInterval(() => {
                 fraseIndex = (fraseIndex + 1) % frasesTroll.length;
                 loader.innerText = frasesTroll[fraseIndex];
             }, 2500);
 
             try {
+                // Só chega aqui se a placa for real!
                 const response = await fetch(`/api/consultar/${placa}`);
                 const data = await response.json();
 
@@ -279,7 +289,7 @@
                     }
                 } else {
                     textoPuro = data.dados;
-                    resultBox.innerHTML = `<strong>Erro:</strong> ${data.dados}`;
+                    resultBox.innerHTML = `<strong>Erro:</strong> ${formatarTexto(data.dados)}`;
                     btn.disabled = false;
                 }
                 
@@ -289,10 +299,9 @@
                 resultContainer.style.display = 'block';
                 btn.disabled = false;
             } finally {
-                // Quando a requisição termina (com sucesso ou erro), paramos a roleta de frases
                 clearInterval(loaderInterval);
                 loader.style.display = 'none';
-                loader.innerText = "Processando requisição... ⏳"; // Reseta pro padrão escondido
+                loader.innerText = "Processando requisição... ⏳"; 
             }
         }
 

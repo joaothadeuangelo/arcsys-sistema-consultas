@@ -181,7 +181,7 @@ async def consultar_placa(placa: str, request: Request):
                 if "Placa inválida" in resposta_final or "não encontrada" in resposta_final.lower() or "inexistente" in resposta_final.lower():
                     return {
                         "sucesso": False, 
-                        "dados": "🐴 **DIGITA ESSA PLACA DIREITO, ANIMAL!**\n\nEssa placa não existe nem no sistema do Detran e nem no ferro-velho. Vê se não digitou a placa do seu carrinho de rolimã!"
+                        "dados": "🐴 DIGITA ESSA PLACA DIREITO, ANIMAL!\n\nEssa placa não existe nem no sistema do Detran e nem no ferro-velho. Vê se não digitou a placa do seu carrinho de rolimã!"
                     }
                 
                 # Se o bot original cair ou mandar link de propaganda
