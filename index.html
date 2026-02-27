@@ -36,14 +36,28 @@
         .destaque-codigo { color: #a1c181; font-family: monospace; font-size: 1.1em; background: rgba(161, 193, 129, 0.1); padding: 2px 4px; border-radius: 4px; }
         .cache-aviso { color: #a1c181; font-size: 0.9em; font-weight: bold; display: block; margin-bottom: 15px; text-align: right; }
 
-        /* Popup / Modal Chato */
-        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); backdrop-filter: blur(5px); display: flex; justify-content: center; align-items: center; z-index: 9999; padding: 20px; }
-        .modal-content { background: #17212b; padding: 30px; border-radius: 12px; width: 100%; max-width: 450px; text-align: center; border: 2px solid #e74c3c; box-shadow: 0 0 30px rgba(231, 76, 60, 0.3); animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
-        .modal-content h3 { color: #e74c3c; margin-top: 0; font-size: 1.6em; text-transform: uppercase; letter-spacing: 1px; }
-        .modal-content p { color: #e4ebf5; font-size: 1.05em; line-height: 1.5; margin-bottom: 20px; text-align: left; }
-        .modal-content strong { color: #fff; }
-        .btn-modal { background-color: #e74c3c; width: 100%; margin-top: 10px; font-size: 1.1em; text-transform: uppercase; white-space: normal; line-height: 1.3; }
-        .btn-modal:hover { background-color: #c0392b; }
+        /* ========================================= */
+        /* CSS DO POPUP CHATO E AGRESSIVO            */
+        /* ========================================= */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); backdrop-filter: blur(8px); display: flex; justify-content: center; align-items: center; z-index: 9999; padding: 20px; }
+        .modal-content { background: #17212b; padding: 30px; border-radius: 12px; width: 100%; max-width: 500px; text-align: center; border: 3px solid #e74c3c; box-shadow: 0 0 50px rgba(231, 76, 60, 0.4); animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        
+        .piscar { animation: blinker 1s linear infinite; color: #ff4757; font-size: 1.5em; margin-top: 0; text-transform: uppercase; letter-spacing: 1px; }
+        @keyframes blinker { 50% { opacity: 0.3; } }
+
+        .regras-box { background: rgba(231, 76, 60, 0.1); padding: 15px; border-radius: 8px; border-left: 4px solid #e74c3c; margin-top: 15px; margin-bottom: 20px; text-align: left; }
+        .regras-box p { margin: 10px 0; font-size: 0.95em; color: #e4ebf5; line-height: 1.5; }
+        .regras-box strong { color: #ff4757; }
+
+        .checkbox-chato { display: flex; align-items: flex-start; gap: 12px; text-align: left; margin-bottom: 20px; cursor: pointer; background: #242f3d; padding: 15px; border-radius: 8px; border: 1px solid #3b4c5d; transition: 0.3s; }
+        .checkbox-chato:hover { border-color: #e74c3c; }
+        .checkbox-chato input { margin-top: 4px; transform: scale(1.5); accent-color: #e74c3c; cursor: pointer; }
+        .checkbox-chato span { font-size: 0.9em; color: #fff; line-height: 1.4; font-weight: bold; }
+
+        .btn-modal { width: 100%; margin-top: 10px; font-size: 1.1em; text-transform: uppercase; white-space: normal; line-height: 1.3; transition: 0.3s; }
+        .btn-modal.liberado { background-color: #e74c3c; color: white; }
+        .btn-modal.liberado:hover { background-color: #c0392b; transform: scale(1.02); }
+        .btn-modal.bloqueado { background-color: #3b4c5d !important; color: #8aa3ba; cursor: not-allowed; transform: none; }
 
         /* Animações */
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
@@ -53,9 +67,10 @@
         @media (max-width: 480px) {
             .input-group { flex-direction: column; }
             button { width: 100%; padding: 15px; }
-            .brand-title { font-size: 1.9em; } /* Letra menor no celular para não quebrar feio */
-            .brand-subtitle::before, .brand-subtitle::after { width: 20px; } /* Linhas menores no celular */
+            .brand-title { font-size: 1.9em; } 
+            .brand-subtitle::before, .brand-subtitle::after { width: 20px; } 
             .container { padding: 20px; margin-top: 20px; }
+            .btn-modal { font-size: 0.95em; }
         }
     </style>
 </head>
@@ -63,14 +78,19 @@
 
     <div id="modalAviso" class="modal-overlay">
         <div class="modal-content">
-            <h3>🚨 Aviso Importante 🚨</h3>
-            <p>Antes de usar o sistema, enfie isso na cabeça:</p>
-            <p>
-                1. Essa ferramenta é <strong>100% GRATUITA</strong>. Você não pagou nada, logo, não tem direito a reclamar de nada.<br><br>
-                2. <strong>NÃO HÁ GARANTIAS</strong> de funcionamento. Se o bot oficial cair, demorar ou falhar, essa bagaça cai junto. O problema é seu!<br><br>
-                3. Se der erro, tenta de novo. Se continuar dando erro, vai tomar uma água e tenta amanhã.
-            </p>
-            <button class="btn-modal" onclick="fecharModal()">Li, Aceito e Não Vou Encher o Saco</button>
+            <h3 class="piscar">⚠️ LEIA ANTES DE CLICAR FEITO UM ANIMAL ⚠️</h3>
+            <div class="regras-box">
+                <p><strong>1. VOCÊ NÃO PAGOU NADA:</strong> Isso aqui é 100% gratuito. Você não é cliente, não tem SAC e o Procon não liga pra você. Baixe sua bola.</p>
+                <p><strong>2. ZERO GARANTIAS:</strong> Se o Telegram cair, se o bot oficial infartar, ou se a consulta demorar, essa bagaça cai junto. O problema é única e exclusivamente SEU.</p>
+                <p><strong>3. DEU ERRO?</strong> Não venha me mandar print chorando. O sistema tem proteção contra spam. Toma uma água, respira fundo e tenta de novo mais tarde.</p>
+            </div>
+            
+            <label class="checkbox-chato">
+                <input type="checkbox" id="checkPromessa" onchange="verificarCheckbox()" disabled>
+                <span>Juro por Deus que li as regras acima e NÃO VOU ENCHER O SACO do desenvolvedor se algo der errado.</span>
+            </label>
+
+            <button id="btnAceitarModal" class="btn-modal bloqueado" disabled onclick="fecharModal()">LENDO AS REGRAS... (5s)</button>
         </div>
     </div>
 
@@ -94,12 +114,53 @@
     </div>
 
     <script>
-        let textoPuro = "";
+        // ==========================================
+        // LÓGICA DO POPUP CHATO (TIMER E CHECKBOX)
+        // ==========================================
+        let tempoLeitura = 5; // Segundos de castigo
+        let timerInterval;
 
-        // Fecha o modal chato
+        window.onload = function() {
+            const btn = document.getElementById('btnAceitarModal');
+            const checkbox = document.getElementById('checkPromessa');
+
+            timerInterval = setInterval(() => {
+                if (tempoLeitura > 0) {
+                    btn.innerText = `LENDO AS REGRAS... (${tempoLeitura}s)`;
+                    tempoLeitura--;
+                } else {
+                    clearInterval(timerInterval);
+                    btn.innerText = "MARQUE A CAIXINHA ACIMA ⬆️";
+                    checkbox.disabled = false; // Libera o checkbox
+                }
+            }, 1000);
+        }
+
+        function verificarCheckbox() {
+            const btn = document.getElementById('btnAceitarModal');
+            const checkbox = document.getElementById('checkPromessa');
+            
+            if (checkbox.checked && tempoLeitura <= 0) {
+                btn.disabled = false;
+                btn.classList.remove('bloqueado');
+                btn.classList.add('liberado');
+                btn.innerText = "LI, ACEITO E NÃO VOU ENCHER O SACO";
+            } else {
+                btn.disabled = true;
+                btn.classList.remove('liberado');
+                btn.classList.add('bloqueado');
+                btn.innerText = "MARQUE A CAIXINHA ACIMA ⬆️";
+            }
+        }
+
         function fecharModal() {
             document.getElementById('modalAviso').style.display = 'none';
         }
+
+        // ==========================================
+        // LÓGICA DO SISTEMA DE CONSULTA
+        // ==========================================
+        let textoPuro = "";
 
         function formatarTexto(texto) {
             return texto
