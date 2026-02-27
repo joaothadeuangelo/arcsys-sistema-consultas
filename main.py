@@ -27,8 +27,12 @@ app = FastAPI()
 fila_clientes = asyncio.Queue()
 
 # --- CONFIGURAÇÃO DO BANCO DE DADOS ---
+# Define onde o banco vai ser salvo. Se a pasta /data existir (Railway), salva lá.
+# Se não existir (no seu PC), salva na mesma pasta do código.
+DB_PATH = '/data/consultas.db' if os.path.exists('/data') else 'consultas.db'
+
 def iniciar_banco():
-    conn = sqlite3.connect('consultas.db')
+    conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS registro_placas (
@@ -42,14 +46,14 @@ def iniciar_banco():
     conn.close()
 
 def salvar_consulta(placa: str, dados: str):
-    conn = sqlite3.connect('consultas.db')
+    conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
     cursor.execute('INSERT INTO registro_placas (placa, dados) VALUES (?, ?)', (placa, dados))
     conn.commit()
     conn.close()
 
 def buscar_consulta(placa: str):
-    conn = sqlite3.connect('consultas.db')
+    conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
     cursor.execute('SELECT dados FROM registro_placas WHERE placa = ? ORDER BY data_consulta DESC LIMIT 1', (placa,))
     resultado = cursor.fetchone()
