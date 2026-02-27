@@ -44,34 +44,34 @@
         </div>
     </div>
 
-    <div class="container">
-        <div class="brand-container">
-            <h1 class="brand-title">ARCANGELO <span>SYSTEM</span></h1>
-            <div class="brand-subtitle">CONSULTAS DE PLACAS</div>
-        </div>
-
-        <div class="input-group">
-            <input type="text" id="placaInput" placeholder="Digite a placa (ex: QPK8206)" maxlength="7">
-            <button id="btnConsultar" onclick="fazerConsulta()">Consultar</button>
-        </div>
+    <div style="display: flex; flex-direction: column; align-items: center; width: 100%;">
         
-        <div id="loader" class="loader">Processando requisição... ⏳</div>
-        
-        <div id="resultadoContainer" class="resultado-container">
-            <div id="resultado" class="resultado"></div>
-            <button class="btn-copiar" onclick="copiarTexto()">📋 Copiar Relatório</button>
+        <div class="container">
+            <div class="brand-container">
+                <h1 class="brand-title">ARCANGELO <span>SYSTEM</span></h1>
+                <div class="brand-subtitle">CONSULTAS DE PLACAS</div>
+            </div>
+
+            <div class="input-group">
+                <input type="text" id="placaInput" placeholder="Digite a placa (ex: QPK8206)" maxlength="7">
+                <button id="btnConsultar" onclick="fazerConsulta()">Consultar</button>
+            </div>
+            
+            <div id="loader" class="loader">Processando requisição... ⏳</div>
+            
+            <div id="resultadoContainer" class="resultado-container">
+                <div id="resultado" class="resultado"></div>
+                <button class="btn-copiar" onclick="copiarTexto()">📋 Copiar Relatório</button>
+            </div>
         </div>
-    </div>
 
-    </div>
+        <div class="footer-creditos">
+            <p>⚡ Ferramenta 100% Gratuita | Desenvolvido por <strong>ARCANGELO SYSTEM</strong></p>
+            <a href="https://t.me/DevArcangelo" target="_blank" class="btn-telegram">
+                ✈️ Falar com o Desenvolvedor
+            </a>
+        </div>
 
-    <div class="footer-creditos">
-        <p>⚡ Ferramenta 100% Gratuita | Desenvolvido por <strong>ARCANGELO SYSTEM</strong></p>
-        <a href="https://t.me/DevArcangelo" target="_blank" class="btn-telegram">
-            ✈️ Falar com o Desenvolvedor
-        </a>
-    </div>
-
-    <script src="/static/script.js"></script>
+    </div> <script src="/static/script.js"></script>
 </body>
 </html>
