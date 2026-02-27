@@ -63,44 +63,10 @@ const frasesTroll = [
 ];
 
 function formatarTexto(texto) {
-    let html = texto
-        // Formata os negritos
+    return texto
         .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-        // Troca as quebras de linha por tag HTML
+        .replace(/`(.*?)`/g, '<span class="destaque-codigo">$1</span>')
         .replace(/\n/g, '<br>');
-
-    // MÁGICA 1: Formatar as variáveis que vêm entre crases (ex: `NÃO`, `QPK8C06`)
-    html = html.replace(/`(.*?)`/g, function(match, conteudo) {
-        let textUpper = conteudo.trim().toUpperCase();
-        
-        // Se for "NÃO", "SEM RESTRICAO", etc -> Etiqueta Verde (Tudo OK)
-        if (['NÃO', 'NAO', 'SEM RESTRICAO', 'SEM RESTRIÇÃO', 'NORMAL'].includes(textUpper)) {
-            return `<span class="badge badge-success">✅ ${conteudo}</span>`;
-        }
-        // Se for "SIM", "COM RESTRICAO", "ROUBO" -> Etiqueta Vermelha Piscante (Alerta)
-        else if (['SIM', 'COM RESTRICAO', 'COM RESTRIÇÃO', 'ROUBO E FURTO', 'ROUBO/FURTO'].includes(textUpper)) {
-            return `<span class="badge badge-danger">🚨 ${conteudo}</span>`;
-        }
-        // Se for "SEM INFORMAÇÃO", etc -> Etiqueta Amarela (Neutro)
-        else if (['SEM INFORMAÇÃO', 'SEM INFORMACAO', 'NÃO APLICAVEL', 'NãO APLICAVEL', 'NAO APLICAVEL'].includes(textUpper)) {
-            return `<span class="badge badge-warning">⚠️ ${conteudo}</span>`;
-        }
-        // Dados normais (Placa, Chassi, Renavam, etc) -> Etiqueta Azul Hacker
-        else {
-            return `<span class="badge badge-info">${conteudo}</span>`;
-        }
-    });
-
-    // MÁGICA 2: Deixar os Títulos das seções bonitões (ex: • DADOS PRINCIPAIS)
-    // Pega os tópicos que o bot manda e transforma num banner separador
-    html = html.replace(/•\s*<strong>([A-ZÍÁÉÓÚÇ\s/]+)<\/strong>/g, '<div class="section-title">📌 $1</div>');
-    // Caso o bot mande o título sem negrito
-    html = html.replace(/•\s*([A-ZÍÁÉÓÚÇ\s/]{10,})(<br>|$)/g, '<div class="section-title">📌 $1</div>$2'); 
-
-    // Remove as bolinhas (•) soltas do início das linhas normais para deixar mais clean
-    html = html.replace(/•\s*<strong>/g, '<strong>');
-
-    return html;
 }
 
 function iniciarCooldown(segundos) {
