@@ -177,10 +177,18 @@ async def consultar_placa(placa: str, request: Request):
                     resposta_final = resposta_final.split("👤 Usuário:")[0].strip()
                 
                 # 2. FILTRO ANTI-FANTASMA (Intercepta erros do bot original)
-                if "Não foi possível realizar a consulta" in resposta_final or "GonzalesCanal" in resposta_final:
+                # Se a placa não existir na base de dados
+                if "Placa inválida" in resposta_final or "não encontrada" in resposta_final.lower() or "inexistente" in resposta_final.lower():
                     return {
                         "sucesso": False, 
-                        "dados": "⚠️ O banco de dados central do ARCYS está temporariamente indisponível ou em manutenção.\nPor favor, aguarde alguns minutos e tente novamente."
+                        "dados": "🐴 **DIGITA ESSA PLACA DIREITO, ANIMAL!**\n\nEssa placa não existe nem no sistema do Detran e nem no ferro-velho. Vê se não digitou a placa do seu carrinho de rolimã!"
+                    }
+                
+                # Se o bot original cair ou mandar link de propaganda
+                elif "Não foi possível realizar a consulta" in resposta_final or "GonzalesCanal" in resposta_final:
+                    return {
+                        "sucesso": False, 
+                        "dados": "🔥 **SISTEMA DE RESSACA!**\n\nO servidor central deu uma capotada ou está em manutenção. Vá tomar uma água e tente de novo daqui a pouco (e não adianta ficar dando F5 como um desesperado)."
                     }
 
                 # 3. Só salva no banco se for uma consulta de sucesso real!
