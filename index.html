@@ -158,9 +158,23 @@
         }
 
         // ==========================================
-        // LÓGICA DO SISTEMA DE CONSULTA
+        // LÓGICA DO SISTEMA DE CONSULTA E TROLAGEM
         // ==========================================
         let textoPuro = "";
+        let loaderInterval; // Variável para controlar a animação das frases
+
+        // Lista de frases para zoar o usuário enquanto ele espera
+        const frasesTroll = [
+            "Hackeando os servidores do Detran... 🕵️‍♂️",
+            "Procurando multas que você não pagou... 💸",
+            "Acordando o estagiário pra buscar a placa... 😴",
+            "Subornando um despachante... 🤫",
+            "Calculando o IPVA atrasado (é muito)... 📉",
+            "Perguntando pro frentista do posto... ⛽",
+            "Descobrindo se é carro de leilão... 🔨",
+            "Calma aí apressado, a internet tá lenta... 🐢",
+            "Quase lá, não aperta F5 pelo amor de Deus... 🚨"
+        ];
 
         function formatarTexto(texto) {
             return texto
@@ -202,6 +216,14 @@
             resultContainer.style.display = 'none';
             loader.style.display = 'block';
 
+            // Inicia o carrossel de frases troll a cada 2.5 segundos
+            let fraseIndex = 0;
+            loader.innerText = frasesTroll[0]; // Bota a primeira frase logo de cara
+            loaderInterval = setInterval(() => {
+                fraseIndex = (fraseIndex + 1) % frasesTroll.length;
+                loader.innerText = frasesTroll[fraseIndex];
+            }, 2500);
+
             try {
                 const response = await fetch(`/api/consultar/${placa}`);
                 const data = await response.json();
@@ -228,7 +250,10 @@
                 resultContainer.style.display = 'block';
                 btn.disabled = false;
             } finally {
+                // Quando a requisição termina (com sucesso ou erro), paramos a roleta de frases
+                clearInterval(loaderInterval);
                 loader.style.display = 'none';
+                loader.innerText = "Processando requisição... ⏳"; // Reseta pro padrão escondido
             }
         }
 
