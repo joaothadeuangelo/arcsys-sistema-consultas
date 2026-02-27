@@ -3,58 +3,106 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Consulta de Veículos</title>
+    <title>ARCYS - Consulta de Veículos</title>
     <style>
         * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        body { background-color: #0e1621; color: #fff; display: flex; justify-content: center; padding: 40px 20px; margin: 0; }
-        .container { background-color: #17212b; padding: 30px; border-radius: 12px; box-shadow: 0 8px 16px rgba(0,0,0,0.3); width: 100%; max-width: 600px; }
-        h2 { text-align: center; color: #5288c1; margin-top: 0; }
+        body { background-color: #0e1621; color: #fff; display: flex; justify-content: center; padding: 20px; margin: 0; min-height: 100vh; align-items: flex-start; }
+        
+        .container { background-color: #17212b; padding: 30px; border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.5); width: 100%; max-width: 600px; margin-top: 40px; border-top: 4px solid #5288c1; }
+        
+        /* Identidade Visual ARCYS */
+        .brand-container { text-align: center; margin-bottom: 25px; }
+        .brand-title { font-size: 2.8em; font-weight: 900; margin: 0; letter-spacing: 6px; color: #ffffff; text-shadow: 0 0 10px rgba(82, 136, 193, 0.8), 0 0 20px rgba(82, 136, 193, 0.4); }
+        .brand-subtitle { color: #8aa3ba; font-size: 0.9em; text-transform: uppercase; letter-spacing: 2px; margin-top: 5px; }
+
         .input-group { display: flex; gap: 10px; margin-bottom: 20px; }
-        input { flex: 1; padding: 12px; border: 1px solid #242f3d; border-radius: 8px; background-color: #242f3d; color: white; font-size: 16px; outline: none; text-transform: uppercase;}
-        input:focus { border-color: #5288c1; }
-        button { padding: 12px 24px; background-color: #5288c1; color: white; border: none; border-radius: 8px; font-size: 16px; cursor: pointer; transition: 0.2s; font-weight: bold;}
-        button:hover:not(:disabled) { background-color: #4175ac; }
-        button:disabled { background-color: #3b4c5d; cursor: not-allowed; color: #8aa3ba; }
+        input { flex: 1; padding: 15px; border: 1px solid #242f3d; border-radius: 8px; background-color: #242f3d; color: white; font-size: 16px; outline: none; text-transform: uppercase; transition: 0.3s;}
+        input:focus { border-color: #5288c1; box-shadow: 0 0 8px rgba(82, 136, 193, 0.3); }
         
-        /* Ajustes no box de resultado */
-        .resultado-container { display: none; margin-top: 20px; position: relative; }
-        .resultado { background-color: #0e1621; padding: 20px; border-radius: 8px; font-size: 14px; line-height: 1.6; word-wrap: break-word; color: #e4ebf5; border-left: 4px solid #5288c1; }
-        .loader { text-align: center; display: none; margin: 20px 0; color: #8aa3ba; font-style: italic;}
+        button { padding: 15px 24px; background-color: #5288c1; color: white; border: none; border-radius: 8px; font-size: 16px; cursor: pointer; transition: 0.2s; font-weight: bold; white-space: nowrap; }
+        button:hover:not(:disabled) { background-color: #4175ac; transform: translateY(-2px); }
+        button:disabled { background-color: #3b4c5d; cursor: not-allowed; color: #8aa3ba; transform: none; }
         
-        /* Botão de copiar */
-        .btn-copiar { margin-top: 10px; width: 100%; background-color: #2b5278; padding: 12px; border: none; border-radius: 8px; color: white; cursor: pointer; font-weight: bold; transition: 0.2s; }
+        .resultado-container { display: none; margin-top: 20px; position: relative; animation: fadeIn 0.4s ease-in-out; }
+        .resultado { background-color: #0e1621; padding: 20px; border-radius: 8px; font-size: 14px; line-height: 1.6; word-wrap: break-word; color: #e4ebf5; border-left: 4px solid #5288c1; max-height: 60vh; overflow-y: auto; }
+        
+        .loader { text-align: center; display: none; margin: 20px 0; color: #8aa3ba; font-style: italic; font-weight: bold; }
+        
+        .btn-copiar { margin-top: 15px; width: 100%; background-color: #2b5278; }
         .btn-copiar:hover { background-color: #3b6a9c; }
         
-        /* Estilos para o texto formatado */
-        .destaque-codigo { color: #a1c181; font-family: monospace; font-size: 1.1em; }
-        .cache-aviso { color: #a1c181; font-size: 0.9em; font-weight: bold; display: block; margin-bottom: 15px; }
+        .destaque-codigo { color: #a1c181; font-family: monospace; font-size: 1.1em; background: rgba(161, 193, 129, 0.1); padding: 2px 4px; border-radius: 4px; }
+        .cache-aviso { color: #a1c181; font-size: 0.9em; font-weight: bold; display: block; margin-bottom: 15px; text-align: right; }
+
+        /* Popup / Modal Chato */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); backdrop-filter: blur(5px); display: flex; justify-content: center; align-items: center; z-index: 9999; padding: 20px; }
+        .modal-content { background: #17212b; padding: 30px; border-radius: 12px; width: 100%; max-width: 450px; text-align: center; border: 2px solid #e74c3c; box-shadow: 0 0 30px rgba(231, 76, 60, 0.3); animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        .modal-content h3 { color: #e74c3c; margin-top: 0; font-size: 1.6em; text-transform: uppercase; letter-spacing: 1px; }
+        .modal-content p { color: #e4ebf5; font-size: 1.05em; line-height: 1.5; margin-bottom: 20px; text-align: left; }
+        .modal-content strong { color: #fff; }
+        .btn-modal { background-color: #e74c3c; width: 100%; margin-top: 10px; font-size: 1.1em; text-transform: uppercase; }
+        .btn-modal:hover { background-color: #c0392b; }
+
+        /* Animações */
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes popIn { from { opacity: 0; transform: scale(0.8); } to { opacity: 1; transform: scale(1); } }
+
+        /* Responsividade para Smartphones */
+        @media (max-width: 480px) {
+            .input-group { flex-direction: column; }
+            button { width: 100%; padding: 15px; }
+            .brand-title { font-size: 2.2em; }
+            .container { padding: 20px; margin-top: 20px; }
+        }
     </style>
 </head>
 <body>
 
+    <div id="modalAviso" class="modal-overlay">
+        <div class="modal-content">
+            <h3>🚨 Aviso Importante 🚨</h3>
+            <p>Antes de usar o sistema, enfie isso na cabeça:</p>
+            <p>
+                1. Essa ferramenta é <strong>100% GRATUITA</strong>. Você não pagou nada, logo, não tem direito a reclamar de nada.<br><br>
+                2. <strong>NÃO HÁ GARANTIAS</strong> de funcionamento. Se o bot oficial cair, demorar ou falhar, essa bagaça cai junto. O problema é seu!<br><br>
+                3. Se der erro, tenta de novo. Se continuar dando erro, vai tomar uma água e tenta amanhã.
+            </p>
+            <button class="btn-modal" onclick="fecharModal()">Li, Aceito e Não Vou Encher o Saco</button>
+        </div>
+    </div>
+
     <div class="container">
-        <h2>🕵️ Consulta Rápida</h2>
+        <div class="brand-container">
+            <h1 class="brand-title">ARCYS</h1>
+            <div class="brand-subtitle">CONSULTAS DE PLACAS</div>
+        </div>
+
         <div class="input-group">
             <input type="text" id="placaInput" placeholder="Digite a placa (ex: QPK8206)" maxlength="7">
             <button id="btnConsultar" onclick="fazerConsulta()">Consultar</button>
         </div>
-        <div id="loader" class="loader">Consultando, aguarde... ⏳</div>
+        
+        <div id="loader" class="loader">Processando requisição... ⏳</div>
         
         <div id="resultadoContainer" class="resultado-container">
             <div id="resultado" class="resultado"></div>
-            <button class="btn-copiar" onclick="copiarTexto()">📋 Copiar Resultado</button>
+            <button class="btn-copiar" onclick="copiarTexto()">📋 Copiar Relatório</button>
         </div>
     </div>
 
     <script>
-        let textoPuro = ""; // Variável para guardar o texto sem HTML para o botão de copiar
+        let textoPuro = "";
 
-        // Função para formatar o Markdown em HTML
+        // Fecha o modal chato
+        function fecharModal() {
+            document.getElementById('modalAviso').style.display = 'none';
+        }
+
         function formatarTexto(texto) {
             return texto
-                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') // Transforma **texto** em negrito
-                .replace(/`(.*?)`/g, '<span class="destaque-codigo">$1</span>') // Transforma `texto` em cor verde/monospace
-                .replace(/\n/g, '<br>'); // Quebras de linha
+                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                .replace(/`(.*?)`/g, '<span class="destaque-codigo">$1</span>')
+                .replace(/\n/g, '<br>');
         }
 
         function iniciarCooldown(segundos) {
@@ -86,7 +134,6 @@
                 return;
             }
 
-            // Oculta resultado anterior e mostra o loader
             btn.disabled = true;
             resultContainer.style.display = 'none';
             loader.style.display = 'block';
@@ -96,25 +143,24 @@
                 const data = await response.json();
 
                 if (data.sucesso) {
-                    textoPuro = data.dados; // Salva o original para a cópia
+                    textoPuro = data.dados; 
                     
-                    // Verifica se o resultado veio do cache (banco de dados)
                     if (data.cache) {
-                        resultBox.innerHTML = "<span class='cache-aviso'>⚡ Recuperado do banco de dados</span>" + formatarTexto(data.dados);
-                        btn.disabled = false; // Libera o botão na hora, sem cooldown
+                        resultBox.innerHTML = "<span class='cache-aviso'>⚡ Recuperado do Banco de Dados</span><br>" + formatarTexto(data.dados);
+                        btn.disabled = false;
                     } else {
-                        resultBox.innerHTML = formatarTexto(data.dados); // Renderiza normal
-                        iniciarCooldown(30); // Inicia os 30s de espera
+                        resultBox.innerHTML = formatarTexto(data.dados);
+                        iniciarCooldown(30);
                     }
                 } else {
                     textoPuro = data.dados;
                     resultBox.innerHTML = `<strong>Erro:</strong> ${data.dados}`;
-                    btn.disabled = false; // Se der erro, libera o botão na hora
+                    btn.disabled = false;
                 }
                 
                 resultContainer.style.display = 'block';
             } catch (error) {
-                resultBox.innerHTML = "Erro de conexão com o servidor local.";
+                resultBox.innerHTML = "Erro de conexão com o servidor. O sistema pode estar offline.";
                 resultContainer.style.display = 'block';
                 btn.disabled = false;
             } finally {
@@ -123,16 +169,22 @@
         }
 
         function copiarTexto() {
-            // Usa a variável textoPuro que não tem as tags HTML <br> ou <strong>
             navigator.clipboard.writeText(textoPuro).then(() => {
-                alert("Copiado com sucesso!");
+                const btnCopiar = document.querySelector('.btn-copiar');
+                const textoOriginal = btnCopiar.innerText;
+                btnCopiar.innerText = "✅ Relatório Copiado!";
+                btnCopiar.style.backgroundColor = "#27ae60";
+                
+                setTimeout(() => {
+                    btnCopiar.innerText = textoOriginal;
+                    btnCopiar.style.backgroundColor = "#2b5278";
+                }, 2000);
             }).catch(err => {
                 alert("Erro ao copiar: " + err);
             });
         }
 
         document.getElementById('placaInput').addEventListener('keypress', function (e) {
-            // Só deixa apertar Enter se o botão não estiver em cooldown (disabled)
             if (e.key === 'Enter' && !document.getElementById('btnConsultar').disabled) {
                 fazerConsulta();
             }
