@@ -70,46 +70,66 @@ button:disabled { background-color: #3b4c5d; cursor: not-allowed; color: #8aa3ba
 
 
 /* ========================================= */
-/* RODAPÉ E BOTÃO DO TELEGRAM                */
+/* RODAPÉ INTEGRADO AO CARD (NOVO)           */
 /* ========================================= */
-.footer-creditos {
-    text-align: center;
+.card-footer {
     margin-top: 30px;
-    margin-bottom: 20px;
-    color: #8aa3ba;
-    font-size: 0.9em;
-    animation: fadeIn 0.8s ease-in-out;
-    width: 100%;
+    padding-top: 20px;
+    border-top: 1px solid #242f3d; /* Linha sutil separando a busca do rodapé */
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
 }
-.footer-creditos p {
-    margin-bottom: 12px;
-}
-.footer-creditos strong {
-    color: #5288c1;
+
+.badge-free {
+    background: rgba(46, 204, 113, 0.1);
+    color: #2ecc71;
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 0.75em;
+    font-weight: bold;
     letter-spacing: 1px;
+    text-transform: uppercase;
 }
-.btn-telegram {
+
+.card-footer p {
+    margin: 0;
+    color: #8aa3ba;
+    font-size: 0.85em;
+}
+
+.card-footer strong {
+    color: #5288c1;
+}
+
+.btn-dev-contato {
     display: inline-flex;
     align-items: center;
-    justify-content: center;
     gap: 8px;
-    background-color: #17212b;
-    color: #e4ebf5;
+    background-color: #0e1621;
+    color: #8aa3ba;
     text-decoration: none;
-    padding: 10px 24px;
-    border-radius: 30px;
-    font-weight: bold;
-    font-size: 0.9em;
-    transition: 0.3s;
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-size: 0.85em;
+    font-weight: 600;
     border: 1px solid #242f3d;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    transition: all 0.3s ease;
 }
-.btn-telegram:hover {
-    background-color: #2b5278;
-    border-color: #5288c1;
+
+.btn-dev-contato:hover {
+    background-color: #5288c1;
     color: #fff;
-    transform: translateY(-3px);
-    box-shadow: 0 6px 15px rgba(82, 136, 193, 0.2);
+    border-color: #5288c1;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(82, 136, 193, 0.3);
+}
+
+.btn-dev-contato svg {
+    width: 16px;
+    height: 16px;
 }
 
 /* ========================================= */
