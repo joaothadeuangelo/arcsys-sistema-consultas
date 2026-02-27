@@ -65,12 +65,26 @@
 
         /* Responsividade para Smartphones */
         @media (max-width: 480px) {
+            /* Ajustes gerais da página */
             .input-group { flex-direction: column; }
             button { width: 100%; padding: 15px; }
             .brand-title { font-size: 1.9em; } 
             .brand-subtitle::before, .brand-subtitle::after { width: 20px; } 
             .container { padding: 20px; margin-top: 20px; }
-            .btn-modal { font-size: 0.95em; }
+            
+            /* Ajustes finos do Modal do Terror para Mobile */
+            .modal-overlay { padding: 15px; }
+            .modal-content { 
+                padding: 20px; /* Tira o excesso de borda interna */
+                max-height: 90vh; /* Garante que o modal não vaze da tela */
+                overflow-y: auto; /* Adiciona rolagem se a tela for muito pequena */
+            }
+            .piscar { font-size: 1.2em; letter-spacing: 0; } /* Título menorzinho */
+            .regras-box { padding: 12px; margin-bottom: 15px; }
+            .regras-box p { font-size: 0.85em; margin: 8px 0; } /* Textos mais compactos */
+            .checkbox-chato { padding: 12px; gap: 8px; margin-bottom: 15px; }
+            .checkbox-chato span { font-size: 0.8em; }
+            .btn-modal { font-size: 0.85em; padding: 12px; }
         }
     </style>
 </head>
