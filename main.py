@@ -165,6 +165,9 @@ async def consultar_placa(placa: str, request: Request):
             "dados": f"Erro interno de conexão: {str(e)}\nTente novamente em alguns segundos."
         }
 
+# ==========================================
+# ROTA DO DASHBOARD ADMIN
+# ==========================================
 @app.get("/admin/lista", response_class=HTMLResponse)
 async def ver_historico(token: str):
     """Painel de administração para visualização dos registros no banco."""
@@ -173,7 +176,8 @@ async def ver_historico(token: str):
 
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
-    cursor.execute('SELECT placa, data_consulta FROM registro_placas ORDER BY data_consulta DESC LIMIT 100')
+    # Adicionamos a coluna 'dados' na requisição SQL
+    cursor.execute('SELECT placa, dados, data_consulta FROM registro_placas ORDER BY data_consulta DESC LIMIT 100')
     rows = cursor.fetchall()
     conn.close()
 
@@ -184,17 +188,48 @@ async def ver_historico(token: str):
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Dashboard ARCYS</title>
+        <style>
+            /* Estilo para segurar o texto grande sem quebrar a tabela */
+            .celula-dados {{
+                max-width: 400px;
+                max-height: 150px;
+                overflow-y: auto;
+                background: #0e1621;
+                padding: 10px;
+                border-radius: 6px;
+                font-size: 0.85em;
+                white-space: pre-wrap; /* Mantém as quebras de linha originais do Telegram */
+                color: #a1c181;
+                border-left: 3px solid #5288c1;
+            }}
+            /* Estiliza a barra de rolagem da caixinha */
+            .celula-dados::-webkit-scrollbar {{ width: 6px; }}
+            .celula-dados::-webkit-scrollbar-thumb {{ background: #5288c1; border-radius: 4px; }}
+        </style>
     </head>
     <body style="background:#0e1621; color:white; font-family:sans-serif; padding:40px;">
         <h2>📊 Relatório de Consultas - ARCYS</h2>
-        <table border="1" style="width:100%; border-collapse:collapse; background:#17212b;">
+        <table border="1" style="width:100%; border-collapse:collapse; background:#17212b; border-color: #242f3d;">
             <tr style="background:#5288c1;">
-                <th style="padding:10px;">Placa</th>
-                <th style="padding:10px;">Data/Hora</th>
+                <th style="padding:15px; width: 10%;">Placa</th>
+                <th style="padding:15px; width: 70%;">Dados Retornados</th>
+                <th style="padding:15px; width: 20%;">Data/Hora (UTC)</th>
             </tr>
     """
     for row in rows:
-        html += f"<tr><td style='padding:10px; text-align:center;'>{row[0]}</td><td style='padding:10px; text-align:center;'>{row[1]}</td></tr>"
+        placa = row[0]
+        dados = row[1]
+        data = row[2]
+        
+        html += f"""
+            <tr>
+                <td style='padding:15px; text-align:center; font-weight:bold; vertical-align:top;'>{placa}</td>
+                <td style='padding:15px; vertical-align:top;'>
+                    <div class="celula-dados">{dados}</div>
+                </td>
+                <td style='padding:15px; text-align:center; color:#8aa3ba; vertical-align:top;'>{data}</td>
+            </tr>
+        """
     
     html += """
         </table>
