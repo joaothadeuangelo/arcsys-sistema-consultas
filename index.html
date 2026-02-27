@@ -65,28 +65,25 @@
 
         /* Responsividade para Smartphones */
         @media (max-width: 480px) {
-            /* Ajustes gerais da página */
             .input-group { flex-direction: column; }
             button { width: 100%; padding: 15px; }
             .brand-title { font-size: 1.9em; } 
             .brand-subtitle::before, .brand-subtitle::after { width: 20px; } 
             .container { padding: 20px; margin-top: 20px; }
             
-            /* Ajustes finos do Modal do Terror para Mobile */
             .modal-overlay { padding: 15px; }
             .modal-content { 
-                padding: 20px; /* Tira o excesso de borda interna */
-                max-height: 90vh; /* Garante que o modal não vaze da tela */
-                overflow-y: auto; /* Adiciona rolagem se a tela for muito pequena */
+                padding: 20px; 
+                max-height: 90vh; 
+                overflow-y: auto; 
             }
-            .piscar { font-size: 1.2em; letter-spacing: 0; } /* Título menorzinho */
+            .piscar { font-size: 1.2em; letter-spacing: 0; } 
             .regras-box { padding: 12px; margin-bottom: 15px; }
-            .regras-box p { font-size: 0.85em; margin: 8px 0; } /* Textos mais compactos */
+            .regras-box p { font-size: 0.85em; margin: 8px 0; } 
             .checkbox-chato { padding: 12px; gap: 8px; margin-bottom: 15px; }
             .checkbox-chato span { font-size: 0.8em; }
             .btn-modal { font-size: 0.85em; padding: 12px; }
         }
-
 
         /* Animação Anti-Burro */
         .shake { animation: shake 0.4s; border-color: #e74c3c !important; box-shadow: 0 0 10px rgba(231, 76, 60, 0.5) !important; }
@@ -101,6 +98,18 @@
     </style>
 </head>
 <body>
+
+    <div id="modalManutencao" class="modal-overlay" style="display: none; z-index: 10000; background: #0e1621;">
+        <div class="modal-content" style="border-color: #f39c12; box-shadow: 0 0 50px rgba(243, 156, 18, 0.4);">
+            <h3 style="color: #f39c12; font-size: 1.8em; margin-top: 0; text-transform: uppercase;">🛠️ Sistema em Manutenção</h3>
+            <div class="regras-box" style="border-color: #f39c12; background: rgba(243, 156, 18, 0.1);">
+                <p style="text-align: center; font-size: 1.1em; margin: 0;">
+                    Nossos engenheiros tropeçaram no fio do servidor.<br><br>
+                    A busca de placas está <strong style="color: #f39c12;">temporariamente desativada</strong> para melhorias. Vá tomar uma água e volte mais tarde!
+                </p>
+            </div>
+        </div>
+    </div>
 
     <div id="modalAviso" class="modal-overlay">
         <div class="modal-content">
@@ -140,13 +149,24 @@
     </div>
 
     <script>
-        // ==========================================
-        // LÓGICA DO POPUP CHATO (TIMER E CHECKBOX)
-        // ==========================================
-        let tempoLeitura = 5; // Segundos de castigo
+        let tempoLeitura = 5; 
         let timerInterval;
 
         window.onload = function() {
+            // 1. VERIFICAÇÃO DE MANUTENÇÃO PRIMEIRO DE TUDO!
+            // Essa variável `window.SISTEMA_EM_MANUTENCAO` é injetada pelo main.py
+            if (window.SISTEMA_EM_MANUTENCAO) {
+                // Esconde a caixa principal do site
+                document.querySelector('.container').style.display = 'none';
+                // Esconde o modal de regras (caso ele tente aparecer)
+                document.getElementById('modalAviso').style.display = 'none';
+                // Bloqueia a tela de fundo com a mensagem de manutenção permanente
+                document.getElementById('modalManutencao').style.display = 'flex';
+                // O return abaixo mata a função, impedindo o restante do script de rodar
+                return; 
+            }
+
+            // 2. SE O SISTEMA ESTIVER NORMAL, CARREGA A LÓGICA DO POPUP DE REGRAS
             const btn = document.getElementById('btnAceitarModal');
             const checkbox = document.getElementById('checkPromessa');
 
@@ -239,7 +259,6 @@
             // ==========================================
             // A BARREIRA INTRANSPONÍVEL (FILTRO ANTI-BURRO)
             // ==========================================
-            // Aceita EXATAMENTE: 3 letras + 1 número + (1 letra OU 1 número) + 2 números
             const regexPlaca = /^[A-Z]{3}[0-9][A-Z0-9][0-9]{2}$/;
 
             if (!regexPlaca.test(placa)) {
@@ -247,7 +266,7 @@
                 input.classList.add('shake');
                 setTimeout(() => input.classList.remove('shake'), 400);
                 
-                // Exibe a mensagem de erro direto no frontend (NÃO ACIONA O SERVIDOR)
+                // Exibe a mensagem de erro
                 resultBox.innerHTML = `
                     <strong>⚠️ Placa Inválida.</strong><br><br>
                     Não inventa moda! Utilize um formato válido no Brasil:<br><br>
@@ -255,8 +274,6 @@
                     Padrão Mercosul: <span class='destaque-codigo'>ABC1D23</span>
                 `;
                 resultContainer.style.display = 'block';
-                
-                // ESSE RETURN É O QUE SALVA SUA VIDA. ELE MATA A FUNÇÃO AQUI!
                 return; 
             }
             // ==========================================
