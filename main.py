@@ -172,10 +172,18 @@ async def consultar_placa(placa: str, request: Request):
                     break
             
             if resposta_final:
-                # Tratamento da resposta (Remoção de rodapé do bot original)
+                # 1. Tratamento da resposta (Remoção de rodapé do bot original)
                 if "👤 Usuário:" in resposta_final:
                     resposta_final = resposta_final.split("👤 Usuário:")[0].strip()
-                    
+                
+                # 2. FILTRO ANTI-FANTASMA (Intercepta erros do bot original)
+                if "Não foi possível realizar a consulta" in resposta_final or "GonzalesCanal" in resposta_final:
+                    return {
+                        "sucesso": False, 
+                        "dados": "⚠️ O banco de dados central do ARCYS está temporariamente indisponível ou em manutenção.\nPor favor, aguarde alguns minutos e tente novamente."
+                    }
+
+                # 3. Só salva no banco se for uma consulta de sucesso real!
                 salvar_consulta(placa, resposta_final)
                 cooldowns_por_ip[ip_cliente] = time.time()
                 
