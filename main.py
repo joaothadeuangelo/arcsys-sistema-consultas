@@ -71,6 +71,14 @@ def buscar_consulta(placa: str):
     
     return resultado[0] if resultado else None
 
+def deletar_consulta_bugada(placa: str):
+    """Deleta do banco caso tenha salvo a mensagem de 'Consultando...' por engano."""
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+    cursor.execute("DELETE FROM registro_placas WHERE placa = ? AND dados LIKE '%Consultando%'", (placa,))
+    conn.commit()
+    conn.close()
+
 # ==========================================
 # EVENTOS DE INICIALIZAÇÃO
 # ==========================================
@@ -113,12 +121,15 @@ async def consultar_placa(placa: str, request: Request):
     ultimo_tempo = cooldowns_por_ip.get(ip_cliente, 0)
     
     try:
-        # 1. Verifica Cache (Banco de Dados)
+        # 1. Limpa lixo do banco (caso você pesquise a mesma placa que travou antes)
+        deletar_consulta_bugada(placa)
+
+        # 2. Verifica Cache (Banco de Dados)
         dados_salvos = buscar_consulta(placa)
         if dados_salvos:
             return {"sucesso": True, "dados": dados_salvos, "cache": True}
 
-        # 2. Verificação de Cooldown (Rate Limit por IP)
+        # 3. Verificação de Cooldown (Rate Limit por IP)
         tempo_passado = tempo_atual - ultimo_tempo
         if tempo_passado < TEMPO_COOLDOWN:
             tempo_restante = int(TEMPO_COOLDOWN - tempo_passado)
@@ -127,7 +138,7 @@ async def consultar_placa(placa: str, request: Request):
                 "dados": f"🚨 Calma lá, apressadinho! O sistema é de graça.\nAguarde mais {tempo_restante} segundos para fazer uma nova consulta no bot."
             }
 
-        # 3. Processamento via Telegram (Fila)
+        # 4. Processamento via Telegram (Fila)
         cliente_atual = await fila_clientes.get()
         
         try:
@@ -136,24 +147,41 @@ async def consultar_placa(placa: str, request: Request):
                 print("⚠️ Conta desconectada detectada. Forçando reconexão...")
                 await cliente_atual.connect()
             
-            # Executa a consulta
+            # Envia o comando
             await cliente_atual.send_message(BOT_USERNAME, f'/placa {placa}')
-            await asyncio.sleep(4)
-            messages = await cliente_atual.get_messages(BOT_USERNAME, limit=1)
             
-            if messages and messages[0].text:
-                resposta = messages[0].text
+            # NOVO: LOOP INTELIGENTE DE ESPERA (Máximo de 30 segundos)
+            resposta_final = None
+            for tentativa in range(15):
+                await asyncio.sleep(2) # Verifica de 2 em 2 segundos
+                messages = await cliente_atual.get_messages(BOT_USERNAME, limit=1)
                 
-                # Tratamento da resposta (Remoção de rodapé do bot original)
-                if "👤 Usuário:" in resposta:
-                    resposta = resposta.split("👤 Usuário:")[0].strip()
+                if messages and messages[0].text:
+                    texto = messages[0].text
                     
-                salvar_consulta(placa, resposta)
+                    # Se o texto ainda for o próprio comando, ele não respondeu nada
+                    if texto.startswith('/placa'):
+                        continue
+                        
+                    # Se for a mensagem temporária, continua esperando
+                    if "Consultando..." in texto or "Processando sua solicitação" in texto:
+                        continue
+                        
+                    # Se chegou aqui, é o resultado final!
+                    resposta_final = texto
+                    break
+            
+            if resposta_final:
+                # Tratamento da resposta (Remoção de rodapé do bot original)
+                if "👤 Usuário:" in resposta_final:
+                    resposta_final = resposta_final.split("👤 Usuário:")[0].strip()
+                    
+                salvar_consulta(placa, resposta_final)
                 cooldowns_por_ip[ip_cliente] = time.time()
                 
-                return {"sucesso": True, "dados": resposta, "cache": False}
+                return {"sucesso": True, "dados": resposta_final, "cache": False}
             else:
-                return {"sucesso": False, "dados": "O bot não respondeu a tempo."}
+                return {"sucesso": False, "dados": "O bot oficial demorou muito para responder (Time-out). Tente novamente."}
                 
         finally:
             # Garante que a conta retorne para a fila mesmo em caso de erro
@@ -176,7 +204,6 @@ async def ver_historico(token: str):
 
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
-    # Adicionamos a coluna 'dados' na requisição SQL
     cursor.execute('SELECT placa, dados, data_consulta FROM registro_placas ORDER BY data_consulta DESC LIMIT 100')
     rows = cursor.fetchall()
     conn.close()
@@ -189,7 +216,6 @@ async def ver_historico(token: str):
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Dashboard ARCYS</title>
         <style>
-            /* Estilo para segurar o texto grande sem quebrar a tabela */
             .celula-dados {{
                 max-width: 400px;
                 max-height: 150px;
@@ -198,11 +224,10 @@ async def ver_historico(token: str):
                 padding: 10px;
                 border-radius: 6px;
                 font-size: 0.85em;
-                white-space: pre-wrap; /* Mantém as quebras de linha originais do Telegram */
+                white-space: pre-wrap; 
                 color: #a1c181;
                 border-left: 3px solid #5288c1;
             }}
-            /* Estiliza a barra de rolagem da caixinha */
             .celula-dados::-webkit-scrollbar {{ width: 6px; }}
             .celula-dados::-webkit-scrollbar-thumb {{ background: #5288c1; border-radius: 4px; }}
         </style>
