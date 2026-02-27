@@ -7,6 +7,7 @@ from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
 from telethon import TelegramClient
 from telethon.sessions import StringSession
+from fastapi.staticfiles import StaticFiles
 
 # ==========================================
 # CONFIGURAÇÕES GERAIS E CREDENCIAIS
@@ -28,10 +29,16 @@ SESSOES_STRINGS = [
 # ESTADO DA APLICAÇÃO E RATE LIMIT
 # ==========================================
 app = FastAPI(title="ARCYS - Consulta de Veículos")
+
+# --- NOVA LINHA: ENSINA O SERVIDOR A LER CSS E JS ---
+app.mount("/static", StaticFiles(directory="static"), name="static")
+
 fila_clientes = asyncio.Queue()
 
 cooldowns_por_ip = {}
 TEMPO_COOLDOWN = 60 # Tempo de espera em segundos
+
+
 
 # ==========================================
 # CONFIGURAÇÃO DO BANCO DE DADOS
