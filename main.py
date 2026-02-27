@@ -1,10 +1,11 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse
 from telethon import TelegramClient
 from telethon.sessions import StringSession
 import asyncio
 import sqlite3
 import os
+import time
 from dotenv import load_dotenv
 
 # Carrega as variáveis do arquivo .env
@@ -26,9 +27,11 @@ app = FastAPI()
 # Criamos a Fila que vai guardar nossos clientes
 fila_clientes = asyncio.Queue()
 
+# --- CONTROLE DE COOLDOWN (BACKEND) ---
+cooldowns_por_ip = {}
+TEMPO_COOLDOWN = 60 # 60 segundos de espera
+
 # --- CONFIGURAÇÃO DO BANCO DE DADOS ---
-# Define onde o banco vai ser salvo. Se a pasta /data existir (Railway), salva lá.
-# Se não existir (no seu PC), salva na mesma pasta do código.
 DB_PATH = '/data/consultas.db' if os.path.exists('/data') else 'consultas.db'
 
 def iniciar_banco():
@@ -70,7 +73,6 @@ async def startup_event():
     
     print(f"Iniciando {len(sessoes_strings)} contas do Telegram via StringSession...")
     
-    # Inicia cada conta usando o texto gigante (StringSession) e joga na fila
     for idx, session_str in enumerate(sessoes_strings):
         try:
             client = TelegramClient(StringSession(session_str), api_id, api_hash)
@@ -88,40 +90,54 @@ async def serve_html():
         return f.read()
 
 @app.get("/api/consultar/{placa}")
-async def consultar_placa(placa: str):
+async def consultar_placa(placa: str, request: Request):
     placa = placa.upper()
     
+    # Descobre o IP real do usuário (ignorando o proxy do Railway)
+    ip_cliente = request.headers.get("X-Forwarded-For", request.client.host)
+    if ip_cliente:
+        ip_cliente = ip_cliente.split(",")[0].strip()
+        
+    tempo_atual = time.time()
+    ultimo_tempo = cooldowns_por_ip.get(ip_cliente, 0)
+    
     try:
-        # 1. Verifica no banco primeiro
+        # 1. Verifica no banco primeiro (Cache NÃO ativa o cooldown)
         dados_salvos = buscar_consulta(placa)
         if dados_salvos:
             return {"sucesso": True, "dados": dados_salvos, "cache": True}
 
-        # 2. Pega uma conta livre na fila
+        # 2. SE NÃO TEM NO CACHE, VERIFICA O COOLDOWN DO IP
+        tempo_passado = tempo_atual - ultimo_tempo
+        if tempo_passado < TEMPO_COOLDOWN:
+            tempo_restante = int(TEMPO_COOLDOWN - tempo_passado)
+            return {"sucesso": False, "dados": f"🚨 Calma lá, apressadinho! O sistema é de graça.\nAguarde mais {tempo_restante} segundos para fazer uma nova consulta no bot."}
+
+        # 3. Pega uma conta livre na fila
         cliente_atual = await fila_clientes.get()
         
         try:
-            # Envia o comando para o bot
             await cliente_atual.send_message(bot_username, f'/placa {placa}')
             await asyncio.sleep(4)
             
-            # Pega a resposta
             messages = await cliente_atual.get_messages(bot_username, limit=1)
             
             if messages and messages[0].text:
                 resposta = messages[0].text
                 
-                # Limpa o rodapé
                 if "👤 Usuário:" in resposta:
                     resposta = resposta.split("👤 Usuário:")[0].strip()
                     
                 salvar_consulta(placa, resposta)
+                
+                # 4. REGISTRA QUE ESTE IP ACABOU DE FAZER UMA CONSULTA COM SUCESSO
+                cooldowns_por_ip[ip_cliente] = time.time()
+                
                 return {"sucesso": True, "dados": resposta, "cache": False}
             else:
                 return {"sucesso": False, "dados": "O bot não respondeu a tempo."}
                 
         finally:
-            # 3. Devolve a conta para a fila, mesmo se der erro
             await fila_clientes.put(cliente_atual)
             
     except Exception as e:
