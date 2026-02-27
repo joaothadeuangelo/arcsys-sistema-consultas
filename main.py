@@ -40,6 +40,28 @@ cooldowns_por_ip = {}
 TEMPO_COOLDOWN = 60 # Tempo de espera em segundos
 
 
+# ==========================================
+# GUARDA DE TRÂNSITO (REDIRECIONAMENTO 301)
+# ==========================================
+@app.middleware("http")
+async def redirecionar_dominio_antigo(request: Request, call_next):
+    host_atual = request.headers.get("host", "")
+    
+    # Verifica se o cara acessou pelo link velho do Railway
+    if "auto-bot-production-9044.up.railway.app" in host_atual:
+        # Monta a URL nova (mantendo a rota, caso ele tenha tentado acessar uma página específica)
+        nova_url = f"https://placa.arcangelopainel.xyz{request.url.path}"
+        if request.url.query:
+            nova_url += f"?{request.url.query}"
+            
+        # Faz o redirecionamento 301 (Permanente)
+        return RedirectResponse(url=nova_url, status_code=301)
+    
+    # Se não for o link velho, deixa o fluxo seguir normalmente
+    response = await call_next(request)
+    return response
+
+
 
 # ==========================================
 # CONFIGURAÇÃO DO BANCO DE DADOS
