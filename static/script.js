@@ -2,7 +2,7 @@ let tempoLeitura = 5;
 let timerInterval;
 
 window.onload = function() {
-    // 1. VERIFICAÇÃO DE MANUTENÇÃO SEMPRE VEM PRIMEIRO
+    // 1. VERIFICAÇÃO DE MANUTENÇÃO
     if (window.SISTEMA_EM_MANUTENCAO) {
         document.querySelector('.container').style.display = 'none';
         document.getElementById('modalAviso').style.display = 'none';
@@ -10,17 +10,19 @@ window.onload = function() {
         return; 
     }
 
-    // 2. SE O SISTEMA ESTIVER ON, DISPARA O TIMER DAS REGRAS IMEDIATAMENTE
+    // 2. DISPARA O TIMER DO ANÚNCIO PREMIUM
     const btn = document.getElementById('btnAceitarModal');
     const checkbox = document.getElementById('checkPromessa');
 
     timerInterval = setInterval(() => {
         if (tempoLeitura > 0) {
-            btn.innerText = `LENDO AS REGRAS... (${tempoLeitura}s)`;
+            // AQUI ESTAVA O ERRO: Atualizando o texto durante a contagem
+            btn.innerText = `⏳ EXIBINDO ANÚNCIO... (${tempoLeitura}s)`;
             tempoLeitura--;
         } else {
             clearInterval(timerInterval);
-            btn.innerText = "MARQUE A CAIXINHA ACIMA ⬆️";
+            // Texto quando o timer acaba
+            btn.innerText = "✅ CONFIRME NA CAIXINHA ACIMA ⬆️";
             checkbox.disabled = false;
         }
     }, 1000);
@@ -34,12 +36,13 @@ function verificarCheckbox() {
         btn.disabled = false;
         btn.classList.remove('bloqueado');
         btn.classList.add('liberado');
-        btn.innerText = "LI, ACEITO E NÃO VOU ENCHER O SACO";
+        // Texto final do botão verde/azul pra entrar
+        btn.innerText = "ENTRAR NO SISTEMA GRATUITO 🚀";
     } else {
         btn.disabled = true;
         btn.classList.remove('liberado');
         btn.classList.add('bloqueado');
-        btn.innerText = "MARQUE A CAIXINHA ACIMA ⬆️";
+        btn.innerText = "✅ CONFIRME NA CAIXINHA ACIMA ⬆️";
     }
 }
 
@@ -47,6 +50,9 @@ function fecharModal() {
     document.getElementById('modalAviso').style.display = 'none';
 }
 
+// ==========================================
+// FUNÇÕES DE LÓGICA E APRESENTAÇÃO
+// ==========================================
 let textoPuro = "";
 let loaderInterval;
 
@@ -63,10 +69,34 @@ const frasesTroll = [
 ];
 
 function formatarTexto(texto) {
-    return texto
+    let html = texto
         .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-        .replace(/`(.*?)`/g, '<span class="destaque-codigo">$1</span>')
         .replace(/\n/g, '<br>');
+
+    // MÁGICA DOS BADGES COLORIDOS
+    html = html.replace(/`(.*?)`/g, function(match, conteudo) {
+        let textUpper = conteudo.trim().toUpperCase();
+        
+        if (['NÃO', 'NAO', 'SEM RESTRICAO', 'SEM RESTRIÇÃO', 'NORMAL'].includes(textUpper)) {
+            return `<span class="badge badge-success">✅ ${conteudo}</span>`;
+        }
+        else if (['SIM', 'COM RESTRICAO', 'COM RESTRIÇÃO', 'ROUBO E FURTO', 'ROUBO/FURTO'].includes(textUpper)) {
+            return `<span class="badge badge-danger">🚨 ${conteudo}</span>`;
+        }
+        else if (['SEM INFORMAÇÃO', 'SEM INFORMACAO', 'NÃO APLICAVEL', 'NãO APLICAVEL', 'NAO APLICAVEL'].includes(textUpper)) {
+            return `<span class="badge badge-warning">⚠️ ${conteudo}</span>`;
+        }
+        else {
+            return `<span class="badge badge-info">${conteudo}</span>`;
+        }
+    });
+
+    // Banners separadores
+    html = html.replace(/•\s*<strong>([A-ZÍÁÉÓÚÇ\s/]+)<\/strong>/g, '<div class="section-title">📌 $1</div>');
+    html = html.replace(/•\s*([A-ZÍÁÉÓÚÇ\s/]{10,})(<br>|$)/g, '<div class="section-title">📌 $1</div>$2'); 
+    html = html.replace(/•\s*<strong>/g, '<strong>');
+
+    return html;
 }
 
 function iniciarCooldown(segundos) {
@@ -160,19 +190,17 @@ async function fazerConsulta() {
 // ==========================================
 function limparTextoParaCopiar(texto) {
     let textoLimpo = texto
-        .replace(/\*\*/g, '') // Remove todos os asteriscos de negrito
-        .replace(/`/g, '')    // Remove todas as crases de código
-        .replace(/\n{3,}/g, '\n\n') // Tira o excesso de linhas em branco (deixa no máximo 1)
-        .trim(); // Arranca espaços sobrando no começo e no fim
+        .replace(/\*\*/g, '') 
+        .replace(/`/g, '')    
+        .replace(/\n{3,}/g, '\n\n') 
+        .trim(); 
 
-    // Adiciona uma assinatura elegante no final do texto copiado
-    textoLimpo += "\n\n━━━━━━━━━━━━━━━━━━━━━━\n🔍 Consulta realizada via ARCANGELO SYSTEM";
+    textoLimpo += "\n\n━━━━━━━━━━━━━━━━━━━━━━\n🔍 Consulta realizada via ARCSYS";
     
     return textoLimpo;
 }
 
 function copiarTexto() {
-    // Passa o texto puro pela faxina antes de mandar pro clipboard
     const textoFormatado = limparTextoParaCopiar(textoPuro);
 
     navigator.clipboard.writeText(textoFormatado).then(() => {

@@ -18,6 +18,7 @@ API_ID = int(os.getenv('API_ID', 0))
 API_HASH = os.getenv('API_HASH', '')
 BOT_USERNAME = os.getenv('BOT_USERNAME', '')
 ADMIN_TOKEN = os.getenv('ADMIN_TOKEN', 'mudar_isso_depois')
+AMBIENTE = os.getenv("AMBIENTE", "producao")
 
 # Coleta todas as strings de sessão usando List Comprehension
 SESSOES_STRINGS = [
@@ -196,7 +197,41 @@ async def consultar_placa(placa: str, request: Request):
                 "dados": f"🚨 Calma lá, apressadinho! O sistema é de graça.\nAguarde mais {tempo_restante} segundos para fazer uma nova consulta no bot."
             }
 
-        # Processamento via Telegram (Fila)
+        # =======================================================
+        # 🚧 MODO DE DESENVOLVIMENTO (MOCK / SIMULAÇÃO)
+        # =======================================================
+        if AMBIENTE == "desenvolvimento":
+            print(f"⚠️ [DEV MODE] Simulando consulta local para a placa {placa} sem usar o Telegram...")
+            
+            await asyncio.sleep(2) # Simula o tempinho de carregamento das zoeiras
+            
+            # Resposta falsa (Coloquei Roubo: SIM para você testar a etiqueta vermelha piscando!)
+            resposta_mock = f"""🕵️ **CONSULTA DE PLACA COMPLETA** 🕵️
+
+• **DADOS PRINCIPAIS**
+
+• **Placa:** `{placa}`
+• **Chassi:** `3KPFN414BKE278951`
+• **RENAVAM:** `01169511870`
+• **Situação:** `EM_CIRCULACAO`
+
+• **RESTRIÇÕES / ALERTAS**
+
+• **Restrição 1:** `SEM RESTRICAO`
+• **Roubo / Furto:** `SIM`
+
+• DATAS E SERVIÇOS
+
+• **Serviço Consultado:** `RENAVAM_MOCK_LOCAL_ARCSYS`"""
+
+            # Salva no banco local e seta o cooldown para testarmos o fluxo completo no frontend
+            salvar_consulta(placa, resposta_mock)
+            cooldowns_por_ip[ip_cliente] = time.time()
+            
+            return {"sucesso": True, "dados": resposta_mock, "cache": False}
+        # =======================================================
+
+        # Processamento via Telegram (Fila) -> SÓ RODA EM PRODUÇÃO
         cliente_atual = await fila_clientes.get()
         
         try:
