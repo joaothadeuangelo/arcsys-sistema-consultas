@@ -10,10 +10,12 @@
         
         .container { background-color: #17212b; padding: 30px; border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.5); width: 100%; max-width: 600px; margin-top: 40px; border-top: 4px solid #5288c1; }
         
-        /* Identidade Visual ARCYS */
-        .brand-container { text-align: center; margin-bottom: 25px; }
-        .brand-title { font-size: 2.8em; font-weight: 900; margin: 0; letter-spacing: 6px; color: #ffffff; text-shadow: 0 0 10px rgba(82, 136, 193, 0.8), 0 0 20px rgba(82, 136, 193, 0.4); }
-        .brand-subtitle { color: #8aa3ba; font-size: 0.9em; text-transform: uppercase; letter-spacing: 2px; margin-top: 5px; }
+        /* Identidade Visual Premium ARCYS */
+        .brand-container { text-align: center; margin-bottom: 30px; }
+        .brand-title { font-size: 2.6em; font-weight: 800; margin: 0; letter-spacing: 2px; color: #ffffff; text-transform: uppercase; text-shadow: 2px 2px 4px rgba(0,0,0,0.3); }
+        .brand-title span { color: #5288c1; }
+        .brand-subtitle { color: #8aa3ba; font-size: 0.85em; text-transform: uppercase; letter-spacing: 4px; margin-top: 8px; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 10px; }
+        .brand-subtitle::before, .brand-subtitle::after { content: ""; height: 1px; width: 40px; background-color: #5288c1; opacity: 0.5; }
 
         .input-group { display: flex; gap: 10px; margin-bottom: 20px; }
         input { flex: 1; padding: 15px; border: 1px solid #242f3d; border-radius: 8px; background-color: #242f3d; color: white; font-size: 16px; outline: none; text-transform: uppercase; transition: 0.3s;}
@@ -51,7 +53,8 @@
         @media (max-width: 480px) {
             .input-group { flex-direction: column; }
             button { width: 100%; padding: 15px; }
-            .brand-title { font-size: 2.2em; }
+            .brand-title { font-size: 1.9em; } /* Letra menor no celular para não quebrar feio */
+            .brand-subtitle::before, .brand-subtitle::after { width: 20px; } /* Linhas menores no celular */
             .container { padding: 20px; margin-top: 20px; }
         }
     </style>
@@ -73,7 +76,7 @@
 
     <div class="container">
         <div class="brand-container">
-            <h1 class="brand-title">ARCANGELO SYSTEM</h1>
+            <h1 class="brand-title">ARCANGELO <span>SYSTEM</span></h1>
             <div class="brand-subtitle">CONSULTAS DE PLACAS</div>
         </div>
 
