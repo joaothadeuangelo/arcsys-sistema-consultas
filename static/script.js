@@ -51,41 +51,78 @@ const frasesTroll = [
 ];
 
 function formatarTexto(texto) {
-    let html = texto
-        // Deixa os rótulos (ex: Placa:, Chassi:) com uma classe suave
-        .replace(/\*\*(.*?)\*\*/g, '<span class="data-label">$1</span>')
-        .replace(/\n/g, '<br>');
+    let linhas = texto.split('\n');
+    let htmlFinal = '<div class="relatorio-wrapper">';
+    let inSection = false;
 
-    // MÁGICA DOS BADGES (AGORA SÓ PARA O QUE REALMENTE IMPORTA)
-    html = html.replace(/`(.*?)`/g, function(match, conteudo) {
-        let textUpper = conteudo.trim().toUpperCase();
-        
-        // Status Positivos
-        if (['NÃO', 'NAO', 'SEM RESTRICAO', 'SEM RESTRIÇÃO', 'NORMAL'].includes(textUpper)) {
-            return `<span class="badge badge-success">✅ ${conteudo}</span>`;
+    linhas.forEach(linha => {
+        let l = linha.trim();
+        if (!l) return; // Pula linhas em branco vazias
+
+        // Limpa o bullet point inicial do bot, se houver
+        if (l.startsWith('•')) l = l.substring(1).trim();
+
+        // 1. Título Geral (Consulta Completa)
+        if (l.includes('🕵️')) {
+            htmlFinal += `<div class="relatorio-header">${l.replace(/\*\*/g, '')}</div>`;
+            return;
         }
-        // Alertas Vermelhos
-        else if (['SIM', 'COM RESTRICAO', 'COM RESTRIÇÃO', 'ROUBO E FURTO', 'ROUBO/FURTO'].includes(textUpper)) {
-            return `<span class="badge badge-danger">🚨 ${conteudo}</span>`;
+
+        // 2. Criação dos Cartões (Seções) - Identifica se é título (tudo maiúsculo sem ":")
+        if ((l.startsWith('**') && l.endsWith('**') && !l.includes(':')) || (l.match(/^[A-ZÍÁÉÓÚÇ\s/]+$/) && l.length > 4 && !l.includes(':'))) {
+            if (inSection) htmlFinal += '</div></div>'; // Fecha o cartão anterior
+            let titulo = l.replace(/\*\*/g, '').trim();
+            htmlFinal += `<div class="relatorio-section">
+                            <div class="section-title">${titulo}</div>
+                            <div class="section-body">`;
+            inSection = true;
+            return;
         }
-        // Neutros
-        else if (['SEM INFORMAÇÃO', 'SEM INFORMACAO', 'NÃO APLICAVEL', 'NãO APLICAVEL', 'NAO APLICAVEL'].includes(textUpper)) {
-            return `<span class="badge badge-warning">⚠️ ${conteudo}</span>`;
-        }
-        // DADOS COMUNS (Placa, Chassi, Cor): Texto limpo, sem caixota em volta!
-        else {
-            return `<span class="data-value">${conteudo}</span>`;
+
+        // 3. Criação das Linhas de Dados (Chave: Valor)
+        if (l.includes(':')) {
+            if (!inSection) {
+                htmlFinal += `<div class="relatorio-section"><div class="section-body">`;
+                inSection = true;
+            }
+
+            let partes = l.split(':');
+            let label = partes[0].replace(/\*\*/g, '').trim();
+            let rawValue = partes.slice(1).join(':').trim(); // O valor real após os ":"
+
+            let cleanValue = rawValue.replace(/`/g, '').replace(/\*\*/g, '').trim();
+            let upperValue = cleanValue.toUpperCase();
+            let valHtml = '';
+
+            // Inteligência das Etiquetas (Badges)
+            if (['NÃO', 'NAO', 'SEM RESTRICAO', 'SEM RESTRIÇÃO', 'NORMAL', 'NADA CONSTA'].includes(upperValue)) {
+                valHtml = `<span class="badge badge-success">✅ ${cleanValue}</span>`;
+            }
+            else if (upperValue === 'SIM' || upperValue.includes('RESTRICAO') || upperValue.includes('RESTRIÇÃO') || upperValue.includes('ROUBO') || upperValue.includes('FURTO') || upperValue.includes('ALIENACAO')) {
+                // Se tiver a palavra restrição, mas NÃO for "Sem restrição"
+                if (!upperValue.includes('SEM ')) {
+                    valHtml = `<span class="badge badge-danger">🚨 ${cleanValue}</span>`;
+                } else {
+                    valHtml = `<span class="data-value">${cleanValue}</span>`;
+                }
+            }
+            else if (['SEM INFORMAÇÃO', 'SEM INFORMACAO', 'NÃO APLICAVEL', 'NãO APLICAVEL', 'NAO APLICAVEL'].includes(upperValue)) {
+                valHtml = `<span class="badge badge-warning">⚠️ ${cleanValue}</span>`;
+            } else {
+                valHtml = `<span class="data-value">${cleanValue}</span>`; // Valor comum em fonte de máquina
+            }
+
+            htmlFinal += `<div class="data-row">
+                            <div class="row-label">${label}</div>
+                            <div class="row-value">${valHtml}</div>
+                          </div>`;
         }
     });
 
-    // Títulos de Seção: Linha sutil por baixo em vez de um bloco azulão
-    html = html.replace(/•\s*<span class="data-label">([A-ZÍÁÉÓÚÇ\s/]+)<\/span>/g, '<div class="section-title">$1</div>');
-    html = html.replace(/•\s*([A-ZÍÁÉÓÚÇ\s/]{10,})(<br>|$)/g, '<div class="section-title">$1</div>$2'); 
-    
-    // Extrema Faxina: Tira aquelas bolinhas "•" soltas pra limpar a tela de vez
-    html = html.replace(/•\s*/g, '');
+    if (inSection) htmlFinal += '</div></div>'; // Garante que o último cartão feche
+    htmlFinal += '</div>';
 
-    return html;
+    return htmlFinal;
 }
 
 function iniciarCooldown(segundos) {
