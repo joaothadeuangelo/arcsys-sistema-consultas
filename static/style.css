@@ -70,25 +70,76 @@ button:disabled { background-color: #3b4c5d; cursor: not-allowed; color: #8aa3ba
 .checkbox-content span:last-child strong { color: #5288c1; } /* Texto em destaque azul */
 .btn-premium-action { width: calc(100% - 40px); margin: 0 20px 25px 20px; padding: 16px; font-size: 1.05em; border-radius: 8px; letter-spacing: 1px; }
 
-/* MODAL DE MANUTENÇÃO */
-.maintenance-overlay { z-index: 10000; background: rgba(14, 22, 33, 0.98) !important; }
-.maintenance-content { border-color: #e67e22 !important; box-shadow: 0 0 60px rgba(230, 126, 34, 0.5) !important; max-width: 550px; text-align: center; padding: 30px !important; }
-.maintenance-header { margin-bottom: 25px; }
-.maintenance-icon { display: block; font-size: 5em; margin-bottom: 20px; animation: pulse-maintenance 2s infinite; text-shadow: 0 0 20px rgba(230, 126, 34, 0.7); }
-.maintenance-title { color: #e67e22 !important; font-size: 2.2em !important; margin: 0; text-transform: uppercase; letter-spacing: 2px; font-weight: 900; text-shadow: 2px 2px 4px rgba(0,0,0,0.5); }
-.maintenance-body { border-color: #e67e22 !important; background: rgba(230, 126, 34, 0.1) !important; padding: 25px !important; }
-.maintenance-body p { font-size: 1.15em; line-height: 1.6; color: #f0f0f0; margin-bottom: 25px; }
-.highlight-car { color: #e67e22; font-weight: bold; font-style: italic; border-bottom: 2px dashed #e67e22; }
-.maintenance-body .maintenance-footer-text { margin-bottom: 0; font-weight: bold; color: #e67e22; font-size: 1.25em; }
+/* ========================================= */
+/* MODAL DE MANUTENÇÃO (PIT STOP PREMIUM)    */
+/* ========================================= */
+.maintenance-overlay { z-index: 10000; background: rgba(10, 15, 22, 0.95) !important; backdrop-filter: blur(10px); }
 
-/* EFEITOS E ANIMAÇÕES */
-@keyframes shake-warning { 0%, 100% { transform: rotate(0deg); } 5%, 15% { transform: rotate(-10deg); } 10%, 20% { transform: rotate(10deg); } 25% { transform: rotate(0deg); } }
-@keyframes pulse-maintenance { 0% { transform: scale(1); filter: brightness(1); } 50% { transform: scale(1.1); filter: brightness(1.3); } 100% { transform: scale(1); filter: brightness(1); } }
-@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-@keyframes popIn { from { opacity: 0; transform: scale(0.8); } to { opacity: 1; transform: scale(1); } }
-.shake { animation: shake 0.4s; border-color: #e74c3c !important; box-shadow: 0 0 10px rgba(231, 76, 60, 0.5) !important; }
-@keyframes shake { 0% { transform: translateX(0); } 25% { transform: translateX(-8px); } 50% { transform: translateX(8px); } 75% { transform: translateX(-8px); } 100% { transform: translateX(0); } }
+.maintenance-content { 
+    border: 1px solid #f39c12 !important; 
+    box-shadow: 0 10px 40px rgba(243, 156, 18, 0.15) !important; /* Brilho sutil e elegante */
+    max-width: 500px; 
+    text-align: center; 
+    padding: 0 !important; 
+    overflow: hidden; 
+}
 
+.maintenance-header { 
+    background: rgba(243, 156, 18, 0.1); 
+    padding: 30px 20px 20px 20px; 
+    border-bottom: 2px solid rgba(243, 156, 18, 0.3); 
+}
+
+/* Ícone flutuante suave */
+.maintenance-icon { 
+    display: block; 
+    font-size: 4em; 
+    margin-bottom: 15px; 
+    animation: float-icon 3s ease-in-out infinite; 
+}
+
+.maintenance-title { 
+    color: #f39c12 !important; 
+    font-size: 1.5em !important; 
+    margin: 0; 
+    text-transform: uppercase; 
+    letter-spacing: 2px; 
+    font-weight: 900; 
+}
+
+.maintenance-body { 
+    background: #0e1621 !important; 
+    padding: 30px 25px !important; 
+}
+
+.maintenance-body p { 
+    font-size: 1.05em; 
+    line-height: 1.6; 
+    color: #aebfd1; 
+    margin: 0 0 15px 0; 
+}
+
+.maintenance-body p strong { color: #f39c12; }
+
+/* Linha separadora elegante */
+.maintenance-divider { 
+    height: 1px; 
+    background: rgba(243, 156, 18, 0.2); 
+    margin: 20px auto; 
+    width: 60px; 
+}
+
+.maintenance-body .maintenance-footer-text { 
+    margin-bottom: 0; 
+    color: #8aa3ba; 
+    font-size: 0.95em; 
+}
+
+@keyframes float-icon { 
+    0% { transform: translateY(0px); } 
+    50% { transform: translateY(-10px); } 
+    100% { transform: translateY(0px); } 
+}
 
 /* ========================================= */
 /* RODAPÉ INTEGRADO AO CARD                  */
@@ -229,11 +280,9 @@ button:disabled { background-color: #3b4c5d; cursor: not-allowed; color: #8aa3ba
     .checkbox-content { padding: 12px; gap: 10px; }
     .btn-premium-action { width: calc(100% - 30px); margin: 0 15px 20px 15px; font-size: 0.9em; }
 
-    /* Modal de Manutenção */
-    .maintenance-content { padding: 20px !important; }
-    .maintenance-icon { font-size: 3.5em; margin-bottom: 15px; }
-    .maintenance-title { font-size: 1.5em !important; }
-    .maintenance-body { padding: 15px !important; }
-    .maintenance-body p { font-size: 0.95em; margin-bottom: 15px; }
-    .maintenance-body .maintenance-footer-text { font-size: 1.05em; }
+    /* Modal de Manutenção Mobile */
+    .maintenance-icon { font-size: 3em; margin-bottom: 10px; }
+    .maintenance-title { font-size: 1.2em !important; }
+    .maintenance-body { padding: 20px 15px !important; }
+    .maintenance-body p { font-size: 0.95em; }
 }
