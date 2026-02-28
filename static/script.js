@@ -227,7 +227,7 @@ async function fazerConsulta() {
                 btn.disabled = false;
             } else {
                 resultBox.innerHTML = formatarTexto(data.dados);
-                iniciarCooldown(60, 'btnConsultarPlaca', 'Consultar');
+                iniciarCooldown(120, 'btnConsultarPlaca', 'Consultar');
             }
         } else {
             textoPuro = data.dados;

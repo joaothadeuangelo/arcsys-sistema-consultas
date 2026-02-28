@@ -36,7 +36,7 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 
 fila_clientes = asyncio.Queue()
 cooldowns_por_ip = {}
-TEMPO_COOLDOWN = 60 # Tempo de espera em segundos entre consultas
+TEMPO_COOLDOWN = 120 # Tempo de espera em segundos entre consultas
 
 # ==========================================
 # GUARDA DE TRÂNSITO (REDIRECIONAMENTO 301)
@@ -186,9 +186,9 @@ async def consultar_placa(placa: str, request: Request):
                     break
             
             if resposta_final:
-                if "👤 Usuário:" in resposta_final: resposta_final = resposta_final.split("👤 Usuário:")[0].strip()
-                if "inválida" in resposta_final.lower() or "não encontrada" in resposta_final.lower():
-                    return {"sucesso": False, "dados": "Placa não encontrada na base de dados."}
+                # Tratamento da resposta (Corta tudo a partir de "👤 Usuário")
+                if "👤 Usuário" in resposta_final: 
+                    resposta_final = resposta_final.split("👤 Usuário")[0].strip()
                 
                 salvar_consulta(placa, resposta_final)
                 cooldowns_por_ip[ip_cliente] = time.time()
@@ -285,7 +285,8 @@ async def consultar_cnh(cpf: str, request: Request):
 
             # Extrai o texto da legenda da foto
             dados_texto = msg_foto.text or "Sem dados adicionais."
-            if "👤 Usuário:" in dados_texto: dados_texto = dados_texto.split("👤 Usuário:")[0].strip()
+            if "👤 Usuário" in dados_texto: 
+                dados_texto = dados_texto.split("👤 Usuário")[0].strip()
 
             # Salva no DB para histórico (Prefixo CPF_)
             salvar_consulta(f"CPF_{cpf_limpo}", dados_texto)
