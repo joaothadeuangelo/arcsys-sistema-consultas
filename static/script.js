@@ -23,7 +23,7 @@ window.onload = function() {
             btn.disabled = false;
             btn.classList.remove('bloqueado');
             btn.classList.add('liberado');
-            btn.innerText = "ENTRAR NO SISTEMA GRATUITO";
+            btn.innerText = "ENTRAR NO SISTEMA GRATUITO 🚀";
         }
     }, 1000);
 }
@@ -157,8 +157,9 @@ function formatarTexto(texto) {
     return htmlFinal;
 }
 
-function iniciarCooldown(segundos) {
-    const btn = document.getElementById('btnConsultar');
+// Cooldown inteligente para qualquer botão
+function iniciarCooldown(segundos, btnId, textoOriginal) {
+    const btn = document.getElementById(btnId);
     let tempoRestante = segundos;
     btn.disabled = true;
 
@@ -168,18 +169,21 @@ function iniciarCooldown(segundos) {
 
         if (tempoRestante < 0) {
             clearInterval(intervalo);
-            btn.innerText = "Consultar";
+            btn.innerText = textoOriginal;
             btn.disabled = false;
         }
     }, 1000);
 }
 
+// ==========================================
+// MÓDULO 1: CONSULTA DE PLACA
+// ==========================================
 async function fazerConsulta() {
     const input = document.getElementById('placaInput');
     const placa = input.value.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
     input.value = placa; 
 
-    const btn = document.getElementById('btnConsultar');
+    const btn = document.getElementById('btnConsultarPlaca'); // Corrigido o ID aqui!
     const resultContainer = document.getElementById('resultadoContainer');
     const resultBox = document.getElementById('resultado');
     const loader = document.getElementById('loader');
@@ -223,7 +227,7 @@ async function fazerConsulta() {
                 btn.disabled = false;
             } else {
                 resultBox.innerHTML = formatarTexto(data.dados);
-                iniciarCooldown(60);
+                iniciarCooldown(60, 'btnConsultarPlaca', 'Consultar');
             }
         } else {
             textoPuro = data.dados;
@@ -240,6 +244,66 @@ async function fazerConsulta() {
         clearInterval(loaderInterval);
         loader.style.display = 'none';
         loader.innerText = "Processando requisição... ⏳"; 
+    }
+}
+
+// ==========================================
+// MÓDULO 2: CONSULTA DE CNH (CPF)
+// ==========================================
+async function fazerConsultaCNH() {
+    const input = document.getElementById('cpfInput');
+    const cpfInput = input.value.replace(/\D/g, ''); // Remove tudo que não for número
+    const btn = document.getElementById('btnConsultarCNH');
+    const resultContainer = document.getElementById('resultadoContainer');
+    const resultBox = document.getElementById('resultado');
+    const loader = document.getElementById('loader');
+
+    if (cpfInput.length !== 11) {
+        input.classList.add('shake');
+        setTimeout(() => input.classList.remove('shake'), 400);
+        alert('🐴 Digite o CPF inteiro, patrão! São 11 números sem traços ou pontos.');
+        return;
+    }
+
+    btn.disabled = true;
+    resultContainer.style.display = 'none';
+    loader.style.display = 'block';
+    loader.innerText = "Iniciando buscas nos sistemas... ⏳";
+
+    try {
+        const response = await fetch(`/api/consultar_cnh/${cpfInput}`);
+        const data = await response.json();
+
+        if (data.sucesso) {
+            textoPuro = data.dados; // Salva para o botão de copiar
+            let htmlFormatado = formatarTexto(data.dados);
+            
+            // Adiciona a foto da CNH no topo se existir
+            if (data.foto) {
+                htmlFormatado = `
+                    <div style="text-align: center; margin-bottom: 25px; animation: fadeIn 0.5s ease;">
+                        <img src="${data.foto}" alt="Foto CNH" style="max-width: 250px; width: 100%; border-radius: 12px; border: 3px solid #5288c1; box-shadow: 0 10px 25px rgba(0,0,0,0.4);">
+                        <div style="color: #8aa3ba; font-size: 0.8em; margin-top: 10px; text-transform: uppercase; letter-spacing: 1px;">Registro Fotográfico Localizado</div>
+                    </div>
+                    ${htmlFormatado}
+                `;
+            }
+            
+            resultBox.innerHTML = htmlFormatado;
+            iniciarCooldown(60, 'btnConsultarCNH', 'Consultar CNH');
+        } else {
+            textoPuro = data.erro || data.dados;
+            resultBox.innerHTML = `<div class="badge badge-danger" style="font-size: 1.1em; padding: 15px; display: block; text-align: center; white-space: pre-wrap;">❌ ${textoPuro}</div>`;
+            btn.disabled = false;
+        }
+        
+        resultContainer.style.display = 'block';
+    } catch (error) {
+        resultBox.innerHTML = `<div class="badge badge-danger" style="font-size: 1.1em; padding: 15px; display: block; text-align: center;">❌ Erro de conexão com o servidor. O bot pode estar dormindo.</div>`;
+        resultContainer.style.display = 'block';
+        btn.disabled = false;
+    } finally {
+        loader.style.display = 'none';
     }
 }
 
@@ -276,8 +340,17 @@ function copiarTexto() {
     });
 }
 
+// ==========================================
+// EVENTOS DE TECLADO (ENTER)
+// ==========================================
 document.getElementById('placaInput').addEventListener('keypress', function (e) {
-    if (e.key === 'Enter' && !document.getElementById('btnConsultar').disabled) {
+    if (e.key === 'Enter' && !document.getElementById('btnConsultarPlaca').disabled) {
         fazerConsulta();
+    }
+});
+
+document.getElementById('cpfInput').addEventListener('keypress', function (e) {
+    if (e.key === 'Enter' && !document.getElementById('btnConsultarCNH').disabled) {
+        fazerConsultaCNH();
     }
 });
