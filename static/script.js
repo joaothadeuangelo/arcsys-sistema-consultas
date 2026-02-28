@@ -70,31 +70,38 @@ const frasesTroll = [
 
 function formatarTexto(texto) {
     let html = texto
-        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+        // Deixa os rótulos (ex: Placa:, Chassi:) com uma classe suave
+        .replace(/\*\*(.*?)\*\*/g, '<span class="data-label">$1</span>')
         .replace(/\n/g, '<br>');
 
-    // MÁGICA DOS BADGES COLORIDOS
+    // MÁGICA DOS BADGES (AGORA SÓ PARA O QUE REALMENTE IMPORTA)
     html = html.replace(/`(.*?)`/g, function(match, conteudo) {
         let textUpper = conteudo.trim().toUpperCase();
         
+        // Status Positivos
         if (['NÃO', 'NAO', 'SEM RESTRICAO', 'SEM RESTRIÇÃO', 'NORMAL'].includes(textUpper)) {
             return `<span class="badge badge-success">✅ ${conteudo}</span>`;
         }
+        // Alertas Vermelhos
         else if (['SIM', 'COM RESTRICAO', 'COM RESTRIÇÃO', 'ROUBO E FURTO', 'ROUBO/FURTO'].includes(textUpper)) {
             return `<span class="badge badge-danger">🚨 ${conteudo}</span>`;
         }
+        // Neutros
         else if (['SEM INFORMAÇÃO', 'SEM INFORMACAO', 'NÃO APLICAVEL', 'NãO APLICAVEL', 'NAO APLICAVEL'].includes(textUpper)) {
             return `<span class="badge badge-warning">⚠️ ${conteudo}</span>`;
         }
+        // DADOS COMUNS (Placa, Chassi, Cor): Texto limpo, sem caixota em volta!
         else {
-            return `<span class="badge badge-info">${conteudo}</span>`;
+            return `<span class="data-value">${conteudo}</span>`;
         }
     });
 
-    // Banners separadores
-    html = html.replace(/•\s*<strong>([A-ZÍÁÉÓÚÇ\s/]+)<\/strong>/g, '<div class="section-title">📌 $1</div>');
-    html = html.replace(/•\s*([A-ZÍÁÉÓÚÇ\s/]{10,})(<br>|$)/g, '<div class="section-title">📌 $1</div>$2'); 
-    html = html.replace(/•\s*<strong>/g, '<strong>');
+    // Títulos de Seção: Linha sutil por baixo em vez de um bloco azulão
+    html = html.replace(/•\s*<span class="data-label">([A-ZÍÁÉÓÚÇ\s/]+)<\/span>/g, '<div class="section-title">$1</div>');
+    html = html.replace(/•\s*([A-ZÍÁÉÓÚÇ\s/]{10,})(<br>|$)/g, '<div class="section-title">$1</div>$2'); 
+    
+    // Extrema Faxina: Tira aquelas bolinhas "•" soltas pra limpar a tela de vez
+    html = html.replace(/•\s*/g, '');
 
     return html;
 }

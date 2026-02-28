@@ -139,37 +139,71 @@ button:disabled { background-color: #3b4c5d; cursor: not-allowed; color: #8aa3ba
 .btn-dev-contato svg { width: 16px; height: 16px; }
 
 /* ========================================= */
-/* ETIQUETAS E PAINEL DE RESULTADOS          */
+/* ETIQUETAS E PAINEL DE RESULTADOS (CLEAN)  */
 /* ========================================= */
+.resultado { 
+    background-color: transparent; 
+    padding: 10px 15px; 
+    font-size: 15px; 
+    line-height: 1.8; 
+    word-wrap: break-word; 
+    max-height: 60vh; 
+    overflow-y: auto; 
+    text-align: left;
+}
+
+/* Os rótulos (Ex: Placa:, Cor:) ficam num tom cinza/azulado discreto */
+.data-label {
+    color: #8aa3ba;
+    font-weight: 500;
+    margin-right: 5px;
+}
+
+/* Os dados (Ex: QPK8206, BRANCA) ficam brancos, destacados e limpos */
+.data-value {
+    color: #ffffff;
+    font-weight: 700;
+    font-family: 'Courier New', Courier, monospace; /* Dá um ar de sistema oficial */
+    font-size: 1.1em;
+    letter-spacing: 0.5px;
+}
+
+/* O título da seção fica minimalista, só com uma linha por baixo */
 .section-title {
-    background-color: rgba(82, 136, 193, 0.1);
     color: #5288c1;
-    padding: 8px 15px;
-    border-radius: 6px;
-    font-weight: 900;
+    font-weight: 800;
     margin-top: 25px;
     margin-bottom: 15px;
     text-transform: uppercase;
-    letter-spacing: 1px;
-    border-left: 4px solid #5288c1;
-    display: inline-block;
+    letter-spacing: 2px;
+    font-size: 1em;
+    display: block;
     width: 100%;
+    border-bottom: 1px solid rgba(82, 136, 193, 0.2);
+    padding-bottom: 5px;
 }
+
+/* As etiquetas agora SÓ aparecem nos status de verdade */
 .badge {
     padding: 3px 8px;
     border-radius: 6px;
     font-weight: bold;
-    font-size: 0.95em;
+    font-size: 0.85em;
     letter-spacing: 0.5px;
-    font-family: monospace;
     display: inline-block;
     margin-left: 5px;
+    vertical-align: middle;
 }
-.badge-info { background-color: rgba(161, 193, 129, 0.1); color: #a1c181; border: 1px solid rgba(161, 193, 129, 0.3); }
+
 .badge-success { background-color: rgba(46, 204, 113, 0.15); color: #2ecc71; border: 1px solid rgba(46, 204, 113, 0.4); }
 .badge-danger { background-color: rgba(231, 76, 60, 0.15); color: #e74c3c; border: 1px solid rgba(231, 76, 60, 0.4); animation: pulse-danger 1.5s infinite; }
 .badge-warning { background-color: rgba(241, 196, 15, 0.1); color: #f39c12; border: 1px solid rgba(241, 196, 15, 0.3); }
-@keyframes pulse-danger { 0% { box-shadow: 0 0 0 0 rgba(231, 76, 60, 0.5); } 70% { box-shadow: 0 0 0 6px rgba(231, 76, 60, 0); } 100% { box-shadow: 0 0 0 0 rgba(231, 76, 60, 0); } }
+
+@keyframes pulse-danger { 
+    0% { box-shadow: 0 0 0 0 rgba(231, 76, 60, 0.5); } 
+    70% { box-shadow: 0 0 0 6px rgba(231, 76, 60, 0); } 
+    100% { box-shadow: 0 0 0 0 rgba(231, 76, 60, 0); } 
+}
 
 
 /* ========================================= */
