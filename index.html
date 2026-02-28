@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ARCSYS - Consulta de Veículos</title>
+    <title>ARCSYS - Consulta de placa</title>
     <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
@@ -31,7 +31,7 @@
     </div>
 
     <div id="modalAviso" class="modal-overlay">
-        <div class="modal-content warning-premium-modal" style="border-color: #5288c1; box-shadow: 0 10px 50px rgba(82, 136, 193, 0.25); display: flex; flex-direction: column; height: 85vh; max-height: 600px; padding: 0 !important; overflow: hidden;">
+        <div class="modal-content warning-premium-modal" style="border-color: #5288c1; box-shadow: 0 10px 50px rgba(82, 136, 193, 0.25); display: flex; flex-direction: column; height: auto; max-height: 95vh; padding: 0 !important; overflow: hidden;">
             
             <div class="warning-header" style="background: rgba(82, 136, 193, 0.1); border-bottom: 2px solid rgba(82, 136, 193, 0.3); flex-shrink: 0; padding: 20px;">
                 <span class="warning-icon-large" style="animation: none; margin-bottom: 5px;">🚀</span>
@@ -45,7 +45,7 @@
                     </p>
 
                     <div class="rule-item" style="padding: 10px; gap: 10px;">
-                        <span class="rule-icon" style="font-size: 1.2em;">🔍</span>
+                        <span class="rule-icon" style="font-size: 1.2em; width: 30px; text-align: center;">🔍</span>
                         <div class="rule-text" style="font-size: 0.85em;">
                             <strong style="color: #5288c1;">PLACA DE TODOS OS VEÍCULOS</strong> 
                             Consultas profundas e detalhadas.
@@ -53,7 +53,9 @@
                     </div>
                     
                     <div class="rule-item" style="padding: 10px; gap: 10px;">
-                        <span class="rule-icon" style="font-size: 1.2em;">📄</span>
+                        <div class="rule-icon" style="display: flex; align-items: center; justify-content: center; width: 30px;">
+                            <img src="/static/uber.png" alt="Uber" class="app-logo">
+                        </div>
                         <div class="rule-text" style="font-size: 0.85em;">
                             <strong style="color: #5288c1;">CRLV PARA UBER</strong> 
                             Com garantia e sem pedir chassi.
@@ -61,7 +63,9 @@
                     </div>
 
                     <div class="rule-item" style="padding: 10px; gap: 10px;">
-                        <span class="rule-icon" style="font-size: 1.2em;">🚕</span>
+                        <div class="rule-icon" style="display: flex; align-items: center; justify-content: center; width: 30px;">
+                            <img src="/static/99.png" alt="99" class="app-logo">
+                        </div>
                         <div class="rule-text" style="font-size: 0.85em;">
                             <strong style="color: #5288c1;">DADOS OU CRLV PARA 99</strong> 
                             Dados ou CRLVs originais 2026 em dias!
@@ -69,7 +73,10 @@
                     </div>
 
                     <div class="rule-item" style="padding: 10px; gap: 10px;">
-                        <span class="rule-icon" style="font-size: 1.2em;">🕵️‍♀️</span>
+                        <div class="rule-icon" style="display: flex; align-items: center; justify-content: center; gap: 5px; width: 30px;">
+                            <img src="/static/uber.png" alt="Uber" class="app-logo" style="width: 20px; height: 20px;">
+                            <img src="/static/99.png" alt="99" class="app-logo" style="width: 20px; height: 20px;">
+                        </div>
                         <div class="rule-text" style="font-size: 0.85em;">
                             <strong style="color: #5288c1;">BICOS PARA UBER E 99</strong> 
                             As melhores porcentagens do mercado.
@@ -83,14 +90,6 @@
             </div>
 
             <div style="flex-shrink: 0; background: #17212b; border-top: 1px solid #242f3d; padding: 15px 20px 20px 20px;">
-                <label class="checkbox-premium" style="margin-bottom: 12px; padding: 0; cursor: pointer;">
-                    <input type="checkbox" id="checkPromessa" onchange="verificarCheckbox()" disabled>
-                    <div class="checkbox-content" style="padding: 10px; background: #0e1621; border-color: #3b4c5d;">
-                        <span class="checkbox-fake" style="width: 20px; height: 20px; min-width: 20px;"></span>
-                        <span style="font-size: 0.8em; color: #fff;">Estou ciente e quero <strong>acessar a consulta gratuita</strong>.</span>
-                    </div>
-                </label>
-
                 <button id="btnAceitarModal" class="btn-modal btn-premium-action bloqueado" disabled onclick="fecharModal()" style="margin: 0; width: 100%; padding: 15px; font-size: 0.95em;">
                     ⏳ EXIBINDO ANÚNCIO... (5s)
                 </button>
@@ -120,7 +119,7 @@
         <div class="card-footer">
             <span class="badge-free">⚡ 100% Gratuito</span>
             <p>Desenvolvido por <strong>ARCANGELO</strong></p>
-            <a href="https://t.me/DevArcangelo" target="_blank" class="btn-dev-contato">
+            <a href="https://api.whatsapp.com/send?phone=5599984221688&text=Fala%20Arcangelo!%20Vim%20pelo%20painel%20e%20preciso%20de%20um%20serviço." target="_blank" class="btn-dev-contato">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
                 Falar com o Desenvolvedor
             </a>

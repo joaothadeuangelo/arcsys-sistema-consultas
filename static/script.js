@@ -10,40 +10,22 @@ window.onload = function() {
         return; 
     }
 
-    // 2. DISPARA O TIMER DO ANÚNCIO PREMIUM
+    // 2. DISPARA O TIMER DO ANÚNCIO (E LIBERA AUTOMATICAMENTE)
     const btn = document.getElementById('btnAceitarModal');
-    const checkbox = document.getElementById('checkPromessa');
 
     timerInterval = setInterval(() => {
         if (tempoLeitura > 0) {
-            // AQUI ESTAVA O ERRO: Atualizando o texto durante a contagem
             btn.innerText = `⏳ EXIBINDO ANÚNCIO... (${tempoLeitura}s)`;
             tempoLeitura--;
         } else {
             clearInterval(timerInterval);
-            // Texto quando o timer acaba
-            btn.innerText = "✅ CONFIRME NA CAIXINHA ACIMA ⬆️";
-            checkbox.disabled = false;
+            // O tempo acabou, libera o botão direto!
+            btn.disabled = false;
+            btn.classList.remove('bloqueado');
+            btn.classList.add('liberado');
+            btn.innerText = "ENTRAR NO SISTEMA GRATUITO";
         }
     }, 1000);
-}
-
-function verificarCheckbox() {
-    const btn = document.getElementById('btnAceitarModal');
-    const checkbox = document.getElementById('checkPromessa');
-    
-    if (checkbox.checked && tempoLeitura <= 0) {
-        btn.disabled = false;
-        btn.classList.remove('bloqueado');
-        btn.classList.add('liberado');
-        // Texto final do botão verde/azul pra entrar
-        btn.innerText = "ENTRAR NO SISTEMA GRATUITO 🚀";
-    } else {
-        btn.disabled = true;
-        btn.classList.remove('liberado');
-        btn.classList.add('bloqueado');
-        btn.innerText = "✅ CONFIRME NA CAIXINHA ACIMA ⬆️";
-    }
 }
 
 function fecharModal() {
