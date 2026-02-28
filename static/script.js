@@ -32,6 +32,38 @@ function fecharModal() {
     document.getElementById('modalAviso').style.display = 'none';
 }
 
+
+// ==========================================
+// CONTROLE DE MÓDULOS (DASHBOARD)
+// ==========================================
+function selecionarModulo(modulo) {
+    // Esconde os cards
+    document.getElementById('menuModulos').style.display = 'none';
+    // Mostra a área de busca
+    document.getElementById('areaBusca').style.display = 'block';
+    
+    // Limpa a tela caso já tivesse uma pesquisa antes
+    document.getElementById('resultadoContainer').style.display = 'none';
+    document.getElementById('resultado').innerHTML = '';
+    
+    // Altera qual Input vai aparecer
+    if (modulo === 'placa') {
+        document.getElementById('grupoPlaca').style.display = 'flex';
+        document.getElementById('grupoCNH').style.display = 'none';
+        document.getElementById('placaInput').focus();
+    } else if (modulo === 'cnh') {
+        document.getElementById('grupoPlaca').style.display = 'none';
+        document.getElementById('grupoCNH').style.display = 'flex';
+        document.getElementById('cpfInput').focus();
+    }
+}
+
+function voltarMenu() {
+    // Faz o caminho inverso
+    document.getElementById('areaBusca').style.display = 'none';
+    document.getElementById('menuModulos').style.display = 'flex';
+}
+
 // ==========================================
 // FUNÇÕES DE LÓGICA E APRESENTAÇÃO
 // ==========================================

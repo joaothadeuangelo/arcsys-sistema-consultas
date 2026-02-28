@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ARCSYS - Consulta de placa</title>
-    <link rel="stylesheet" href="/static/style.css?v=3.0">
+    <title>ARCSYS - Central de Consultas</title>
+    <link rel="stylesheet" href="/static/style.css?v=4.0">
 </head>
 <body>
 
@@ -101,19 +101,43 @@
     <div class="container">
         <div class="brand-container">
             <h1 class="brand-title">ARC<span>SYS</span></h1>
-            <div class="brand-subtitle">CONSULTAS DE PLACAS</div>
+            <div class="brand-subtitle">CENTRAL DE CONSULTAS</div>
         </div>
 
-        <div class="input-group">
-            <input type="text" id="placaInput" placeholder="Digite a placa (ex: QPK8206)" maxlength="7">
-            <button id="btnConsultar" onclick="fazerConsulta()">Consultar</button>
+        <div id="menuModulos" class="modulos-grid">
+            <div class="modulo-card" onclick="selecionarModulo('placa')">
+                <img src="/static/placa.png" alt="Placa Mercosul" class="modulo-icon">
+                <h3>PLACA</h3>
+                <p>Busca de Veículos</p>
+            </div>
+            <div class="modulo-card" onclick="selecionarModulo('cnh')">
+                <img src="/static/cnh.png" alt="CNH" class="modulo-icon">
+                <h3>CNH</h3>
+                <p>Rosto e Dados</p>
+            </div>
         </div>
-        
-        <div id="loader" class="loader">Processando requisição... ⏳</div>
-        
-        <div id="resultadoContainer" class="resultado-container">
-            <div id="resultado" class="resultado"></div>
-            <button class="btn-copiar" onclick="copiarTexto()">📋 Copiar Relatório</button>
+
+        <div id="areaBusca" style="display: none; width: 100%;">
+            <div class="voltar-container">
+                <button class="btn-voltar" onclick="voltarMenu()">🔙 Voltar aos Módulos</button>
+            </div>
+            
+            <div class="input-group" id="grupoPlaca" style="display: none;">
+                <input type="text" id="placaInput" placeholder="Digite a placa (ex: QPK8206)" maxlength="7">
+                <button id="btnConsultarPlaca" onclick="fazerConsulta()">Consultar</button>
+            </div>
+
+            <div class="input-group" id="grupoCNH" style="display: none;">
+                <input type="text" id="cpfInput" placeholder="Digite o CPF (só números)" maxlength="11">
+                <button id="btnConsultarCNH" onclick="fazerConsultaCNH()">Consultar CNH</button>
+            </div>
+            
+            <div id="loader" class="loader">Processando requisição... ⏳</div>
+            
+            <div id="resultadoContainer" class="resultado-container">
+                <div id="resultado" class="resultado"></div>
+                <button class="btn-copiar" onclick="copiarTexto()">📋 Copiar Relatório</button>
+            </div>
         </div>
 
         <div class="card-footer">
@@ -126,6 +150,6 @@
         </div>
     </div>
 
-    <script src="/static/script.js?v=3.0"></script>
+    <script src="/static/script.js?v=4.0"></script>
 </body>
 </html>

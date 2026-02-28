@@ -20,7 +20,7 @@ BOT_USERNAME = os.getenv('BOT_USERNAME', '')
 ADMIN_TOKEN = os.getenv('ADMIN_TOKEN', 'mudar_isso_depois')
 AMBIENTE = os.getenv("AMBIENTE", "producao")
 
-# Coleta todas as strings de sessão usando List Comprehension
+# Coleta todas as strings de sessão
 SESSOES_STRINGS = [
     value.strip() for key, value in os.environ.items() 
     if key.startswith('SESSAO_') and value.strip()
@@ -29,16 +29,14 @@ SESSOES_STRINGS = [
 # ==========================================
 # ESTADO DA APLICAÇÃO E RATE LIMIT
 # ==========================================
-app = FastAPI(title="ARCYS - Consulta de Veículos")
+app = FastAPI(title="ARCSYS - Central de Consultas")
 
-# --- NOVA LINHA: ENSINA O SERVIDOR A LER CSS E JS ---
+# Servindo arquivos estáticos (CSS, JS, Imagens)
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
 fila_clientes = asyncio.Queue()
-
 cooldowns_por_ip = {}
-TEMPO_COOLDOWN = 60 # Tempo de espera em segundos
-
+TEMPO_COOLDOWN = 60 # Tempo de espera em segundos entre consultas
 
 # ==========================================
 # GUARDA DE TRÂNSITO (REDIRECIONAMENTO 301)
@@ -46,22 +44,13 @@ TEMPO_COOLDOWN = 60 # Tempo de espera em segundos
 @app.middleware("http")
 async def redirecionar_dominio_antigo(request: Request, call_next):
     host_atual = request.headers.get("host", "")
-    
-    # Verifica se o cara acessou pelo link velho do Railway
     if "auto-bot-production-9044.up.railway.app" in host_atual:
-        # Monta a URL nova (mantendo a rota, caso ele tenha tentado acessar uma página específica)
         nova_url = f"https://placa.arcangelopainel.xyz{request.url.path}"
         if request.url.query:
             nova_url += f"?{request.url.query}"
-            
-        # Faz o redirecionamento 301 (Permanente)
         return RedirectResponse(url=nova_url, status_code=301)
     
-    # Se não for o link velho, deixa o fluxo seguir normalmente
-    response = await call_next(request)
-    return response
-
-
+    return await call_next(request)
 
 # ==========================================
 # CONFIGURAÇÃO DO BANCO DE DADOS
@@ -69,11 +58,8 @@ async def redirecionar_dominio_antigo(request: Request, call_next):
 DB_PATH = '/data/consultas.db' if os.path.exists('/data') else 'consultas.db'
 
 def iniciar_banco() -> None:
-    """Cria as tabelas de registros e configurações caso não existam."""
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
-    
-    # Tabela de Histórico de Placas
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS registro_placas (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -82,50 +68,32 @@ def iniciar_banco() -> None:
             data_consulta TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     ''')
-    
-    # Tabela do Botão de Pânico (Configurações do Sistema)
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS configuracoes (
             chave TEXT PRIMARY KEY,
             valor TEXT NOT NULL
         )
     ''')
-    
-    # Garante que o sistema nasce "Ligado" (0 = Sem manutenção)
     cursor.execute("INSERT OR IGNORE INTO configuracoes (chave, valor) VALUES ('manutencao', '0')")
-    
     conn.commit()
     conn.close()
 
-def salvar_consulta(placa: str, dados: str) -> None:
-    """Salva o resultado de uma consulta no banco."""
+def salvar_consulta(chave_busca: str, dados: str) -> None:
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
-    cursor.execute('INSERT INTO registro_placas (placa, dados) VALUES (?, ?)', (placa, dados))
+    cursor.execute('INSERT INTO registro_placas (placa, dados) VALUES (?, ?)', (chave_busca, dados))
     conn.commit()
     conn.close()
 
-def buscar_consulta(placa: str):
-    """Verifica se uma placa já foi consultada recentemente."""
+def buscar_consulta(chave_busca: str):
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
-    cursor.execute('SELECT dados FROM registro_placas WHERE placa = ? ORDER BY data_consulta DESC LIMIT 1', (placa,))
+    cursor.execute('SELECT dados FROM registro_placas WHERE placa = ? ORDER BY data_consulta DESC LIMIT 1', (chave_busca,))
     resultado = cursor.fetchone()
     conn.close()
-    
     return resultado[0] if resultado else None
 
-def deletar_consulta_bugada(placa: str):
-    """Deleta do banco caso tenha salvo a mensagem temporária por engano."""
-    conn = sqlite3.connect(DB_PATH)
-    cursor = conn.cursor()
-    cursor.execute("DELETE FROM registro_placas WHERE placa = ? AND dados LIKE '%Consultando%'", (placa,))
-    conn.commit()
-    conn.close()
-
-# --- FUNÇÕES DO MODO MANUTENÇÃO ---
 def is_manutencao() -> bool:
-    """Verifica se o botão de pânico (manutenção) está ativado no banco"""
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
     cursor.execute("SELECT valor FROM configuracoes WHERE chave = 'manutencao'")
@@ -134,9 +102,8 @@ def is_manutencao() -> bool:
     return resultado[0] == '1' if resultado else False
 
 def toggle_manutencao() -> None:
-    """Inverte o status do sistema (Liga/Desliga)"""
     atual = is_manutencao()
-    novo_valor = '0' if atual else '1' # Se estava 1, vira 0. Se estava 0, vira 1.
+    novo_valor = '0' if atual else '1'
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
     cursor.execute("UPDATE configuracoes SET valor = ? WHERE chave = 'manutencao'", (novo_valor,))
@@ -163,179 +130,191 @@ async def startup_event():
     print("🚀 Todas as contas operacionais!")
 
 # ==========================================
-# ROTAS DA APLICAÇÃO (ENDPOINTS)
+# ROTAS DA APLICAÇÃO (ENDPOINTS FRONTEND)
 # ==========================================
 @app.get("/", response_class=HTMLResponse)
 async def serve_html():
-    """Renderiza a página inicial (Frontend) e injeta o status de manutenção."""
     with open("index.html", "r", encoding="utf-8") as f:
         html = f.read()
-        
-    # Verifica o status atual no banco
     status_manutencao = "true" if is_manutencao() else "false"
-    
-    # Injeta a variável JavaScript invisível no <head> da página do usuário
     script_injetado = f"<script>window.SISTEMA_EM_MANUTENCAO = {status_manutencao};</script>\n</head>"
-    html = html.replace("</head>", script_injetado)
-    
-    return html
+    return html.replace("</head>", script_injetado)
 
+# ==========================================
+# MÓDULO 1: CONSULTA DE PLACAS
+# ==========================================
 @app.get("/api/consultar/{placa}")
 async def consultar_placa(placa: str, request: Request):
-    """Endpoint principal de consulta de placas."""
-    
-    # 1. BLOQUEIO DE SEGURANÇA BACKEND (Caso tentem burlar o frontend)
     if is_manutencao():
-        return {
-            "sucesso": False, 
-            "dados": "🛠️ **SISTEMA EM MANUTENÇÃO!**\n\nNossos engenheiros tropeçaram nos cabos do servidor. Estamos arrumando a bagunça. Tente novamente mais tarde."
-        }
+        return {"sucesso": False, "dados": "🛠️ **SISTEMA EM MANUTENÇÃO!**\n\nNossos servidores estão em ajuste."}
         
     placa = placa.upper()
-    
-    # Extração de IP considerando proxies de nuvem (Railway)
-    ip_cliente = request.headers.get("X-Forwarded-For", request.client.host)
-    if ip_cliente:
-        ip_cliente = ip_cliente.split(",")[0].strip()
-        
+    ip_cliente = request.headers.get("X-Forwarded-For", request.client.host).split(",")[0].strip()
     tempo_atual = time.time()
     ultimo_tempo = cooldowns_por_ip.get(ip_cliente, 0)
     
     try:
-        # Limpa lixo do banco (caso você pesquise a mesma placa que travou antes)
-        deletar_consulta_bugada(placa)
-
-        # Verifica Cache (Banco de Dados)
         dados_salvos = buscar_consulta(placa)
-        if dados_salvos:
+        if dados_salvos and "Consultando" not in dados_salvos:
             return {"sucesso": True, "dados": dados_salvos, "cache": True}
 
-        # Verificação de Cooldown (Rate Limit por IP)
-        tempo_passado = tempo_atual - ultimo_tempo
-        if tempo_passado < TEMPO_COOLDOWN:
-            tempo_restante = int(TEMPO_COOLDOWN - tempo_passado)
-            return {
-                "sucesso": False, 
-                "dados": f"🚨 Calma lá, apressadinho! O sistema é de graça.\nAguarde mais {tempo_restante} segundos para fazer uma nova consulta no bot."
-            }
+        if (tempo_atual - ultimo_tempo) < TEMPO_COOLDOWN:
+            return {"sucesso": False, "dados": f"🚨 Aguarde mais {int(TEMPO_COOLDOWN - (tempo_atual - ultimo_tempo))} segundos."}
 
-        # =======================================================
-        # 🚧 MODO DE DESENVOLVIMENTO (MOCK / SIMULAÇÃO)
-        # =======================================================
+        # Mock de Desenvolvimento
         if AMBIENTE == "desenvolvimento":
-            print(f"⚠️ [DEV MODE] Simulando consulta local para a placa {placa} sem usar o Telegram...")
-            
-            await asyncio.sleep(2) # Simula o tempinho de carregamento das zoeiras
-            
-            # Resposta falsa (Coloquei Roubo: SIM para você testar a etiqueta vermelha piscando!)
-            resposta_mock = f"""🕵️ **CONSULTA DE PLACA COMPLETA** 🕵️
-
-• **DADOS PRINCIPAIS**
-
-• **Placa:** `{placa}`
-• **Chassi:** `3KPFN414BKE278951`
-• **RENAVAM:** `01169511870`
-• **Situação:** `EM_CIRCULACAO`
-
-• **RESTRIÇÕES / ALERTAS**
-
-• **Restrição 1:** `SEM RESTRICAO`
-• **Roubo / Furto:** `SIM`
-
-• DATAS E SERVIÇOS
-
-• **Serviço Consultado:** `RENAVAM_MOCK_LOCAL_ARCSYS`"""
-
-            # Salva no banco local e seta o cooldown para testarmos o fluxo completo no frontend
+            await asyncio.sleep(2)
+            resposta_mock = f"🕵️ **CONSULTA DE PLACA**\n\n• **Placa:** `{placa}`\n• **Situação:** `NORMAL`\n• **Roubo / Furto:** `NAO`"
             salvar_consulta(placa, resposta_mock)
             cooldowns_por_ip[ip_cliente] = time.time()
-            
             return {"sucesso": True, "dados": resposta_mock, "cache": False}
-        # =======================================================
 
-        # Processamento via Telegram (Fila) -> SÓ RODA EM PRODUÇÃO
         cliente_atual = await fila_clientes.get()
-        
         try:
-            # Health Check da Conexão
-            if not cliente_atual.is_connected():
-                print("⚠️ Conta desconectada detectada. Forçando reconexão...")
-                await cliente_atual.connect()
+            if not cliente_atual.is_connected(): await cliente_atual.connect()
             
-            # Envia o comando
             await cliente_atual.send_message(BOT_USERNAME, f'/placa {placa}')
-            
-            # LOOP INTELIGENTE DE ESPERA (Máximo de 30 segundos)
             resposta_final = None
-            for tentativa in range(15):
-                await asyncio.sleep(2) # Verifica de 2 em 2 segundos
+            
+            for _ in range(15):
+                await asyncio.sleep(2)
                 messages = await cliente_atual.get_messages(BOT_USERNAME, limit=1)
-                
                 if messages and messages[0].text:
                     texto = messages[0].text
-                    
-                    if texto.startswith('/placa'):
-                        continue
-                    if "Consultando..." in texto or "Processando sua solicitação" in texto:
-                        continue
-                        
+                    if texto.startswith('/placa') or "Consultando..." in texto: continue
                     resposta_final = texto
                     break
             
             if resposta_final:
-                # Tratamento da resposta (Remoção de rodapé do bot original)
-                if "👤 Usuário:" in resposta_final:
-                    resposta_final = resposta_final.split("👤 Usuário:")[0].strip()
+                if "👤 Usuário:" in resposta_final: resposta_final = resposta_final.split("👤 Usuário:")[0].strip()
+                if "inválida" in resposta_final.lower() or "não encontrada" in resposta_final.lower():
+                    return {"sucesso": False, "dados": "Placa não encontrada na base de dados."}
                 
-                # FILTRO ANTI-FANTASMA (Intercepta erros do bot original)
-                if "Placa inválida" in resposta_final or "não encontrada" in resposta_final.lower() or "inexistente" in resposta_final.lower():
-                    return {
-                        "sucesso": False, 
-                        "dados": "🐴 **DIGITA ESSA PLACA DIREITO, ANIMAL!**\n\nEssa placa não existe nem no sistema do Detran e nem no ferro-velho. Vê se não digitou a placa do seu carrinho de rolimã!"
-                    }
-                
-                elif "Não foi possível realizar a consulta" in resposta_final or "GonzalesCanal" in resposta_final:
-                    return {
-                        "sucesso": False, 
-                        "dados": "🔥 **SISTEMA DE RESSACA!**\n\nO servidor central deu uma capotada ou está em manutenção. Vá tomar uma água e tente de novo daqui a pouco (e não adianta ficar dando F5 como um desesperado)."
-                    }
-
-                # Só salva no banco se for uma consulta de sucesso real!
                 salvar_consulta(placa, resposta_final)
                 cooldowns_por_ip[ip_cliente] = time.time()
-                
                 return {"sucesso": True, "dados": resposta_final, "cache": False}
-            else:
-                return {"sucesso": False, "dados": "O bot oficial demorou muito para responder (Time-out). Tente novamente."}
-                
+            return {"sucesso": False, "dados": "Tempo esgotado na consulta da placa."}
+            
         finally:
-            # Garante que a conta retorne para a fila mesmo em caso de erro
             await fila_clientes.put(cliente_atual)
             
     except Exception as e:
-        return {
-            "sucesso": False, 
-            "dados": f"Erro interno de conexão: {str(e)}\nTente novamente em alguns segundos."
-        }
+        return {"sucesso": False, "dados": f"Erro interno: {str(e)}"}
+
+# ==========================================
+# MÓDULO 2: CONSULTA DE CNH (CPF) - NOVO!
+# ==========================================
+@app.get("/api/consultar_cnh/{cpf}")
+async def consultar_cnh(cpf: str, request: Request):
+    if is_manutencao():
+        return {"sucesso": False, "erro": "🛠️ SISTEMA EM MANUTENÇÃO!"}
+
+    # Limpa pontuação do CPF
+    cpf_limpo = ''.join(filter(str.isdigit, cpf))
+    if len(cpf_limpo) != 11:
+        return {"sucesso": False, "erro": "CPF inválido. Digite os 11 números corretamente."}
+
+    ip_cliente = request.headers.get("X-Forwarded-For", request.client.host).split(",")[0].strip()
+    tempo_atual = time.time()
+    ultimo_tempo = cooldowns_por_ip.get(ip_cliente, 0)
+
+    try:
+        if (tempo_atual - ultimo_tempo) < TEMPO_COOLDOWN:
+            return {"sucesso": False, "erro": f"Aguarde {int(TEMPO_COOLDOWN - (tempo_atual - ultimo_tempo))} segundos."}
+
+        # Mock de Desenvolvimento
+        if AMBIENTE == "desenvolvimento":
+            await asyncio.sleep(3)
+            cooldowns_por_ip[ip_cliente] = time.time()
+            return {
+                "sucesso": True, 
+                "dados": f"🕵️ DADOS DA CNH\n\n**CPF:** {cpf_limpo}\n**Nome:** USUÁRIO TESTE ARCSYS",
+                "foto": "/static/cnh.png"
+            }
+
+        cliente_atual = await fila_clientes.get()
+        try:
+            if not cliente_atual.is_connected(): await cliente_atual.connect()
+            
+            # 1. Envia o Comando
+            await cliente_atual.send_message(BOT_USERNAME, f'/cpf {cpf_limpo}')
+            
+            # 2. Espera os botões aparecerem
+            await asyncio.sleep(4)
+            mensagens = await cliente_atual.get_messages(BOT_USERNAME, limit=3)
+            msg_botoes = None
+            
+            for msg in mensagens:
+                if msg.buttons: # No Telethon, os Inline Keyboards ficam em msg.buttons
+                    msg_botoes = msg
+                    break
+                    
+            if not msg_botoes:
+                return {"sucesso": False, "erro": "O bot não retornou o menu de opções."}
+
+            # 3. Mágica do Telethon: Clicar no botão CNH
+            clicou = False
+            for linha in msg_botoes.buttons:
+                for botao in linha:
+                    if "CNH" in botao.text.upper():
+                        await botao.click() # Simula o clique exato no botão!
+                        clicou = True
+                        break
+                if clicou: break
+
+            if not clicou:
+                return {"sucesso": False, "erro": "Opção CNH indisponível para este CPF."}
+
+            # 4. Espera a foto ser gerada e enviada
+            await asyncio.sleep(5)
+            mensagens_finais = await cliente_atual.get_messages(BOT_USERNAME, limit=3)
+            msg_foto = None
+            
+            for msg in mensagens_finais:
+                if msg.photo:
+                    msg_foto = msg
+                    break
+
+            if not msg_foto:
+                return {"sucesso": False, "erro": "A foto da CNH não foi localizada."}
+
+            # 5. Baixa a mídia para a pasta static
+            os.makedirs("static/cnh", exist_ok=True)
+            caminho_salvo = f"static/cnh/cnh_{cpf_limpo}.jpg"
+            await cliente_atual.download_media(msg_foto, file=caminho_salvo)
+
+            # Extrai o texto da legenda da foto
+            dados_texto = msg_foto.text or "Sem dados adicionais."
+            if "👤 Usuário:" in dados_texto: dados_texto = dados_texto.split("👤 Usuário:")[0].strip()
+
+            # Salva no DB para histórico (Prefixo CPF_)
+            salvar_consulta(f"CPF_{cpf_limpo}", dados_texto)
+            cooldowns_por_ip[ip_cliente] = time.time()
+
+            return {
+                "sucesso": True,
+                "dados": dados_texto,
+                "foto": f"/{caminho_salvo}"
+            }
+
+        finally:
+            await fila_clientes.put(cliente_atual)
+
+    except Exception as e:
+        return {"sucesso": False, "erro": f"Falha na comunicação: {str(e)}"}
 
 # ==========================================
 # ROTAS DO DASHBOARD ADMIN E CONTROLES
 # ==========================================
-
 @app.get("/admin/toggle")
 async def alternar_status(token: str):
-    """Rota invisível que inverte o status de manutenção e redireciona de volta."""
-    if token != ADMIN_TOKEN:
-        return "<h1>Acesso Negado</h1>"
-    
+    if token != ADMIN_TOKEN: return "<h1>Acesso Negado</h1>"
     toggle_manutencao()
     return RedirectResponse(url=f"/admin/lista?token={token}")
 
 @app.get("/admin/lista", response_class=HTMLResponse)
 async def ver_historico(token: str):
-    """Painel de administração para visualização dos registros no banco e botão de pânico."""
-    if token != ADMIN_TOKEN:
-        return "<h1>Acesso Negado, amigão!</h1>"
+    if token != ADMIN_TOKEN: return "<h1>Acesso Negado</h1>"
 
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
@@ -343,11 +322,10 @@ async def ver_historico(token: str):
     rows = cursor.fetchall()
     conn.close()
 
-    # Define o visual do painel baseado no status atual do sistema
     status_atual = is_manutencao()
     cor_borda = "#e74c3c" if status_atual else "#2ecc71"
-    status_texto = "EM MANUTENÇÃO (SISTEMA DESLIGADO)" if status_atual else "ONLINE (SISTEMA RODANDO)"
-    btn_texto = "🟢 LIGAR SISTEMA" if status_atual else "🔴 DESLIGAR SISTEMA (MANUTENÇÃO)"
+    status_texto = "EM MANUTENÇÃO" if status_atual else "ONLINE"
+    btn_texto = "LIGAR SISTEMA" if status_atual else "DESLIGAR SISTEMA"
     btn_cor = "#27ae60" if status_atual else "#c0392b"
 
     html = f"""
@@ -355,66 +333,25 @@ async def ver_historico(token: str):
     <html lang="pt-BR">
     <head>
         <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Dashboard ARCYS</title>
+        <title>Dashboard ARCSYS</title>
         <style>
-            .celula-dados {{
-                max-width: 400px; max-height: 150px; overflow-y: auto;
-                background: #0e1621; padding: 10px; border-radius: 6px;
-                font-size: 0.85em; white-space: pre-wrap; color: #a1c181;
-                border-left: 3px solid #5288c1;
-            }}
-            .celula-dados::-webkit-scrollbar {{ width: 6px; }}
-            .celula-dados::-webkit-scrollbar-thumb {{ background: #5288c1; border-radius: 4px; }}
-            
-            .painel-controle {{
-                background: #17212b; padding: 20px; border-radius: 8px; margin-bottom: 30px; 
-                display: flex; justify-content: space-between; align-items: center;
-                border-left: 6px solid {cor_borda}; box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-            }}
-            .btn-power {{
-                background-color: {btn_cor}; color: white; padding: 12px 24px; text-decoration: none; 
-                border-radius: 6px; font-weight: bold; transition: 0.2s; box-shadow: 0 4px 6px rgba(0,0,0,0.3);
-            }}
-            .btn-power:hover {{ filter: brightness(1.2); transform: translateY(-2px); }}
+            body {{ background:#0e1621; color:white; font-family:sans-serif; padding:40px; }}
+            .celula-dados {{ max-width: 400px; max-height: 150px; overflow-y: auto; background: #17212b; padding: 10px; font-size: 0.85em; white-space: pre-wrap; border-left: 3px solid #5288c1; }}
+            .painel-controle {{ background: #17212b; padding: 20px; border-radius: 8px; margin-bottom: 30px; display: flex; justify-content: space-between; align-items: center; border-left: 6px solid {cor_borda}; }}
+            .btn-power {{ background-color: {btn_cor}; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold; }}
         </style>
     </head>
-    <body style="background:#0e1621; color:white; font-family:sans-serif; padding:40px;">
-        
+    <body>
         <div class="painel-controle">
-            <div>
-                <h2 style="margin: 0; color: #fff;">Painel de Controle ARCYS</h2>
-                <p style="margin: 5px 0 0 0; color: {cor_borda}; font-weight: bold;">Status Atual: {status_texto}</p>
-            </div>
+            <div><h2 style="margin: 0;">Painel de Controle</h2><p style="color: {cor_borda};">Status: {status_texto}</p></div>
             <a href="/admin/toggle?token={token}" class="btn-power">{btn_texto}</a>
         </div>
-
-        <h2>📊 Relatório de Consultas - ARCYS</h2>
-        <table border="1" style="width:100%; border-collapse:collapse; background:#17212b; border-color: #242f3d;">
-            <tr style="background:#5288c1;">
-                <th style="padding:15px; width: 10%;">Placa</th>
-                <th style="padding:15px; width: 70%;">Dados Retornados</th>
-                <th style="padding:15px; width: 20%;">Data/Hora (UTC)</th>
-            </tr>
+        <h2>📊 Relatório de Consultas</h2>
+        <table border="1" style="width:100%; border-collapse:collapse; border-color: #242f3d;">
+            <tr style="background:#5288c1;"><th style="padding:15px;">Chave</th><th style="padding:15px;">Dados</th><th style="padding:15px;">Data</th></tr>
     """
     for row in rows:
-        placa = row[0]
-        dados = row[1]
-        data = row[2]
-        
-        html += f"""
-            <tr>
-                <td style='padding:15px; text-align:center; font-weight:bold; vertical-align:top;'>{placa}</td>
-                <td style='padding:15px; vertical-align:top;'>
-                    <div class="celula-dados">{dados}</div>
-                </td>
-                <td style='padding:15px; text-align:center; color:#8aa3ba; vertical-align:top;'>{data}</td>
-            </tr>
-        """
+        html += f"<tr><td style='padding:15px; text-align:center;'>{row[0]}</td><td style='padding:15px;'><div class='celula-dados'>{row[1]}</div></td><td style='padding:15px; text-align:center;'>{row[2]}</td></tr>"
     
-    html += """
-        </table>
-    </body>
-    </html>
-    """
+    html += "</table></body></html>"
     return html

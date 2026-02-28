@@ -365,3 +365,77 @@ button:disabled { background-color: #3b4c5d; cursor: not-allowed; color: #8aa3ba
         width: 100%;
         font-size: 1.05em; /* Valor fica maiorzinho no celular */
     }
+
+
+/* ========================================= */
+/* MENU DE MÓDULOS (DASHBOARD)               */
+/* ========================================= */
+.modulos-grid {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+    margin-bottom: 20px;
+    width: 100%;
+    animation: fadeIn 0.5s ease;
+}
+
+.modulo-card {
+    background: #17212b;
+    border: 1px solid rgba(82, 136, 193, 0.2);
+    border-radius: 12px;
+    padding: 20px 10px;
+    width: 48%;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+}
+
+.modulo-card:hover {
+    transform: translateY(-5px);
+    border-color: #5288c1;
+    box-shadow: 0 8px 25px rgba(82, 136, 193, 0.3);
+    background: #1a242f;
+}
+
+.modulo-icon {
+    height: 50px;
+    width: auto;
+    margin-bottom: 12px;
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
+}
+
+.modulo-card h3 {
+    color: #5288c1;
+    margin: 0 0 5px 0;
+    font-size: 1.1em;
+    font-weight: 900;
+}
+
+.modulo-card p {
+    color: #8aa3ba;
+    font-size: 0.8em;
+    margin: 0;
+}
+
+.voltar-container {
+    display: flex;
+    justify-content: flex-start;
+    width: 100%;
+    margin-bottom: 10px;
+}
+
+.btn-voltar {
+    background: transparent;
+    color: #8aa3ba;
+    border: none;
+    cursor: pointer;
+    font-size: 0.9em;
+    font-weight: bold;
+    padding: 5px 0;
+    transition: color 0.2s ease;
+}
+
+.btn-voltar:hover {
+    color: #fff;
+}
