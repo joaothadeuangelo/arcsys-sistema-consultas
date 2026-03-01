@@ -22,7 +22,7 @@ if (cpfInputField) {
 // 2. FUNÇÃO PRINCIPAL DE CONSULTA
 async function fazerConsultaCNH() {
     const input = document.getElementById('cpfInput');
-    const cpfInput = input.value; // Já está limpo por causa da função acima
+    const cpfInput = input.value; 
     const btn = document.getElementById('btnConsultarCNH');
     const resultContainer = document.getElementById('resultadoContainer');
     const resultBox = document.getElementById('resultado');
@@ -33,7 +33,6 @@ async function fazerConsultaCNH() {
         input.classList.add('shake');
         setTimeout(() => input.classList.remove('shake'), 400);
         
-        // Troquei o alert feio pelo nosso card de erro padrão!
         resultBox.innerHTML = `<div class="badge badge-danger" style="font-size: 1.1em; padding: 15px; display: block; text-align: center; white-space: pre-wrap;">❌ CPF Inválido!<br>O CPF precisa ter exatamente 11 números.</div>`;
         resultContainer.style.display = 'block';
         return;
@@ -43,12 +42,12 @@ async function fazerConsultaCNH() {
     resultContainer.style.display = 'none';
     loader.style.display = 'block';
 
-    let fraseIndex = 0;
-    loader.innerText = frasesTroll[0];
-    loaderInterval = setInterval(() => {
-        fraseIndex = (fraseIndex + 1) % frasesTroll.length;
-        loader.innerText = frasesTroll[fraseIndex];
-    }, 3000);
+    // Injeta o spinner HTML animado e a frase profissional
+    loader.innerHTML = `
+        <div class="loader-content">
+            <div class="spinner"></div> 
+            Processando sua consulta, por favor aguarde...
+        </div>`;
 
     try {
         const response = await fetch(`/api/consultar_cnh/${cpfInput}`);
@@ -70,7 +69,7 @@ async function fazerConsultaCNH() {
             
             if (data.cache) {
                 resultBox.innerHTML = "<span class='cache-aviso'>⚡ Recuperado do Banco de Dados</span><br>" + htmlFormatado;
-                btn.disabled = false; // Se veio do cache, não precisa de cooldown longo
+                btn.disabled = false; 
             } else {
                 resultBox.innerHTML = htmlFormatado;
                 iniciarCooldown(120, 'btnConsultarCNH', 'Consultar CNH');
@@ -88,9 +87,8 @@ async function fazerConsultaCNH() {
         resultContainer.style.display = 'block';
         btn.disabled = false; 
     } finally {
-        clearInterval(loaderInterval); 
+        // Encerramento limpo
         loader.style.display = 'none';
-        loader.innerText = "Processando requisição... ⏳"; 
     }
 }
 

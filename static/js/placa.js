@@ -1,10 +1,20 @@
 // ==========================================
 // MÓDULO 1: CONSULTA DE PLACA
 // ==========================================
+
+// 1. TRATAMENTO EM TEMPO REAL (Impede caracteres inválidos e força maiúscula)
+const placaInputField = document.getElementById('placaInput');
+if (placaInputField) {
+    placaInputField.addEventListener('input', function (e) {
+        // Remove tudo que não for letra ou número e converte para CAIXA ALTA
+        this.value = this.value.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
+    });
+}
+
+// 2. FUNÇÃO PRINCIPAL DE CONSULTA
 async function fazerConsulta() {
     const input = document.getElementById('placaInput');
-    const placa = input.value.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
-    input.value = placa; 
+    const placa = input.value; 
 
     const btn = document.getElementById('btnConsultarPlaca'); 
     const resultContainer = document.getElementById('resultadoContainer');
@@ -13,15 +23,19 @@ async function fazerConsulta() {
 
     const regexPlaca = /^[A-Z]{3}[0-9][A-Z0-9][0-9]{2}$/;
 
+    // Validação de Segurança
     if (!regexPlaca.test(placa)) {
         input.classList.add('shake');
         setTimeout(() => input.classList.remove('shake'), 400);
         
+        // Ajustado para usar o Card Vermelho padrão do sistema
         resultBox.innerHTML = `
-            <strong>⚠️ Placa Inválida.</strong><br><br>
-            Não inventa moda! Utilize um formato válido no Brasil:<br><br>
-            Padrão Antigo: <span class='destaque-codigo'>ABC1234</span><br>
-            Padrão Mercosul: <span class='destaque-codigo'>ABC1D23</span>
+            <div class="badge badge-danger" style="font-size: 1.1em; padding: 15px; display: block; text-align: center; white-space: pre-wrap;">
+                ❌ Placa Inválida!<br><br>
+                Utilize um formato válido no Brasil:<br>
+                Padrão Antigo: <span class='destaque-codigo'>ABC1234</span><br>
+                Padrão Mercosul: <span class='destaque-codigo'>ABC1D23</span>
+            </div>
         `;
         resultContainer.style.display = 'block';
         return; 
@@ -31,12 +45,12 @@ async function fazerConsulta() {
     resultContainer.style.display = 'none';
     loader.style.display = 'block';
 
-    let fraseIndex = 0;
-    loader.innerText = frasesTroll[0];
-    loaderInterval = setInterval(() => {
-        fraseIndex = (fraseIndex + 1) % frasesTroll.length;
-        loader.innerText = frasesTroll[fraseIndex];
-    }, 2500);
+    // Injeta o spinner HTML animado e a frase profissional
+    loader.innerHTML = `
+        <div class="loader-content">
+            <div class="spinner"></div> 
+            Processando sua consulta, por favor aguarde...
+        </div>`;
 
     try {
         const response = await fetch(`/api/consultar/${placa}`);
@@ -64,13 +78,12 @@ async function fazerConsulta() {
         resultContainer.style.display = 'block';
         btn.disabled = false;
     } finally {
-        clearInterval(loaderInterval);
+        // Encerramento limpo
         loader.style.display = 'none';
-        loader.innerText = "Processando requisição... ⏳"; 
     }
 }
 
-// Evento de "Enter" no teclado
+// 3. EVENTO DE TECLADO (ENTER)
 document.getElementById('placaInput')?.addEventListener('keypress', function (e) {
     if (e.key === 'Enter' && !document.getElementById('btnConsultarPlaca').disabled) {
         fazerConsulta();

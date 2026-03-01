@@ -4,19 +4,8 @@
 let tempoLeitura = 5; 
 let timerInterval;
 let textoPuro = "";
-let loaderInterval;
 
-const frasesTroll = [
-    "Hackeando os servidores do Detran... 🕵️‍♂️",
-    "Procurando multas que você não pagou... 💸",
-    "Acordando o estagiário pra buscar a placa... 😴",
-    "Subornando um despachante... 🤫",
-    "Calculando o IPVA atrasado (é muito)... 📉",
-    "Perguntando pro frentista do posto... ⛽",
-    "Descobrindo se é carro de leilão... 🔨",
-    "Calma aí apressado, a internet tá lenta... 🐢",
-    "Quase lá, não aperta F5 pelo amor de Deus... 🚨"
-];
+
 
 // ==========================================
 // INICIALIZAÇÃO E MODAIS (COM MEMÓRIA DE SESSÃO)

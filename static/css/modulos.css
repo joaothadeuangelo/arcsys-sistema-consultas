@@ -9,7 +9,38 @@ button { padding: 15px 24px; background-color: #5288c1; color: white; border: no
 button:hover:not(:disabled) { background-color: #4175ac; transform: translateY(-2px); }
 button:disabled { background-color: #3b4c5d; cursor: not-allowed; color: #8aa3ba; transform: none; }
 
-.loader { text-align: center; display: none; margin: 20px 0; color: #8aa3ba; font-style: italic; font-weight: bold; }
+/* ========================================= */
+/* SPINNER E LOADER PROFISSIONAL             */
+/* ========================================= */
+.loader { 
+    display: none; 
+    margin: 25px 0; 
+}
+
+.loader-content {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    color: #5288c1;
+    font-weight: 700;
+    font-size: 0.95em;
+    letter-spacing: 0.5px;
+}
+
+.spinner {
+    width: 22px;
+    height: 22px;
+    border: 3px solid rgba(82, 136, 193, 0.2);
+    border-top-color: #5288c1;
+    border-radius: 50%;
+    animation: spinner-anim 1s linear infinite;
+}
+
+@keyframes spinner-anim {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
 
 .btn-copiar { margin-top: 15px; width: 100%; background-color: #2b5278; }
 .btn-copiar:hover { background-color: #3b6a9c; }
