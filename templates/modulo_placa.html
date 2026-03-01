@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div id="areaBusca" style="width: 100%;">
+    
+    <div class="input-group" id="grupoPlaca">
+        <input type="text" id="placaInput" placeholder="Digite a placa (ex: QPK8206)" maxlength="7" autofocus>
+        <button id="btnConsultarPlaca" onclick="fazerConsulta()">Consultar</button>
+    </div>
+    
+    <div id="loader" class="loader" style="display: none;">Processando requisição... ⏳</div>
+    
+    <div id="resultadoContainer" class="resultado-container" style="display: none;">
+        <div id="resultado" class="resultado"></div>
+        <button class="btn-copiar" onclick="copiarTexto()">📋 Copiar Relatório</button>
+    </div>
+
+    <div class="voltar-container-novo">
+        <a href="/" class="btn-voltar-novo">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="19" y1="12" x2="5" y2="12"></line>
+                <polyline points="12 19 5 12 12 5"></polyline>
+            </svg>
+            Escolher outro módulo
+        </a>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/js/placa.js?v=1.0"></script>
+{% endblock %}
