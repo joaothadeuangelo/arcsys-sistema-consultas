@@ -1,13 +1,55 @@
 /* ========================================= */
 /* ÁREA DE BUSCA (INPUTS E BOTÕES)           */
 /* ========================================= */
-.input-group { display: flex; gap: 10px; margin-bottom: 20px; }
-input { flex: 1; padding: 15px; border: 1px solid #242f3d; border-radius: 8px; background-color: #242f3d; color: white; font-size: 16px; outline: none; text-transform: uppercase; transition: 0.3s;}
-input:focus { border-color: #5288c1; box-shadow: 0 0 8px rgba(82, 136, 193, 0.3); }
+.input-group { 
+    display: flex; 
+    gap: 10px; 
+    margin-bottom: 20px; 
+}
 
-button { padding: 15px 24px; background-color: #5288c1; color: white; border: none; border-radius: 8px; font-size: 16px; cursor: pointer; transition: 0.2s; font-weight: bold; white-space: nowrap; }
-button:hover:not(:disabled) { background-color: #4175ac; transform: translateY(-2px); }
-button:disabled { background-color: #3b4c5d; cursor: not-allowed; color: #8aa3ba; transform: none; }
+input { 
+    flex: 1; 
+    padding: 15px; 
+    border: 1px solid #242f3d; 
+    border-radius: 8px; 
+    background-color: #242f3d; 
+    color: white; 
+    font-size: 16px; 
+    outline: none; 
+    text-transform: uppercase; 
+    transition: 0.3s;
+    text-align: center; /* 🎯 Ajuste aplicado: Centraliza o texto e o placeholder */
+}
+
+input:focus { 
+    border-color: #5288c1; 
+    box-shadow: 0 0 8px rgba(82, 136, 193, 0.3); 
+}
+
+button { 
+    padding: 15px 24px; 
+    background-color: #5288c1; 
+    color: white; 
+    border: none; 
+    border-radius: 8px; 
+    font-size: 16px; 
+    cursor: pointer; 
+    transition: 0.2s; 
+    font-weight: bold; 
+    white-space: nowrap; 
+}
+
+button:hover:not(:disabled) { 
+    background-color: #4175ac; 
+    transform: translateY(-2px); 
+}
+
+button:disabled { 
+    background-color: #3b4c5d; 
+    cursor: not-allowed; 
+    color: #8aa3ba; 
+    transform: none; 
+}
 
 /* ========================================= */
 /* SPINNER E LOADER PROFISSIONAL             */
