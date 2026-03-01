@@ -268,7 +268,14 @@ async function fazerConsultaCNH() {
     btn.disabled = true;
     resultContainer.style.display = 'none';
     loader.style.display = 'block';
-    loader.innerText = "Iniciando buscas nos sistemas... ⏳";
+
+    // Loop de frases troll para manter o usuário na tela
+    let fraseIndex = 0;
+    loader.innerText = frasesTroll[0];
+    loaderInterval = setInterval(() => {
+        fraseIndex = (fraseIndex + 1) % frasesTroll.length;
+        loader.innerText = frasesTroll[fraseIndex];
+    }, 3000);
 
     try {
         const response = await fetch(`/api/consultar_cnh/${cpfInput}`);
@@ -303,7 +310,9 @@ async function fazerConsultaCNH() {
         resultContainer.style.display = 'block';
         btn.disabled = false;
     } finally {
+        clearInterval(loaderInterval); // <-- Adicione esta linha
         loader.style.display = 'none';
+        btn.disabled = false; // Garante que o botão seja liberado em caso de erro
     }
 }
 

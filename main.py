@@ -239,18 +239,19 @@ async def consultar_cnh(cpf: str, request: Request):
             # 1. Envia o Comando
             await cliente_atual.send_message(BOT_USERNAME, f'/cpf {cpf_limpo}')
             
-            # 2. Espera os botões aparecerem
-            await asyncio.sleep(4)
-            mensagens = await cliente_atual.get_messages(BOT_USERNAME, limit=3)
+            # 2. ESPERA INTELIGENTE PELOS BOTÕES (Até 30 segundos)
             msg_botoes = None
-            
-            for msg in mensagens:
-                if msg.buttons: # No Telethon, os Inline Keyboards ficam em msg.buttons
-                    msg_botoes = msg
-                    break
+            for _ in range(15):
+                await asyncio.sleep(2)
+                mensagens = await cliente_atual.get_messages(BOT_USERNAME, limit=3)
+                for msg in mensagens:
+                    if msg.buttons: # No Telethon, os Inline Keyboards ficam em msg.buttons
+                        msg_botoes = msg
+                        break
+                if msg_botoes: break
                     
             if not msg_botoes:
-                return {"sucesso": False, "erro": "O bot não retornou o menu de opções."}
+                return {"sucesso": False, "erro": "O bot oficial demorou muito para carregar o menu. Tente novamente."}
 
             # 3. Mágica do Telethon: Clicar no botão CNH
             clicou = False
@@ -265,18 +266,19 @@ async def consultar_cnh(cpf: str, request: Request):
             if not clicou:
                 return {"sucesso": False, "erro": "Opção CNH indisponível para este CPF."}
 
-            # 4. Espera a foto ser gerada e enviada
-            await asyncio.sleep(5)
-            mensagens_finais = await cliente_atual.get_messages(BOT_USERNAME, limit=3)
+            # 4. ESPERA INTELIGENTE PELA FOTO (Até 90 segundos)
             msg_foto = None
-            
-            for msg in mensagens_finais:
-                if msg.photo:
-                    msg_foto = msg
-                    break
+            for _ in range(45): # 45 tentativas de 2 segundos = 90s de tolerância
+                await asyncio.sleep(2)
+                mensagens_finais = await cliente_atual.get_messages(BOT_USERNAME, limit=3)
+                for msg in mensagens_finais:
+                    if msg.photo: # A foto chegou!
+                        msg_foto = msg
+                        break
+                if msg_foto: break
 
             if not msg_foto:
-                return {"sucesso": False, "erro": "A foto da CNH não foi localizada."}
+                return {"sucesso": False, "erro": "O servidor oficial está congestionado e estourou o tempo limite de busca (1 min). Tente novamente."}
 
             # 5. Baixa a mídia para a pasta static
             os.makedirs("static/cnh", exist_ok=True)
