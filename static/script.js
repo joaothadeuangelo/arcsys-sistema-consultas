@@ -297,22 +297,31 @@ async function fazerConsultaCNH() {
             }
             
             resultBox.innerHTML = htmlFormatado;
-            iniciarCooldown(60, 'btnConsultarCNH', 'Consultar CNH');
+            
+            // AJUSTE 1: Cooldown de 120s (O botão se auto-gerencia a partir daqui)
+            iniciarCooldown(120, 'btnConsultarCNH', 'Consultar CNH');
+            
         } else {
             textoPuro = data.erro || data.dados;
             resultBox.innerHTML = `<div class="badge badge-danger" style="font-size: 1.1em; padding: 15px; display: block; text-align: center; white-space: pre-wrap;">❌ ${textoPuro}</div>`;
-            btn.disabled = false;
+            // Libera o botão só se der erro
+            btn.disabled = false; 
         }
         
         resultContainer.style.display = 'block';
     } catch (error) {
         resultBox.innerHTML = `<div class="badge badge-danger" style="font-size: 1.1em; padding: 15px; display: block; text-align: center;">❌ Erro de conexão com o servidor. O bot pode estar dormindo.</div>`;
         resultContainer.style.display = 'block';
-        btn.disabled = false;
+        // Libera o botão se der erro de conexão
+        btn.disabled = false; 
     } finally {
-        clearInterval(loaderInterval); // <-- Adicione esta linha
+        clearInterval(loaderInterval); 
         loader.style.display = 'none';
-        btn.disabled = false; // Garante que o botão seja liberado em caso de erro
+        
+        // AJUSTE 2: Reseta o texto do loader para a próxima busca ficar limpa
+        loader.innerText = "Processando requisição... ⏳"; 
+        
+        // AJUSTE 3: O btn.disabled = false FOI REMOVIDO DAQUI para não matar o seu cronômetro!
     }
 }
 
