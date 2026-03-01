@@ -202,7 +202,7 @@ async def consultar_placa(placa: str, request: Request):
         return {"sucesso": False, "dados": f"Erro interno: {str(e)}"}
 
 # ==========================================
-# MÓDULO 2: CONSULTA DE CNH (CPF) - NOVO!
+# MÓDULO 2: CONSULTA DE CNH (CPF) - BLINDADO
 # ==========================================
 @app.get("/api/consultar_cnh/{cpf}")
 async def consultar_cnh(cpf: str, request: Request):
@@ -219,6 +219,18 @@ async def consultar_cnh(cpf: str, request: Request):
     ultimo_tempo = cooldowns_por_ip.get(ip_cliente, 0)
 
     try:
+        # 1. VERIFICA O CACHE PRIMEIRO (Evita ir no Telegram se já consultou antes)
+        dados_salvos = buscar_consulta(f"CPF_{cpf_limpo}")
+        if dados_salvos and "Consultando" not in dados_salvos:
+            caminho_foto = f"static/cnh/cnh_{cpf_limpo}.jpg"
+            if os.path.exists(caminho_foto): # Só usa o cache se a foto ainda existir na pasta
+                return {
+                    "sucesso": True, 
+                    "dados": dados_salvos,
+                    "foto": f"/{caminho_foto}",
+                    "cache": True
+                }
+
         if (tempo_atual - ultimo_tempo) < TEMPO_COOLDOWN:
             return {"sucesso": False, "erro": f"Aguarde {int(TEMPO_COOLDOWN - (tempo_atual - ultimo_tempo))} segundos."}
 
@@ -236,29 +248,32 @@ async def consultar_cnh(cpf: str, request: Request):
         try:
             if not cliente_atual.is_connected(): await cliente_atual.connect()
             
-            # 1. Envia o Comando
+            # Envia o Comando
             await cliente_atual.send_message(BOT_USERNAME, f'/cpf {cpf_limpo}')
             
-            # 2. ESPERA INTELIGENTE PELOS BOTÕES (Até 30 segundos)
+            # ESPERA INTELIGENTE PELOS BOTÕES
             msg_botoes = None
             for _ in range(15):
                 await asyncio.sleep(2)
-                mensagens = await cliente_atual.get_messages(BOT_USERNAME, limit=3)
+                mensagens = await cliente_atual.get_messages(BOT_USERNAME, limit=5)
                 for msg in mensagens:
-                    if msg.buttons: # No Telethon, os Inline Keyboards ficam em msg.buttons
-                        msg_botoes = msg
-                        break
+                    if msg.buttons: 
+                        # VALIDAÇÃO: Garante que o menu é do CPF que pedimos
+                        numeros_menu = ''.join(filter(str.isdigit, msg.text or ""))
+                        if cpf_limpo in numeros_menu:
+                            msg_botoes = msg
+                            break
                 if msg_botoes: break
                     
             if not msg_botoes:
                 return {"sucesso": False, "erro": "O bot oficial demorou muito para carregar o menu. Tente novamente."}
 
-            # 3. Mágica do Telethon: Clicar no botão CNH
+            # Clicar no botão CNH
             clicou = False
             for linha in msg_botoes.buttons:
                 for botao in linha:
                     if "CNH" in botao.text.upper():
-                        await botao.click() # Simula o clique exato no botão!
+                        await botao.click() 
                         clicou = True
                         break
                 if clicou: break
@@ -266,31 +281,35 @@ async def consultar_cnh(cpf: str, request: Request):
             if not clicou:
                 return {"sucesso": False, "erro": "Opção CNH indisponível para este CPF."}
 
-            # 4. ESPERA INTELIGENTE PELA FOTO (Até 90 segundos)
+            # ESPERA INTELIGENTE PELA FOTO COM VALIDAÇÃO ANTI-CRUZA DE DADOS
             msg_foto = None
-            for _ in range(45): # 45 tentativas de 2 segundos = 90s de tolerância
+            for _ in range(45): 
                 await asyncio.sleep(2)
-                mensagens_finais = await cliente_atual.get_messages(BOT_USERNAME, limit=3)
+                mensagens_finais = await cliente_atual.get_messages(BOT_USERNAME, limit=5)
                 for msg in mensagens_finais:
-                    if msg.photo: # A foto chegou!
-                        msg_foto = msg
-                        break
+                    if msg.photo and msg.text:
+                        # O SEGREDO: Só pega a foto se o texto dela contiver o CPF pesquisado!
+                        numeros_legenda = ''.join(filter(str.isdigit, msg.text))
+                        if cpf_limpo in numeros_legenda:
+                            msg_foto = msg
+                            break
                 if msg_foto: break
 
             if not msg_foto:
-                return {"sucesso": False, "erro": "O servidor oficial está congestionado e estourou o tempo limite de busca (1 min). Tente novamente."}
+                return {"sucesso": False, "erro": "O servidor oficial está congestionado (demorou mais de 1 min). Tente novamente."}
 
-            # 5. Baixa a mídia para a pasta static
+            # Baixa a mídia
             os.makedirs("static/cnh", exist_ok=True)
             caminho_salvo = f"static/cnh/cnh_{cpf_limpo}.jpg"
             await cliente_atual.download_media(msg_foto, file=caminho_salvo)
 
-            # Extrai o texto da legenda da foto
             dados_texto = msg_foto.text or "Sem dados adicionais."
-            if "👤 Usuário" in dados_texto: 
-                dados_texto = dados_texto.split("👤 Usuário")[0].strip()
+            
+            # TESOURA INFALÍVEL: Corta tudo a partir do emoji de busto 👤
+            if "👤" in dados_texto: 
+                dados_texto = dados_texto.split("👤")[0].strip()
 
-            # Salva no DB para histórico (Prefixo CPF_)
+            # Salva no DB
             salvar_consulta(f"CPF_{cpf_limpo}", dados_texto)
             cooldowns_por_ip[ip_cliente] = time.time()
 
