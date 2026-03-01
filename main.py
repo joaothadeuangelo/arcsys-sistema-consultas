@@ -111,7 +111,7 @@ def toggle_manutencao() -> None:
     conn.close()
 
 # ==========================================
-# EVENTOS DE INICIALIZAÇÃO
+# EVENTOS DE INICIALIZAÇÃO (BLINDADO)
 # ==========================================
 @app.on_event("startup")
 async def startup_event():
@@ -121,13 +121,21 @@ async def startup_event():
     for idx, session_str in enumerate(SESSOES_STRINGS):
         try:
             client = TelegramClient(StringSession(session_str), API_ID, API_HASH)
-            await client.start()
-            await fila_clientes.put(client)
-            print(f"✅ Conta {idx + 1} conectada e pronta na fila!")
-        except Exception as e:
-            print(f"❌ Erro ao conectar a conta {idx + 1}: {e}")
             
-    print("🚀 Todas as contas operacionais!")
+            # Usamos connect() em vez de start() para não pedir número de telefone no terminal
+            await client.connect()
+            
+            # Verifica silenciosamente se a sessão ainda é válida
+            if await client.is_user_authorized():
+                await fila_clientes.put(client)
+                print(f"✅ Conta {idx + 1} conectada e pronta na fila!")
+            else:
+                print(f"❌ Conta {idx + 1} deslogada ou sessão inválida. Ignorando...")
+                
+        except Exception as e:
+            print(f"❌ Erro crítico ao conectar a conta {idx + 1}: {e}")
+            
+    print(f"🚀 {fila_clientes.qsize()} contas operacionais!")
 
 # ==========================================
 # ROTAS DA APLICAÇÃO (ENDPOINTS FRONTEND)

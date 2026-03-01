@@ -183,7 +183,7 @@ async function fazerConsulta() {
     const placa = input.value.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
     input.value = placa; 
 
-    const btn = document.getElementById('btnConsultarPlaca'); // Corrigido o ID aqui!
+    const btn = document.getElementById('btnConsultarPlaca'); 
     const resultContainer = document.getElementById('resultadoContainer');
     const resultBox = document.getElementById('resultado');
     const loader = document.getElementById('loader');
@@ -230,14 +230,16 @@ async function fazerConsulta() {
                 iniciarCooldown(120, 'btnConsultarPlaca', 'Consultar');
             }
         } else {
-            textoPuro = data.dados;
-            resultBox.innerHTML = `<strong>Erro:</strong> ${formatarTexto(data.dados)}`;
+            // == AJUSTE APLICADO AQUI ==
+            textoPuro = data.erro || data.dados;
+            resultBox.innerHTML = `<div class="badge badge-danger" style="font-size: 1.1em; padding: 15px; display: block; text-align: center; white-space: pre-wrap;">❌ ${textoPuro}</div>`;
             btn.disabled = false;
         }
         
         resultContainer.style.display = 'block';
     } catch (error) {
-        resultBox.innerHTML = "Erro de conexão com o servidor. O sistema pode estar offline.";
+        // Aproveitei e deixei o erro de conexão com o mesmo padrão visual
+        resultBox.innerHTML = `<div class="badge badge-danger" style="font-size: 1.1em; padding: 15px; display: block; text-align: center;">❌ Erro de conexão com o servidor. O sistema pode estar offline.</div>`;
         resultContainer.style.display = 'block';
         btn.disabled = false;
     } finally {
@@ -246,7 +248,6 @@ async function fazerConsulta() {
         loader.innerText = "Processando requisição... ⏳"; 
     }
 }
-
 // ==========================================
 // MÓDULO 2: CONSULTA DE CNH (CPF)
 // ==========================================
