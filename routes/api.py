@@ -13,7 +13,10 @@ TEMPO_COOLDOWN = 120
 
 # Estado Compartilhado
 fila_clientes = asyncio.Queue()
-cooldowns_por_ip = {}
+
+cooldowns_placa = {}
+cooldowns_cnh = {}
+cooldowns_cpf = {}
 
 # ==========================================
 # MÓDULO 1: CONSULTA DE PLACAS
@@ -26,7 +29,7 @@ async def consultar_placa(placa: str, request: Request):
     placa = placa.upper()
     ip_cliente = request.headers.get("X-Forwarded-For", request.client.host).split(",")[0].strip()
     tempo_atual = time.time()
-    ultimo_tempo = cooldowns_por_ip.get(ip_cliente, 0)
+    ultimo_tempo = cooldowns_placa.get(ip_cliente, 0)
     
     try:
         dados_salvos = buscar_consulta(placa)
@@ -40,7 +43,7 @@ async def consultar_placa(placa: str, request: Request):
             await asyncio.sleep(2)
             resposta_mock = f"🕵️ **CONSULTA DE PLACA**\n\n• **Placa:** `{placa}`\n• **Situação:** `NORMAL`\n• **Roubo / Furto:** `NAO`"
             salvar_consulta(placa, resposta_mock)
-            cooldowns_por_ip[ip_cliente] = time.time()
+            cooldowns_placa[ip_cliente] = time.time()
             return {"sucesso": True, "dados": resposta_mock, "cache": False}
 
         cliente_atual = await fila_clientes.get()
@@ -63,7 +66,7 @@ async def consultar_placa(placa: str, request: Request):
                 if "👤 Usuário" in resposta_final: 
                     resposta_final = resposta_final.split("👤 Usuário")[0].strip()
                 salvar_consulta(placa, resposta_final)
-                cooldowns_por_ip[ip_cliente] = time.time()
+                cooldowns_placa[ip_cliente] = time.time()
                 return {"sucesso": True, "dados": resposta_final, "cache": False}
             return {"sucesso": False, "dados": "Tempo esgotado na consulta da placa."}
             
@@ -87,7 +90,7 @@ async def consultar_cnh(cpf: str, request: Request):
 
     ip_cliente = request.headers.get("X-Forwarded-For", request.client.host).split(",")[0].strip()
     tempo_atual = time.time()
-    ultimo_tempo = cooldowns_por_ip.get(ip_cliente, 0)
+    ultimo_tempo = cooldowns_cnh.get(ip_cliente, 0)
 
     try:
         dados_salvos = buscar_consulta(f"CPF_{cpf_limpo}")
@@ -101,7 +104,7 @@ async def consultar_cnh(cpf: str, request: Request):
 
         if AMBIENTE == "desenvolvimento":
             await asyncio.sleep(3)
-            cooldowns_por_ip[ip_cliente] = time.time()
+            cooldowns_cnh[ip_cliente] = time.time()
             return {"sucesso": True, "dados": f"🕵️ DADOS DA CNH\n\n**CPF:** {cpf_limpo}\n**Nome:** USUÁRIO TESTE ARCSYS", "foto": "/static/img/cnh.png"}
 
         cliente_atual = await fila_clientes.get()
@@ -161,7 +164,7 @@ async def consultar_cnh(cpf: str, request: Request):
                 dados_texto = dados_texto.split("👤")[0].strip()
 
             salvar_consulta(f"CPF_{cpf_limpo}", dados_texto)
-            cooldowns_por_ip[ip_cliente] = time.time()
+            cooldowns_cnh[ip_cliente] = time.time()
 
             return {"sucesso": True, "dados": dados_texto, "foto": f"/{caminho_salvo}"}
 
@@ -186,7 +189,7 @@ async def consultar_dados_cpf(cpf: str, request: Request):
 
     ip_cliente = request.headers.get("X-Forwarded-For", request.client.host).split(",")[0].strip()
     tempo_atual = time.time()
-    ultimo_tempo = cooldowns_por_ip.get(ip_cliente, 0)
+    ultimo_tempo = cooldowns_cpf.get(ip_cliente, 0)
 
     try:
         # 1. Busca no Cache (Note que a chave mudou para SISREG_ para não conflitar com a CNH)
@@ -201,7 +204,7 @@ async def consultar_dados_cpf(cpf: str, request: Request):
         # 3. Módulo de Desenvolvimento / Teste Local
         if AMBIENTE == "desenvolvimento":
             await asyncio.sleep(3)
-            cooldowns_por_ip[ip_cliente] = time.time()
+            cooldowns_cpf[ip_cliente] = time.time()
             return {"sucesso": True, "dados": f"🕵️ DADOS SISREG-III\n\n**CPF:** {cpf_limpo}\n**Nome:** ARCANGELO O MESTRE\n**Situação:** REGULAR\n**Score:** 999"}
 
         # =======================================
@@ -275,7 +278,7 @@ async def consultar_dados_cpf(cpf: str, request: Request):
 
             # 9. Salva no Cache e libera
             salvar_consulta(f"SISREG_{cpf_limpo}", dados_texto)
-            cooldowns_por_ip[ip_cliente] = time.time()
+            cooldowns_cpf[ip_cliente] = time.time()
 
             return {"sucesso": True, "dados": dados_texto}
 
