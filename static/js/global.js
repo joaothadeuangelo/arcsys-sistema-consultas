@@ -54,7 +54,6 @@ function fecharModal() {
     sessionStorage.setItem('avisoFechado', 'true');
 }
 
-// ... (Daqui pra baixo o global.js continua normal, com o formatarTexto, etc) ...
 // ==========================================
 // FORMATAÇÃO E COOLDOWN
 // ==========================================
@@ -122,19 +121,45 @@ function formatarTexto(texto) {
 
 function iniciarCooldown(segundos, btnId, textoOriginal) {
     const btn = document.getElementById(btnId);
-    let tempoRestante = segundos;
-    btn.disabled = true;
+    if (!btn) return; // Se o botão não estiver na tela atual, ignora silenciosamente
 
-    const intervalo = setInterval(() => {
-        btn.innerText = `Aguarde ${tempoRestante}s`;
-        tempoRestante--;
+    // Limpa o timer anterior para não duplicar se clicar rápido
+    if (btn.dataset.cooldownTimer) clearInterval(btn.dataset.cooldownTimer);
 
-        if (tempoRestante < 0) {
-            clearInterval(intervalo);
-            btn.innerText = textoOriginal;
+    let endTime;
+    if (segundos > 0) {
+        // Nova consulta: define o tempo de fim e salva na memória do navegador
+        endTime = Date.now() + (segundos * 1000);
+        localStorage.setItem(`timer_${btnId}`, endTime);
+    } else {
+        // Recuperando da memória (quando o usuário recarrega ou volta pra página)
+        endTime = localStorage.getItem(`timer_${btnId}`);
+    }
+
+    if (!endTime) return; // Não tem timer ativo, vida que segue
+
+    function atualizarRelogio() {
+        const agora = Date.now();
+        const restante = Math.ceil((endTime - agora) / 1000);
+
+        if (restante > 0) {
+            btn.disabled = true;
+            btn.innerText = `Aguarde ${restante}s`;
+        } else {
+            // Acabou o tempo! Limpa a memória e libera o botão
+            clearInterval(btn.dataset.cooldownTimer);
             btn.disabled = false;
+            btn.innerText = textoOriginal;
+            localStorage.removeItem(`timer_${btnId}`);
         }
-    }, 1000);
+    }
+
+    atualizarRelogio(); // Chama a primeira vez instantaneamente
+    
+    // Se ainda tiver tempo na conta, inicia o loop do relógio
+    if (btn.disabled) {
+        btn.dataset.cooldownTimer = setInterval(atualizarRelogio, 1000);
+    }
 }
 
 // ==========================================
@@ -162,3 +187,13 @@ function copiarTexto() {
         alert("Erro ao copiar: " + err);
     });
 }
+
+// ==========================================
+// RECUPERAÇÃO DE COOLDOWN AO CARREGAR A TELA
+// ==========================================
+document.addEventListener('DOMContentLoaded', () => {
+    // Passamos "0" porque não queremos adicionar tempo, só checar se já existe um salvo!
+    iniciarCooldown(0, 'btnConsultarPlaca', 'Consultar');
+    iniciarCooldown(0, 'btnConsultarCNH', 'Consultar CNH');
+    iniciarCooldown(0, 'btnConsultarDadosCPF', 'Consultar Dados');
+});
