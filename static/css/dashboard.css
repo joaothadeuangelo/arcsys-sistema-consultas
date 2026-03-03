@@ -82,3 +82,29 @@
 .btn-voltar:hover {
     color: #fff;
 }
+
+
+
+/* ========================================= */
+/* ESTADO OFFLINE DOS MÓDULOS                */
+/* ========================================= */
+.offline-card {
+    cursor: not-allowed !important;
+    filter: grayscale(100%);
+    opacity: 0.6;
+    position: relative;
+    pointer-events: none; /* Bloqueia qualquer clique */
+}
+
+.badge-offline {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: #c0392b;
+    color: white;
+    font-size: 0.7em;
+    font-weight: 900;
+    padding: 3px 8px;
+    border-radius: 4px;
+    letter-spacing: 1px;
+}

@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Comando ARCSYS</title>
+    <style>
+        body { background:#0e1621; color:white; font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding:20px 40px; margin: 0; }
+        h1 { color: #5288c1; font-size: 2em; margin-bottom: 5px; }
+        h2 { color: #8aa3ba; margin-top: 40px; border-bottom: 1px solid #242f3d; padding-bottom: 10px; }
+        
+        /* Grid dos Cards de Controle */
+        .painel-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; margin-top: 20px; }
+        .card { background: #17212b; padding: 20px; border-radius: 10px; border-top: 4px solid; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
+        .card h3 { margin: 0 0 10px 0; color: #fff; }
+        .status-texto { font-weight: bold; font-size: 0.9em; margin-bottom: 20px; }
+        
+        /* Botões */
+        .btn-power { display: block; color: white; padding: 12px; text-decoration: none; border-radius: 6px; font-weight: bold; transition: 0.2s; }
+        .btn-power:hover { filter: brightness(1.2); }
+        
+        /* Tabela Premium */
+        table { width:100%; border-collapse:collapse; margin-top: 15px; background: #17212b; border-radius: 8px; overflow: hidden; }
+        th { background:#242f3d; color: #5288c1; padding:15px; text-align: left; }
+        td { padding:15px; border-bottom: 1px solid #242f3d; vertical-align: top; }
+        tr:hover { background: #1a242f; }
+        .celula-dados { max-width: 500px; max-height: 120px; overflow-y: auto; background: #0e1621; padding: 10px; font-size: 0.85em; white-space: pre-wrap; border-left: 3px solid #5288c1; border-radius: 4px; }
+        .chave-badge { background: #5288c1; color: #fff; padding: 4px 8px; border-radius: 4px; font-weight: bold; font-size: 0.85em; }
+    </style>
+</head>
+<body>
+    
+    <h1>ARCSYS <span style="color: #fff;">Centro de Comando</span></h1>
+    <p style="color: #8aa3ba; margin-top: 0;">Controle modular de APIs e Bot.</p>
+
+    {% macro gerar_card(titulo, nome_modulo, is_off, token) %}
+        {% set cor = "#e74c3c" if is_off else "#2ecc71" %}
+        {% set status_txt = "🔴 OFF (MANUTENÇÃO)" if is_off else "🟢 ON (OPERACIONAL)" %}
+        {% set btn_txt = "LIGAR MÓDULO" if is_off else "DESLIGAR MÓDULO" %}
+        {% set btn_cor = "#27ae60" if is_off else "#c0392b" %}
+        
+        <div class="card" style="border-top-color: {{ cor }};">
+            <h3>{{ titulo }}</h3>
+            <p class="status-texto" style="color: {{ cor }};">{{ status_txt }}</p>
+            <a href="/admin/toggle?token={{ token }}{% if nome_modulo %}&modulo={{ nome_modulo }}{% endif %}" class="btn-power" style="background-color: {{ btn_cor }};">{{ btn_txt }}</a>
+        </div>
+    {% endmacro %}
+
+    <div class="painel-grid">
+        {{ gerar_card("⚠️ SISTEMA GLOBAL", "", status_global, token) }}
+        {{ gerar_card("🔍 MÓDULO PLACA", "placa", status_placa, token) }}
+        {{ gerar_card("🪪 MÓDULO CNH", "cnh", status_cnh, token) }}
+        {{ gerar_card("📄 MÓDULO CPF", "cpf", status_cpf, token) }}
+    </div>
+
+    <h2>📊 Relatório de Consultas Recentes</h2>
+    <table>
+        <tr>
+            <th>Chave / IP</th>
+            <th>Dados do Relatório</th>
+            <th>Data da Consulta</th>
+        </tr>
+        
+        {% for row in rows %}
+        <tr>
+            <td><span class="chave-badge">{{ row[0] }}</span></td>
+            <td><div class="celula-dados">{{ row[1] }}</div></td>
+            <td style="color: #8aa3ba; font-size: 0.9em;">{{ row[2] }}</td>
+        </tr>
+        {% endfor %}
+        
+    </table>
+</body>
+</html>

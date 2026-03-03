@@ -1,10 +1,9 @@
 from fastapi import APIRouter, Request
+from fastapi.responses import RedirectResponse
 from fastapi.templating import Jinja2Templates
-from database import is_manutencao
+from database import is_manutencao, is_manutencao_modulo
 
 router = APIRouter()
-
-# Aponta para a pasta onde criamos nossos HTMLs
 templates = Jinja2Templates(directory="templates")
 
 # ==========================================
@@ -14,7 +13,10 @@ templates = Jinja2Templates(directory="templates")
 async def render_dashboard(request: Request):
     return templates.TemplateResponse("dashboard.html", {
         "request": request, 
-        "manutencao": is_manutencao()
+        "manutencao": is_manutencao(),
+        "manutencao_placa": is_manutencao_modulo('placa'),
+        "manutencao_cnh": is_manutencao_modulo('cnh'),
+        "manutencao_cpf": is_manutencao_modulo('cpf')
     })
 
 # ==========================================
@@ -22,6 +24,10 @@ async def render_dashboard(request: Request):
 # ==========================================
 @router.get("/placa")
 async def render_placa(request: Request):
+    # Se o sistema global ou o módulo placa estiver off, chuta pro início
+    if is_manutencao() or is_manutencao_modulo('placa'):
+        return RedirectResponse(url="/")
+        
     return templates.TemplateResponse("modulo_placa.html", {
         "request": request, 
         "manutencao": is_manutencao()
@@ -32,6 +38,9 @@ async def render_placa(request: Request):
 # ==========================================
 @router.get("/cnh")
 async def render_cnh(request: Request):
+    if is_manutencao() or is_manutencao_modulo('cnh'):
+        return RedirectResponse(url="/")
+        
     return templates.TemplateResponse("modulo_cnh.html", {
         "request": request, 
         "manutencao": is_manutencao()
@@ -42,6 +51,9 @@ async def render_cnh(request: Request):
 # ==========================================
 @router.get("/cpf")
 async def render_cpf(request: Request):
+    if is_manutencao() or is_manutencao_modulo('cpf'):
+        return RedirectResponse(url="/")
+        
     return templates.TemplateResponse("modulo_cpf.html", {
         "request": request, 
         "manutencao": is_manutencao()

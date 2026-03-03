@@ -2,7 +2,7 @@ import os
 import time
 import asyncio
 from fastapi import APIRouter, Request
-from database import is_manutencao, buscar_consulta, salvar_consulta
+from database import buscar_consulta, salvar_consulta, is_manutencao, is_manutencao_modulo
 
 router = APIRouter()
 
@@ -23,8 +23,8 @@ cooldowns_cpf = {}
 # ==========================================
 @router.get("/api/consultar/{placa}")
 async def consultar_placa(placa: str, request: Request):
-    if is_manutencao():
-        return {"sucesso": False, "dados": "🛠️ **SISTEMA EM MANUTENÇÃO!**\n\nNossos servidores estão em ajuste."}
+    if is_manutencao() or is_manutencao_modulo('placa'):
+        return {"sucesso": False, "erro": "🛠️ MÓDULO EM MANUTENÇÃO!"}
         
     placa = placa.upper()
     ip_cliente = request.headers.get("X-Forwarded-For", request.client.host).split(",")[0].strip()
@@ -81,8 +81,8 @@ async def consultar_placa(placa: str, request: Request):
 # ==========================================
 @router.get("/api/consultar_cnh/{cpf}")
 async def consultar_cnh(cpf: str, request: Request):
-    if is_manutencao():
-        return {"sucesso": False, "erro": "🛠️ SISTEMA EM MANUTENÇÃO!"}
+    if is_manutencao() or is_manutencao_modulo('cnh'):
+        return {"sucesso": False, "erro": "🛠️ MÓDULO EM MANUTENÇÃO!"}
 
     cpf_limpo = ''.join(filter(str.isdigit, cpf))
     if len(cpf_limpo) != 11:
@@ -180,8 +180,8 @@ async def consultar_cnh(cpf: str, request: Request):
 # ==========================================
 @router.get("/api/consultar_dados_cpf/{cpf}")
 async def consultar_dados_cpf(cpf: str, request: Request):
-    if is_manutencao():
-        return {"sucesso": False, "erro": "🛠️ SISTEMA EM MANUTENÇÃO!"}
+    if is_manutencao() or is_manutencao_modulo('cpf'):
+        return {"sucesso": False, "erro": "🛠️ MÓDULO EM MANUTENÇÃO!"}
 
     cpf_limpo = ''.join(filter(str.isdigit, cpf))
     if len(cpf_limpo) != 11:
