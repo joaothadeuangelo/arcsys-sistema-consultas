@@ -3,6 +3,7 @@
 /* ========================================= */
 .modulos-grid {
     display: flex;
+    flex-wrap: wrap; /* 🎯 MÁGICA 1: Permite quebrar a linha no celular */
     gap: 15px;
     justify-content: center;
     margin-bottom: 20px;
@@ -15,7 +16,10 @@
     border: 1px solid rgba(82, 136, 193, 0.2);
     border-radius: 12px;
     padding: 20px 10px;
-    width: 48%;
+    
+    /* 🎯 MÁGICA 2: Em celulares, ocupam metade da tela exata. O 3º cai para baixo! */
+    width: calc(50% - 8px); 
+    
     text-align: center;
     cursor: pointer;
     transition: all 0.3s ease;
@@ -47,6 +51,13 @@
     color: #8aa3ba;
     font-size: 0.8em;
     margin: 0;
+}
+
+/* 🎯 MÁGICA 3: Se a tela for grande (PC/Tablet), eles ficam os 3 lado a lado */
+@media (min-width: 768px) {
+    .modulo-card {
+        width: calc(33.333% - 10px);
+    }
 }
 
 /* Botão voltar nas telas dos módulos */
