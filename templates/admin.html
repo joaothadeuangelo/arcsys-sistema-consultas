@@ -25,6 +25,13 @@
         tr:hover { background: #1a242f; }
         .celula-dados { max-width: 500px; max-height: 120px; overflow-y: auto; background: #0e1621; padding: 10px; font-size: 0.85em; white-space: pre-wrap; border-left: 3px solid #5288c1; border-radius: 4px; }
         .chave-badge { background: #5288c1; color: #fff; padding: 4px 8px; border-radius: 4px; font-weight: bold; font-size: 0.85em; }
+
+        /* Paginação e Contador */
+        .paginacao { display: flex; justify-content: center; align-items: center; gap: 10px; margin-top: 30px; margin-bottom: 40px; }
+        .btn-page { background: #242f3d; color: #5288c1; padding: 10px 20px; text-decoration: none; border-radius: 6px; font-weight: bold; transition: 0.2s; }
+        .btn-page:hover { background: #5288c1; color: white; }
+        .btn-page.disabled { opacity: 0.5; pointer-events: none; }
+        .badge-total { background: #5288c1; color: white; padding: 5px 12px; border-radius: 20px; font-size: 0.8em; vertical-align: middle; margin-left: 10px; }
     </style>
 </head>
 <body>
@@ -52,7 +59,7 @@
         {{ gerar_card("📄 MÓDULO CPF", "cpf", status_cpf, token) }}
     </div>
 
-    <h2>📊 Relatório de Consultas Recentes</h2>
+    <h2>📊 Relatório de Consultas <span class="badge-total">{{ total_consultas }} Registros no Banco</span></h2>
     <table>
         <tr>
             <th>Chave / IP</th>
@@ -69,5 +76,22 @@
         {% endfor %}
         
     </table>
+
+    <div class="paginacao">
+        {% if pagina_atual > 1 %}
+            <a href="/admin/lista?token={{ token }}&pagina={{ pagina_atual - 1 }}" class="btn-page">◀ Anterior</a>
+        {% else %}
+            <a href="#" class="btn-page disabled">◀ Anterior</a>
+        {% endif %}
+
+        <span style="color: #8aa3ba; padding: 10px; font-weight: bold;">Página {{ pagina_atual }} de {{ total_paginas }}</span>
+
+        {% if pagina_atual < total_paginas %}
+            <a href="/admin/lista?token={{ token }}&pagina={{ pagina_atual + 1 }}" class="btn-page">Próxima ▶</a>
+        {% else %}
+            <a href="#" class="btn-page disabled">Próxima ▶</a>
+        {% endif %}
+    </div>
+
 </body>
 </html>
