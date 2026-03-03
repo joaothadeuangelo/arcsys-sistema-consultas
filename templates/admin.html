@@ -45,7 +45,7 @@
 
     {% macro gerar_card(titulo, nome_modulo, is_off, token) %}
         {% set cor = "#e74c3c" if is_off else "#2ecc71" %}
-        {% set status_txt = "🔴 OFF (MANUTENÇÃO)" if is_off else "🟢 ON (OPERACIONAL)" %}
+        {% set status_txt = "🔴 OFF" if is_off else "🟢 ON" %}
         {% set btn_txt = "LIGAR MÓDULO" if is_off else "DESLIGAR MÓDULO" %}
         {% set btn_cor = "#27ae60" if is_off else "#c0392b" %}
         
