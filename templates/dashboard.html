@@ -1,6 +1,13 @@
 {% extends "base.html" %}
 
 {% block content %}
+
+<div class="brand-container">
+    <h1 class="brand-title">ARC<span>SYS</span></h1>
+    <div class="brand-subtitle">CENTRAL DE CONSULTAS</div>
+</div>
+
+
 <div id="menuModulos" class="modulos-grid">
     
     {% if manutencao_placa or manutencao %}
@@ -41,6 +48,18 @@
         <h3>CPF</h3><p>Consulta de Dados</p>
     </a>
     {% endif %}
+
+
+    </div>
+
+    <div class="card-footer">
+        <span class="badge-free">⚡ 100% Gratuito</span>
+        <p>Desenvolvido por <strong>ARCANGELO</strong></p>
+        <a href="https://api.whatsapp.com/send?phone=5599984221688&text=Fala%20Arcangelo!%20Vim%20pelo%20painel%20e%20preciso%20de%20um%20serviço." target="_blank" class="btn-dev-contato">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+            Falar com o Desenvolvedor
+        </a>
+    </div>
 
 </div>
 {% endblock %}
