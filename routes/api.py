@@ -7,6 +7,7 @@ import json
 import re
 from fastapi import APIRouter, Request
 from database import buscar_consulta, salvar_consulta, is_manutencao, is_manutencao_modulo
+import base64
 
 router = APIRouter()
 
@@ -166,9 +167,21 @@ async def consultar_cnh(cpf: str, request: Request):
     try:
         dados_salvos = buscar_consulta(f"CPF_{cpf_limpo}")
         if dados_salvos and "Consultando" not in dados_salvos:
-            caminho_foto = f"static/cnh/cnh_{cpf_limpo}.jpg"
-            if os.path.exists(caminho_foto):
-                return {"sucesso": True, "dados": dados_salvos, "foto": f"/{caminho_foto}", "cache": True}
+            # 📦 TENTA DESEMPACOTAR O JSON (Novo formato com Base64)
+            try:
+                dados_json = json.loads(dados_salvos)
+                return {
+                    "sucesso": True, 
+                    "dados": dados_json.get("texto", ""), 
+                    "foto": dados_json.get("foto", ""), 
+                    "cache": True
+                }
+            except json.JSONDecodeError:
+                # Fallback: Se for uma consulta antiga (só texto), tenta achar a foto na pasta
+                caminho_foto = f"static/cnh/cnh_{cpf_limpo}.jpg"
+                if os.path.exists(caminho_foto):
+                    return {"sucesso": True, "dados": dados_salvos, "foto": f"/{caminho_foto}", "cache": True}
+                return {"sucesso": True, "dados": dados_salvos, "cache": True}
 
         if (tempo_atual - ultimo_tempo) < TEMPO_COOLDOWN:
             return {"sucesso": False, "erro": f"Aguarde {int(TEMPO_COOLDOWN - (tempo_atual - ultimo_tempo))} segundos."}
@@ -197,7 +210,7 @@ async def consultar_cnh(cpf: str, request: Request):
                 if msg_botoes: break
                     
             if not msg_botoes:
-                return {"sucesso": False, "erro": "O sistema central demorou para responder. Tente novamente."} # Mensagem genérica
+                return {"sucesso": False, "erro": "O sistema central demorou para responder. Tente novamente."}
 
             clicou = False
             for linha in msg_botoes.buttons:
@@ -209,7 +222,7 @@ async def consultar_cnh(cpf: str, request: Request):
                 if clicou: break
 
             if not clicou:
-                return {"sucesso": False, "erro": "Opção CNH indisponível para este documento."} # Mensagem genérica
+                return {"sucesso": False, "erro": "Opção CNH indisponível para este documento."}
 
             msg_foto = None
             for _ in range(45): 
@@ -224,20 +237,34 @@ async def consultar_cnh(cpf: str, request: Request):
                 if msg_foto: break
 
             if not msg_foto:
-                return {"sucesso": False, "erro": "O servidor principal está congestionado. Tente novamente."} # Mensagem genérica
+                return {"sucesso": False, "erro": "O servidor principal está congestionado. Tente novamente."}
 
+            # 📥 BAIXA A FOTO TEMPORARIAMENTE
             os.makedirs("static/cnh", exist_ok=True)
             caminho_salvo = f"static/cnh/cnh_{cpf_limpo}.jpg"
             await cliente_atual.download_media(msg_foto, file=caminho_salvo)
 
-            # 🛡️ BLINDAGEM DA FONTE APLICADA AQUI
+            # 🖼️ CONVERTE PARA BASE64
+            with open(caminho_salvo, "rb") as image_file:
+                foto_b64 = "data:image/jpeg;base64," + base64.b64encode(image_file.read()).decode('utf-8')
+            
+            # 🧹 APAGA A FOTO FÍSICA IMEDIATAMENTE APÓS CONVERTER
+            try:
+                os.remove(caminho_salvo)
+            except Exception as e:
+                pass # Se der erro ao apagar, ignora e segue a vida
+
+            # 🛡️ BLINDAGEM DA FONTE APLICADA
             dados_texto = msg_foto.text or "Sem dados adicionais."
             dados_texto = sanitizar_resposta(dados_texto)
 
-            salvar_consulta(f"CPF_{cpf_limpo}", dados_texto)
+            # 📦 EMPACOTA E SALVA NO BANCO (DADOS + FOTO EM BASE64)
+            pacote_salvar = json.dumps({"texto": dados_texto, "foto": foto_b64})
+            salvar_consulta(f"CPF_{cpf_limpo}", pacote_salvar)
+            
             cooldowns_cnh[ip_cliente] = time.time()
 
-            return {"sucesso": True, "dados": dados_texto, "foto": f"/{caminho_salvo}"}
+            return {"sucesso": True, "dados": dados_texto, "foto": foto_b64}
 
         finally:
             await fila_clientes.put(cliente_atual)
