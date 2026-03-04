@@ -45,7 +45,7 @@ async function fazerConsulta() {
     const turnstileResponse = document.querySelector('[name="cf-turnstile-response"]')?.value;
     
     if (!turnstileResponse) {
-        resultBox.innerHTML = `<div class="badge badge-danger" style="font-size: 1.1em; padding: 15px; display: block; text-align: center;">🤖 Por favor, aguarde a verificação de segurança (Cloudflare) carregar ou marque a caixa indicando que você é humano.</div>`;
+        resultBox.innerHTML = `<div class="badge badge-danger" style="font-size: 1.1em; padding: 15px; display: block; text-align: center;">🤖 Por favor, valide o captcha.</div>`;
         resultContainer.style.display = 'block';
         return;
     }
