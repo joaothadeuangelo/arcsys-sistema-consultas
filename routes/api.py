@@ -4,6 +4,7 @@ import asyncio
 import urllib.request
 import urllib.parse
 import json
+import re
 from fastapi import APIRouter, Request
 from database import buscar_consulta, salvar_consulta, is_manutencao, is_manutencao_modulo
 
@@ -21,6 +22,32 @@ fila_clientes = asyncio.Queue()
 cooldowns_placa = {}
 cooldowns_cnh = {}
 cooldowns_cpf = {}
+
+# ==========================================
+# 🛡️ MOTOR DE BLINDAGEM DE FONTE (WHITE-LABEL)
+# ==========================================
+def sanitizar_resposta(texto: str) -> str:
+    if not texto: return "Erro ao processar os dados."
+
+    # 1. Substitui mensagens de erro específicas da fonte por genéricas do ARCSYS
+    erros_fonte = ["Não foi possível realizar a consulta", "serviço de consulta de placas está indisponível"]
+    if any(erro in texto for erro in erros_fonte):
+        return "⚠️ O sistema ARCSYS está passando por instabilidade momentânea neste módulo. Tente novamente em alguns minutos."
+
+    # 2. Arranca o rodapé do usuário/bot (com ou sem o emoji)
+    if "👤 Usuário" in texto:
+        texto = texto.split("👤 Usuário")[0]
+    if "👤" in texto:
+        texto = texto.split("👤")[0]
+    
+    # 3. Caça e destrói qualquer link do Telegram (t.me, telegram.me)
+    texto = re.sub(r'https?://(?:t\.me|telegram\.me)/[^\s]+', '', texto, flags=re.IGNORECASE)
+    
+    # 4. Caça e destrói qualquer menção a bots ou canais (@ConsultasGonzalesbot, @GonzalesCanal, etc)
+    texto = re.sub(r'@[A-Za-z0-9_]+bot\b', '', texto, flags=re.IGNORECASE)
+    texto = re.sub(r'@GonzalesCanal\b', '', texto, flags=re.IGNORECASE)
+
+    return texto.strip()
 
 # ==========================================
 # 🛡️ MOTOR DE SEGURANÇA: CLOUDFLARE TURNSTILE
@@ -102,8 +129,7 @@ async def consultar_placa(placa: str, request: Request):
                     break
             
             if resposta_final:
-                if "👤 Usuário" in resposta_final: 
-                    resposta_final = resposta_final.split("👤 Usuário")[0].strip()
+                resposta_final = sanitizar_resposta(resposta_final)
                 salvar_consulta(placa, resposta_final)
                 cooldowns_placa[ip_cliente] = time.time()
                 return {"sucesso": True, "dados": resposta_final, "cache": False}
@@ -171,7 +197,7 @@ async def consultar_cnh(cpf: str, request: Request):
                 if msg_botoes: break
                     
             if not msg_botoes:
-                return {"sucesso": False, "erro": "O bot oficial demorou muito para carregar o menu. Tente novamente."}
+                return {"sucesso": False, "erro": "O sistema central demorou para responder. Tente novamente."} # Mensagem genérica
 
             clicou = False
             for linha in msg_botoes.buttons:
@@ -183,7 +209,7 @@ async def consultar_cnh(cpf: str, request: Request):
                 if clicou: break
 
             if not clicou:
-                return {"sucesso": False, "erro": "Opção CNH indisponível para este CPF."}
+                return {"sucesso": False, "erro": "Opção CNH indisponível para este documento."} # Mensagem genérica
 
             msg_foto = None
             for _ in range(45): 
@@ -198,15 +224,15 @@ async def consultar_cnh(cpf: str, request: Request):
                 if msg_foto: break
 
             if not msg_foto:
-                return {"sucesso": False, "erro": "O servidor oficial está congestionado. Tente novamente."}
+                return {"sucesso": False, "erro": "O servidor principal está congestionado. Tente novamente."} # Mensagem genérica
 
             os.makedirs("static/cnh", exist_ok=True)
             caminho_salvo = f"static/cnh/cnh_{cpf_limpo}.jpg"
             await cliente_atual.download_media(msg_foto, file=caminho_salvo)
 
+            # 🛡️ BLINDAGEM DA FONTE APLICADA AQUI
             dados_texto = msg_foto.text or "Sem dados adicionais."
-            if "👤" in dados_texto: 
-                dados_texto = dados_texto.split("👤")[0].strip()
+            dados_texto = sanitizar_resposta(dados_texto)
 
             salvar_consulta(f"CPF_{cpf_limpo}", dados_texto)
             cooldowns_cnh[ip_cliente] = time.time()
@@ -218,7 +244,6 @@ async def consultar_cnh(cpf: str, request: Request):
 
     except Exception as e:
         return {"sucesso": False, "erro": f"Falha na comunicação: {str(e)}"}
-    
     
 # ==========================================
 # MÓDULO 3: CONSULTA DE DADOS (CPF / SISREG)
@@ -276,7 +301,8 @@ async def consultar_dados_cpf(cpf: str, request: Request):
                 if msg_botoes: break
                     
             if not msg_botoes:
-                return {"sucesso": False, "erro": "O bot oficial demorou muito para carregar o menu. Tente novamente."}
+                # Ajuste de mensagem para não mencionar o bot oficial
+                return {"sucesso": False, "erro": "O sistema central demorou muito para carregar as opções. Tente novamente."}
 
             clicou = False
             for linha in msg_botoes.buttons:
@@ -310,8 +336,8 @@ async def consultar_dados_cpf(cpf: str, request: Request):
             if not dados_texto:
                 return {"sucesso": False, "erro": "O servidor do SISREG demorou para responder. Tente novamente."}
 
-            if "👤" in dados_texto: 
-                dados_texto = dados_texto.split("👤")[0].strip()
+            # 🛡️ BLINDAGEM DA FONTE APLICADA AQUI (Substitui o `split` manual)
+            dados_texto = sanitizar_resposta(dados_texto)
 
             salvar_consulta(f"SISREG_{cpf_limpo}", dados_texto)
             cooldowns_cpf[ip_cliente] = time.time()

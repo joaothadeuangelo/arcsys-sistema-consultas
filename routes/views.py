@@ -26,7 +26,7 @@ async def render_dashboard(request: Request):
 async def render_placa(request: Request):
     # Se o sistema global ou o módulo placa estiver off, chuta pro início
     if is_manutencao() or is_manutencao_modulo('placa'):
-        return RedirectResponse(url="/")
+        return RedirectResponse(url="/", status_code=303)
         
     return templates.TemplateResponse("modulo_placa.html", {
         "request": request, 
@@ -39,7 +39,7 @@ async def render_placa(request: Request):
 @router.get("/cnh")
 async def render_cnh(request: Request):
     if is_manutencao() or is_manutencao_modulo('cnh'):
-        return RedirectResponse(url="/")
+        return RedirectResponse(url="/", status_code=303)
         
     return templates.TemplateResponse("modulo_cnh.html", {
         "request": request, 
@@ -52,7 +52,7 @@ async def render_cnh(request: Request):
 @router.get("/cpf")
 async def render_cpf(request: Request):
     if is_manutencao() or is_manutencao_modulo('cpf'):
-        return RedirectResponse(url="/")
+        return RedirectResponse(url="/", status_code=303)
         
     return templates.TemplateResponse("modulo_cpf.html", {
         "request": request, 
@@ -66,7 +66,7 @@ async def render_cpf(request: Request):
 async def render_separador(request: Request):
     # O separador não tem módulo no DB, mas respeita a manutenção global
     if is_manutencao():
-        return RedirectResponse(url="/")
+        return RedirectResponse(url="/", status_code=303)
         
     return templates.TemplateResponse("modulo_separador.html", {
         "request": request,
