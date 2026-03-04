@@ -23,12 +23,11 @@ async function fazerConsulta() {
 
     const regexPlaca = /^[A-Z]{3}[0-9][A-Z0-9][0-9]{2}$/;
 
-    // Validação de Segurança
+    // Validação de Segurança (Formato da Placa)
     if (!regexPlaca.test(placa)) {
         input.classList.add('shake');
         setTimeout(() => input.classList.remove('shake'), 400);
         
-        // Ajustado para usar o Card Vermelho padrão do sistema
         resultBox.innerHTML = `
             <div class="badge badge-danger" style="font-size: 1.1em; padding: 15px; display: block; text-align: center; white-space: pre-wrap;">
                 ❌ Placa Inválida!<br><br>
@@ -39,6 +38,16 @@ async function fazerConsulta() {
         `;
         resultContainer.style.display = 'block';
         return; 
+    }
+
+    // 🛡️ VERIFICAÇÃO DO CLOUDFLARE TURNSTILE
+    // Pega a resposta invisível gerada pelo widget
+    const turnstileResponse = document.querySelector('[name="cf-turnstile-response"]')?.value;
+    
+    if (!turnstileResponse) {
+        resultBox.innerHTML = `<div class="badge badge-danger" style="font-size: 1.1em; padding: 15px; display: block; text-align: center;">🤖 Por favor, aguarde a verificação de segurança (Cloudflare) carregar ou marque a caixa indicando que você é humano.</div>`;
+        resultContainer.style.display = 'block';
+        return;
     }
 
     btn.disabled = true;
@@ -53,7 +62,14 @@ async function fazerConsulta() {
         </div>`;
 
     try {
-        const response = await fetch(`/api/consultar/${placa}`);
+        // 🛡️ ENVIANDO O TOKEN PARA O SERVIDOR NO HEADER
+        const response = await fetch(`/api/consultar/${placa}`, {
+            method: 'GET',
+            headers: {
+                'X-Turnstile-Token': turnstileResponse
+            }
+        });
+        
         const data = await response.json();
 
         if (data.sucesso) {
@@ -80,6 +96,11 @@ async function fazerConsulta() {
     } finally {
         // Encerramento limpo
         loader.style.display = 'none';
+        
+        // 🛡️ RESET DO CLOUDFLARE PARA A PRÓXIMA CONSULTA
+        if (typeof turnstile !== 'undefined') {
+            turnstile.reset();
+        }
     }
 }
 

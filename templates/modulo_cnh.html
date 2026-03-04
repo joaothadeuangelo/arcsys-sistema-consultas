@@ -11,6 +11,10 @@
         <input type="text" id="cpfInput" placeholder="Digite o CPF (só números)" maxlength="14" autofocus>
         <button id="btnConsultarCNH" onclick="fazerConsultaCNH()">Consultar CNH</button>
     </div>
+
+    <div style="display: flex; justify-content: center; margin-top: 15px; margin-bottom: 15px;">
+        <div class="cf-turnstile" data-sitekey="0x4AAAAAACl3rXFR93fDYsnj" data-theme="dark"></div>
+    </div>
     
     <div id="loader" class="loader" style="display: none;"></div>
     
@@ -33,5 +37,6 @@
 {% endblock %}
 
 {% block scripts %}
-<script src="/static/js/cnh.js?v=100.0"></script>
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+<script src="/static/js/cnh.js?v=102.0"></script>
 {% endblock %}

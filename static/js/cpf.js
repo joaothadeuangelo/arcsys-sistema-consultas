@@ -38,6 +38,16 @@ async function fazerConsultaDadosCPF() {
         return;
     }
 
+    // 🛡️ VERIFICAÇÃO DO CLOUDFLARE TURNSTILE
+    // Pega a resposta invisível gerada pelo widget
+    const turnstileResponse = document.querySelector('[name="cf-turnstile-response"]')?.value;
+    
+    if (!turnstileResponse) {
+        resultBox.innerHTML = `<div class="badge badge-danger" style="font-size: 1.1em; padding: 15px; display: block; text-align: center;">🤖 Por favor, aguarde a verificação de segurança (Cloudflare) carregar ou marque a caixa indicando que você é humano.</div>`;
+        resultContainer.style.display = 'block';
+        return;
+    }
+
     btn.disabled = true;
     resultContainer.style.display = 'none';
     loader.style.display = 'block';
@@ -50,8 +60,14 @@ async function fazerConsultaDadosCPF() {
         </div>`;
 
     try {
-        // Atenção aqui: Esta é a rota nova que vamos criar no backend!
-        const response = await fetch(`/api/consultar_dados_cpf/${cpfInput}`);
+        // 🛡️ ENVIANDO O TOKEN PARA O SERVIDOR NO HEADER
+        const response = await fetch(`/api/consultar_dados_cpf/${cpfInput}`, {
+            method: 'GET',
+            headers: {
+                'X-Turnstile-Token': turnstileResponse
+            }
+        });
+        
         const data = await response.json();
 
         if (data.sucesso) {
@@ -80,6 +96,11 @@ async function fazerConsultaDadosCPF() {
     } finally {
         // Encerramento limpo
         loader.style.display = 'none';
+        
+        // 🛡️ RESET DO CLOUDFLARE PARA A PRÓXIMA CONSULTA
+        if (typeof turnstile !== 'undefined') {
+            turnstile.reset();
+        }
     }
 }
 

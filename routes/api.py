@@ -1,14 +1,18 @@
 import os
 import time
 import asyncio
+import urllib.request
+import urllib.parse
+import json
 from fastapi import APIRouter, Request
 from database import buscar_consulta, salvar_consulta, is_manutencao, is_manutencao_modulo
 
 router = APIRouter()
 
-# Configurações do Bot
+# Configurações do Bot e Segurança
 BOT_USERNAME = os.getenv('BOT_USERNAME', '')
 AMBIENTE = os.getenv("AMBIENTE", "producao")
+TURNSTILE_SECRET_KEY = os.getenv('TURNSTILE_SECRET_KEY', '')
 TEMPO_COOLDOWN = 120
 
 # Estado Compartilhado
@@ -17,6 +21,35 @@ fila_clientes = asyncio.Queue()
 cooldowns_placa = {}
 cooldowns_cnh = {}
 cooldowns_cpf = {}
+
+# ==========================================
+# 🛡️ MOTOR DE SEGURANÇA: CLOUDFLARE TURNSTILE
+# ==========================================
+async def verificar_turnstile(token: str, ip: str) -> bool:
+    if not token: return False
+    # Se a chave não estiver no .env (ex: rodando local rápido), permite passar para não quebrar seu teste
+    if not TURNSTILE_SECRET_KEY: return True 
+    
+    url = "https://challenges.cloudflare.com/turnstile/v0/siteverify"
+    data = urllib.parse.urlencode({
+        'secret': TURNSTILE_SECRET_KEY,
+        'response': token,
+        'remoteip': ip
+    }).encode('utf-8')
+    
+    try:
+        # Roda a requisição em background para não travar o FastAPI (Alta Performance)
+        loop = asyncio.get_event_loop()
+        def fetch():
+            req = urllib.request.Request(url, data=data)
+            with urllib.request.urlopen(req, timeout=5) as response:
+                return json.loads(response.read().decode())
+                
+        resultado = await loop.run_in_executor(None, fetch)
+        return resultado.get("success", False)
+    except Exception as e:
+        print(f"Erro na validação do Turnstile: {e}")
+        return False
 
 # ==========================================
 # MÓDULO 1: CONSULTA DE PLACAS
@@ -28,6 +61,12 @@ async def consultar_placa(placa: str, request: Request):
         
     placa = placa.upper()
     ip_cliente = request.headers.get("X-Forwarded-For", request.client.host).split(",")[0].strip()
+    
+    # 🛡️ BARREIRA DE SEGURANÇA (BOTS E SCRAPERS)
+    token_turnstile = request.headers.get("X-Turnstile-Token")
+    if not await verificar_turnstile(token_turnstile, ip_cliente):
+        return {"sucesso": False, "erro": "🤖 Bloqueado pela Segurança Cloudflare. Verifique se você é humano e tente novamente."}
+
     tempo_atual = time.time()
     ultimo_tempo = cooldowns_placa.get(ip_cliente, 0)
     
@@ -37,7 +76,7 @@ async def consultar_placa(placa: str, request: Request):
             return {"sucesso": True, "dados": dados_salvos, "cache": True}
 
         if (tempo_atual - ultimo_tempo) < TEMPO_COOLDOWN:
-            return {"sucesso": False, "dados": f"🚨 Aguarde mais {int(TEMPO_COOLDOWN - (tempo_atual - ultimo_tempo))} segundos."}
+            return {"sucesso": False, "erro": f"🚨 Aguarde mais {int(TEMPO_COOLDOWN - (tempo_atual - ultimo_tempo))} segundos."}
 
         if AMBIENTE == "desenvolvimento":
             await asyncio.sleep(2)
@@ -68,13 +107,13 @@ async def consultar_placa(placa: str, request: Request):
                 salvar_consulta(placa, resposta_final)
                 cooldowns_placa[ip_cliente] = time.time()
                 return {"sucesso": True, "dados": resposta_final, "cache": False}
-            return {"sucesso": False, "dados": "Tempo esgotado na consulta da placa."}
+            return {"sucesso": False, "erro": "Tempo esgotado na consulta da placa."}
             
         finally:
             await fila_clientes.put(cliente_atual)
             
     except Exception as e:
-        return {"sucesso": False, "dados": f"Erro interno: {str(e)}"}
+        return {"sucesso": False, "erro": f"Erro interno: {str(e)}"}
 
 # ==========================================
 # MÓDULO 2: CONSULTA DE CNH (CPF)
@@ -89,6 +128,12 @@ async def consultar_cnh(cpf: str, request: Request):
         return {"sucesso": False, "erro": "CPF inválido. Digite os 11 números corretamente."}
 
     ip_cliente = request.headers.get("X-Forwarded-For", request.client.host).split(",")[0].strip()
+    
+    # 🛡️ BARREIRA DE SEGURANÇA (BOTS E SCRAPERS)
+    token_turnstile = request.headers.get("X-Turnstile-Token")
+    if not await verificar_turnstile(token_turnstile, ip_cliente):
+        return {"sucesso": False, "erro": "🤖 Bloqueado pela Segurança Cloudflare. Verifique se você é humano e tente novamente."}
+
     tempo_atual = time.time()
     ultimo_tempo = cooldowns_cnh.get(ip_cliente, 0)
 
@@ -188,36 +233,34 @@ async def consultar_dados_cpf(cpf: str, request: Request):
         return {"sucesso": False, "erro": "CPF inválido. Digite os 11 números corretamente."}
 
     ip_cliente = request.headers.get("X-Forwarded-For", request.client.host).split(",")[0].strip()
+    
+    # 🛡️ BARREIRA DE SEGURANÇA (BOTS E SCRAPERS)
+    token_turnstile = request.headers.get("X-Turnstile-Token")
+    if not await verificar_turnstile(token_turnstile, ip_cliente):
+        return {"sucesso": False, "erro": "🤖 Bloqueado pela Segurança Cloudflare. Verifique se você é humano e tente novamente."}
+
     tempo_atual = time.time()
     ultimo_tempo = cooldowns_cpf.get(ip_cliente, 0)
 
     try:
-        # 1. Busca no Cache (Note que a chave mudou para SISREG_ para não conflitar com a CNH)
         dados_salvos = buscar_consulta(f"SISREG_{cpf_limpo}")
         if dados_salvos and "Consultando" not in dados_salvos:
             return {"sucesso": True, "dados": dados_salvos, "cache": True}
 
-        # 2. Verifica Cooldown
         if (tempo_atual - ultimo_tempo) < TEMPO_COOLDOWN:
             return {"sucesso": False, "erro": f"Aguarde {int(TEMPO_COOLDOWN - (tempo_atual - ultimo_tempo))} segundos."}
 
-        # 3. Módulo de Desenvolvimento / Teste Local
         if AMBIENTE == "desenvolvimento":
             await asyncio.sleep(3)
             cooldowns_cpf[ip_cliente] = time.time()
             return {"sucesso": True, "dados": f"🕵️ DADOS SISREG-III\n\n**CPF:** {cpf_limpo}\n**Nome:** ARCANGELO O MESTRE\n**Situação:** REGULAR\n**Score:** 999"}
 
-        # =======================================
-        # COMUNICAÇÃO COM O TELEGRAM
-        # =======================================
         cliente_atual = await fila_clientes.get()
         try:
             if not cliente_atual.is_connected(): await cliente_atual.connect()
             
-            # 4. Envia o comando do CPF
             await cliente_atual.send_message(BOT_USERNAME, f'/cpf {cpf_limpo}')
             
-            # 5. Espera o Menu aparecer
             msg_botoes = None
             texto_menu_original = ""
             for _ in range(15):
@@ -228,14 +271,13 @@ async def consultar_dados_cpf(cpf: str, request: Request):
                         numeros_menu = ''.join(filter(str.isdigit, msg.text or ""))
                         if cpf_limpo in numeros_menu:
                             msg_botoes = msg
-                            texto_menu_original = msg.text # Salva o texto do menu para comparar depois
+                            texto_menu_original = msg.text
                             break
                 if msg_botoes: break
                     
             if not msg_botoes:
                 return {"sucesso": False, "erro": "O bot oficial demorou muito para carregar o menu. Tente novamente."}
 
-            # 6. Clica no botão SISREG
             clicou = False
             for linha in msg_botoes.buttons:
                 for botao in linha:
@@ -248,19 +290,15 @@ async def consultar_dados_cpf(cpf: str, request: Request):
             if not clicou:
                 return {"sucesso": False, "erro": "Opção SISREG-III indisponível para este CPF."}
 
-            # 7. Espera o Bot editar a mensagem com os resultados
             dados_texto = None
             for _ in range(30): 
                 await asyncio.sleep(2)
-                # Puxa a mesma mensagem de novo para ver se o bot editou ela
                 msg_editada = await cliente_atual.get_messages(BOT_USERNAME, ids=msg_botoes.id)
                 
-                # Se o texto for diferente do menu original, significa que o relatório chegou!
                 if msg_editada and msg_editada.text and msg_editada.text != texto_menu_original:
                     dados_texto = msg_editada.text
                     break
                 
-                # Plano B: Se o bot mandou uma MENSAGEM NOVA em vez de editar
                 mensagens_novas = await cliente_atual.get_messages(BOT_USERNAME, limit=2)
                 for m in mensagens_novas:
                     if m.id > msg_botoes.id and m.text and cpf_limpo in ''.join(filter(str.isdigit, m.text)):
@@ -272,11 +310,9 @@ async def consultar_dados_cpf(cpf: str, request: Request):
             if not dados_texto:
                 return {"sucesso": False, "erro": "O servidor do SISREG demorou para responder. Tente novamente."}
 
-            # 8. Limpa lixos do bot (propagandas, botões de voltar, etc)
             if "👤" in dados_texto: 
                 dados_texto = dados_texto.split("👤")[0].strip()
 
-            # 9. Salva no Cache e libera
             salvar_consulta(f"SISREG_{cpf_limpo}", dados_texto)
             cooldowns_cpf[ip_cliente] = time.time()
 
