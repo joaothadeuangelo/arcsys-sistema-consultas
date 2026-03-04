@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Request
-from fastapi.responses import RedirectResponse
+from fastapi.responses import RedirectResponse, HTMLResponse
 from fastapi.templating import Jinja2Templates
 from database import is_manutencao, is_manutencao_modulo
 
@@ -56,5 +56,19 @@ async def render_cpf(request: Request):
         
     return templates.TemplateResponse("modulo_cpf.html", {
         "request": request, 
+        "manutencao": is_manutencao()
+    })
+    
+# ==========================================
+# ROTA VISUAL: SEPARADOR DE CPF (FERRAMENTA 100% FRONT-END)
+# ==========================================
+@router.get("/separador", response_class=HTMLResponse)
+async def render_separador(request: Request):
+    # O separador não tem módulo no DB, mas respeita a manutenção global
+    if is_manutencao():
+        return RedirectResponse(url="/")
+        
+    return templates.TemplateResponse("modulo_separador.html", {
+        "request": request,
         "manutencao": is_manutencao()
     })

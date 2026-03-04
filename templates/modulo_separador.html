@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="module-header">
+    <h2>✂️ SEPARADOR DE CPF COMUM</h2>
+    <p>Extraia, limpe e valide CPFs de listas ou textos desorganizados</p>
+</div>
+
+<div id="areaExtracao" style="width: 100%;">
+    
+    <div id="boxInput" style="animation: fadeIn 0.5s ease;">
+        <textarea id="textoEntrada" placeholder="Cole o texto sujo aqui... (Pode ter milhares de linhas, letras, símbolos, etc)" rows="12" style="width: 100%; padding: 15px; border-radius: 8px; background: #17212b; border: 1px solid #242f3d; color: #fff; resize: vertical; font-family: monospace; font-size: 0.9em; box-sizing: border-box;"></textarea>
+        
+        <button id="btnExtrair" onclick="processarCPFs()" style="width: 100%; padding: 15px; background: #5288c1; color: white; border: none; border-radius: 8px; font-weight: bold; margin-top: 15px; cursor: pointer; transition: 0.3s; font-size: 1.1em; box-shadow: 0 4px 15px rgba(82, 136, 193, 0.3);">
+            Extrair e Limpar CPFs
+        </button>
+    </div>
+
+    <div id="boxResultado" style="display: none; animation: fadeIn 0.5s ease;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+            <span id="contadorResultados" style="background: rgba(46, 204, 113, 0.2); color: #2ecc71; padding: 6px 15px; border-radius: 20px; font-weight: bold; font-size: 0.85em; border: 1px solid rgba(46, 204, 113, 0.3);">
+                0 CPFs extraídos
+            </span>
+            <span style="color: #8aa3ba; font-size: 0.8em;">Duplicatas removidas</span>
+        </div>
+        
+        <textarea id="textoSaida" rows="12" readonly style="width: 100%; padding: 15px; border-radius: 8px; background: #0e1621; border: 1px solid #2ecc71; color: #5288c1; resize: vertical; font-family: monospace; font-size: 1em; box-sizing: border-box;"></textarea>
+        
+        <div style="display: flex; gap: 10px; margin-top: 15px; flex-wrap: wrap;">
+            <button onclick="copiarCPFs()" style="flex: 1; min-width: 120px; padding: 12px; background: #242f3d; color: #fff; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.3s;">📋 Copiar Lista</button>
+            <button onclick="baixarTXT()" style="flex: 1; min-width: 120px; padding: 12px; background: #242f3d; color: #fff; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.3s;">💾 Baixar .txt</button>
+            <button onclick="limparTudo()" style="flex: 1; min-width: 120px; padding: 12px; background: #e74c3c; color: #fff; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.3s;">🗑️ Nova Extração</button>
+        </div>
+    </div>
+
+    <div class="voltar-container-novo" style="margin-top: 30px;">
+        <a href="/" class="btn-voltar-novo">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="19" y1="12" x2="5" y2="12"></line>
+                <polyline points="12 19 5 12 12 5"></polyline>
+            </svg>
+            Escolher outro módulo
+        </a>
+    </div>
+
+</div>
+
+<style>
+    #btnExtrair:hover { background: #4175ac; transform: translateY(-2px); }
+    #boxResultado button:hover { filter: brightness(1.2); transform: translateY(-2px); }
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/js/separador.js?v=100.0"></script>
+{% endblock %}
