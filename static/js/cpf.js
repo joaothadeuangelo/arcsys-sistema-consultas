@@ -27,6 +27,9 @@ async function fazerConsultaDadosCPF() {
     const resultContainer = document.getElementById('resultadoContainer');
     const resultBox = document.getElementById('resultado');
     const loader = document.getElementById('loader');
+    
+    // 💡 NOVO: Seleciona o botão de copiar do HTML
+    const btnCopiar = document.getElementById('btn-copiar');
 
     // Validação de Segurança
     if (cpfInput.length !== 11) {
@@ -35,6 +38,7 @@ async function fazerConsultaDadosCPF() {
         
         resultBox.innerHTML = `<div class="badge badge-danger" style="font-size: 1.1em; padding: 15px; display: block; text-align: center; white-space: pre-wrap;">❌ CPF Inválido!<br>O CPF precisa ter exatamente 11 números.</div>`;
         resultContainer.style.display = 'block';
+        if (btnCopiar) btnCopiar.style.display = 'none'; // Esconde o botão no erro
         return;
     }
 
@@ -45,6 +49,7 @@ async function fazerConsultaDadosCPF() {
     if (!turnstileResponse) {
         resultBox.innerHTML = `<div class="badge badge-danger" style="font-size: 1.1em; padding: 15px; display: block; text-align: center;">🤖 Por favor, valide o captcha.</div>`;
         resultContainer.style.display = 'block';
+        if (btnCopiar) btnCopiar.style.display = 'none'; // Esconde o botão no erro
         return;
     }
 
@@ -81,11 +86,13 @@ async function fazerConsultaDadosCPF() {
                 resultBox.innerHTML = htmlFormatado;
                 iniciarCooldown(120, 'btnConsultarDadosCPF', 'Consultar Dados');
             }
+            if (btnCopiar) btnCopiar.style.display = 'block'; // SÓ MOSTRA O BOTÃO SE DER SUCESSO
             
         } else {
             textoPuro = data.erro || data.dados;
             resultBox.innerHTML = `<div class="badge badge-danger" style="font-size: 1.1em; padding: 15px; display: block; text-align: center; white-space: pre-wrap;">❌ ${textoPuro}</div>`;
             btn.disabled = false; 
+            if (btnCopiar) btnCopiar.style.display = 'none'; // Esconde o botão no erro
         }
         
         resultContainer.style.display = 'block';
@@ -93,6 +100,7 @@ async function fazerConsultaDadosCPF() {
         resultBox.innerHTML = `<div class="badge badge-danger" style="font-size: 1.1em; padding: 15px; display: block; text-align: center;">❌ Erro de conexão com o servidor. Tente novamente em instantes.</div>`;
         resultContainer.style.display = 'block';
         btn.disabled = false; 
+        if (btnCopiar) btnCopiar.style.display = 'none'; // Esconde o botão no erro
     } finally {
         // Encerramento limpo
         loader.style.display = 'none';

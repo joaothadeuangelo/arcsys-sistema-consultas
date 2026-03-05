@@ -20,6 +20,10 @@ async function fazerConsulta() {
     const resultContainer = document.getElementById('resultadoContainer');
     const resultBox = document.getElementById('resultado');
     const loader = document.getElementById('loader');
+    
+    // 💡 NOVO: Seleciona o botão de copiar 
+    // (Verifique se o ID no seu HTML é 'btnCopiar' mesmo. Se for diferente, ajuste aqui)
+    const btnCopiar = document.getElementById('btn-copiar'); 
 
     const regexPlaca = /^[A-Z]{3}[0-9][A-Z0-9][0-9]{2}$/;
 
@@ -37,6 +41,7 @@ async function fazerConsulta() {
             </div>
         `;
         resultContainer.style.display = 'block';
+        if (btnCopiar) btnCopiar.style.display = 'none'; // Esconde o botão no erro
         return; 
     }
 
@@ -47,6 +52,7 @@ async function fazerConsulta() {
     if (!turnstileResponse) {
         resultBox.innerHTML = `<div class="badge badge-danger" style="font-size: 1.1em; padding: 15px; display: block; text-align: center;">🤖 Por favor, valide o captcha.</div>`;
         resultContainer.style.display = 'block';
+        if (btnCopiar) btnCopiar.style.display = 'none'; // Esconde o botão no erro
         return;
     }
 
@@ -82,10 +88,12 @@ async function fazerConsulta() {
                 resultBox.innerHTML = formatarTexto(data.dados);
                 iniciarCooldown(120, 'btnConsultarPlaca', 'Consultar');
             }
+            if (btnCopiar) btnCopiar.style.display = 'block'; // SÓ MOSTRA O BOTÃO SE DER SUCESSO
         } else {
             textoPuro = data.erro || data.dados;
             resultBox.innerHTML = `<div class="badge badge-danger" style="font-size: 1.1em; padding: 15px; display: block; text-align: center; white-space: pre-wrap;">❌ ${textoPuro}</div>`;
             btn.disabled = false;
+            if (btnCopiar) btnCopiar.style.display = 'none'; // Esconde o botão no erro
         }
         
         resultContainer.style.display = 'block';
@@ -93,6 +101,7 @@ async function fazerConsulta() {
         resultBox.innerHTML = `<div class="badge badge-danger" style="font-size: 1.1em; padding: 15px; display: block; text-align: center;">❌ Erro de conexão com o servidor. O sistema pode estar offline.</div>`;
         resultContainer.style.display = 'block';
         btn.disabled = false;
+        if (btnCopiar) btnCopiar.style.display = 'none'; // Esconde o botão no erro
     } finally {
         // Encerramento limpo
         loader.style.display = 'none';

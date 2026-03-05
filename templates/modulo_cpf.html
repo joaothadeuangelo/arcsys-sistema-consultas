@@ -20,7 +20,7 @@
     
     <div id="resultadoContainer" class="resultado-container" style="display: none;">
         <div id="resultado" class="resultado"></div>
-        <button class="btn-copiar" onclick="copiarTexto()">📋 Copiar Relatório</button>
+        <button id="btn-copiar" class="btn-copiar" onclick="copiarTexto()" style="display: none;">📋 Copiar Relatório</button>
     </div>
 
     <div class="voltar-container-novo">
@@ -38,5 +38,5 @@
 
 {% block scripts %}
 <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
-<script src="/static/js/cpf.js?v=102.0"></script>
+<script src="/static/js/cpf.js?v=103.0"></script>
 {% endblock %}
