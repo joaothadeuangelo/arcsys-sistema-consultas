@@ -198,6 +198,7 @@ async def consultar_cnh(cpf: str, request: Request):
             await cliente_atual.send_message(BOT_USERNAME, f'/cpf {cpf_limpo}')
             
             msg_botoes = None
+            texto_menu_original = "" # 💡 NOVO: Guarda o texto original do menu
             for _ in range(15):
                 await asyncio.sleep(2)
                 mensagens = await cliente_atual.get_messages(BOT_USERNAME, limit=5)
@@ -206,6 +207,7 @@ async def consultar_cnh(cpf: str, request: Request):
                         numeros_menu = ''.join(filter(str.isdigit, msg.text or ""))
                         if cpf_limpo in numeros_menu:
                             msg_botoes = msg
+                            texto_menu_original = msg.text or "" # Salva o texto
                             break
                 if msg_botoes: break
                     
@@ -224,41 +226,54 @@ async def consultar_cnh(cpf: str, request: Request):
             if not clicou:
                 return {"sucesso": False, "erro": "Opção CNH indisponível para este documento."}
 
-            msg_foto = None
+            msg_resultado = None # 💡 Mudamos de 'msg_foto' para 'msg_resultado'
             for _ in range(45): 
                 await asyncio.sleep(2)
+                
+                # 1. Verifica se a mensagem original foi EDITADA (comum quando o bot manda só texto)
+                msg_editada = await cliente_atual.get_messages(BOT_USERNAME, ids=msg_botoes.id)
+                if msg_editada and msg_editada.text and msg_editada.text != texto_menu_original:
+                    msg_resultado = msg_editada
+                    break
+
+                # 2. Verifica se chegou uma mensagem NOVA (com foto ou apenas texto)
                 mensagens_finais = await cliente_atual.get_messages(BOT_USERNAME, limit=5)
                 for msg in mensagens_finais:
-                    if msg.photo and msg.text:
-                        numeros_legenda = ''.join(filter(str.isdigit, msg.text))
+                    if msg.id > msg_botoes.id:
+                        texto_legenda = msg.text or ""
+                        numeros_legenda = ''.join(filter(str.isdigit, texto_legenda))
                         if cpf_limpo in numeros_legenda:
-                            msg_foto = msg
+                            msg_resultado = msg
                             break
-                if msg_foto: break
+                if msg_resultado: break
 
-            if not msg_foto:
+            if not msg_resultado:
                 return {"sucesso": False, "erro": "O servidor principal está congestionado. Tente novamente."}
 
-            # 📥 BAIXA A FOTO TEMPORARIAMENTE
-            os.makedirs("static/cnh", exist_ok=True)
-            caminho_salvo = f"static/cnh/cnh_{cpf_limpo}.jpg"
-            await cliente_atual.download_media(msg_foto, file=caminho_salvo)
-
-            # 🖼️ CONVERTE PARA BASE64
-            with open(caminho_salvo, "rb") as image_file:
-                foto_b64 = "data:image/jpeg;base64," + base64.b64encode(image_file.read()).decode('utf-8')
+            foto_b64 = ""
             
-            # 🧹 APAGA A FOTO FÍSICA IMEDIATAMENTE APÓS CONVERTER
-            try:
-                os.remove(caminho_salvo)
-            except Exception as e:
-                pass # Se der erro ao apagar, ignora e segue a vida
+            # 💡 NOVO: Só tenta baixar a foto SE existir uma foto na mensagem
+            if msg_resultado.photo:
+                # 📥 BAIXA A FOTO TEMPORARIAMENTE
+                os.makedirs("static/cnh", exist_ok=True)
+                caminho_salvo = f"static/cnh/cnh_{cpf_limpo}.jpg"
+                await cliente_atual.download_media(msg_resultado, file=caminho_salvo)
+
+                # 🖼️ CONVERTE PARA BASE64
+                with open(caminho_salvo, "rb") as image_file:
+                    foto_b64 = "data:image/jpeg;base64," + base64.b64encode(image_file.read()).decode('utf-8')
+                
+                # 🧹 APAGA A FOTO FÍSICA IMEDIATAMENTE APÓS CONVERTER
+                try:
+                    os.remove(caminho_salvo)
+                except Exception as e:
+                    pass # Se der erro ao apagar, ignora e segue a vida
 
             # 🛡️ BLINDAGEM DA FONTE APLICADA
-            dados_texto = msg_foto.text or "Sem dados adicionais."
+            dados_texto = msg_resultado.text or "Sem dados adicionais."
             dados_texto = sanitizar_resposta(dados_texto)
 
-            # 📦 EMPACOTA E SALVA NO BANCO (DADOS + FOTO EM BASE64)
+            # 📦 EMPACOTA E SALVA NO BANCO (DADOS + FOTO EM BASE64 SE TIVER)
             pacote_salvar = json.dumps({"texto": dados_texto, "foto": foto_b64})
             salvar_consulta(f"CPF_{cpf_limpo}", pacote_salvar)
             
