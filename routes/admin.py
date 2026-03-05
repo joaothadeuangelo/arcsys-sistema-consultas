@@ -3,6 +3,11 @@ from fastapi import APIRouter, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 
+# ==========================================
+# 🚨 CORREÇÃO: IMPORTANDO A FILA DE CLIENTES
+# ==========================================
+from api import fila_clientes  # <-- Puxando a variável de onde ela nasceu
+
 # Importando TODA a inteligência do nosso database.py (o Model)
 from database import (
     toggle_manutencao, 
@@ -80,3 +85,63 @@ async def ver_historico(request: Request, token: str, pagina: int = 1):
     }
 
     return templates.TemplateResponse("admin.html", contexto)
+
+
+# ==========================================
+# ROTA ADMIN: STATUS DAS CONTAS TELEGRAM
+# ==========================================
+@router.get("/api/admin/status_contas")
+async def verificar_status_contas():
+    status_lista = []
+    clientes_temporarios = []
+    
+    # 1. Pega quantos clientes estão livres na fila agora
+    quantidade = fila_clientes.qsize()
+    
+    if quantidade == 0:
+        return {"sucesso": False, "erro": "Nenhuma conta na fila (ou todas estão em uso no exato momento)."}
+
+    try:
+        # 2. Retira todos da fila para testar
+        for _ in range(quantidade):
+            cliente = await fila_clientes.get()
+            clientes_temporarios.append(cliente)
+
+        # 3. Testa um por um
+        for idx, cliente in enumerate(clientes_temporarios):
+            # Tenta pegar o nome do arquivo da sessão (ex: conta1.session)
+            nome_sessao = "Desconhecido"
+            if hasattr(cliente, 'session') and hasattr(cliente.session, 'filename'):
+                nome_sessao = os.path.basename(cliente.session.filename)
+
+            if not cliente.is_connected():
+                status_lista.append({
+                    "id": idx + 1, "sessao": nome_sessao, 
+                    "status": "Desconectada", "cor": "red", "icone": "❌"
+                })
+                continue
+
+            try:
+                # O teste de fogo: Tenta puxar as infos da própria conta
+                # Se a sessão foi banida ou deslogada, isso aqui vai dar erro
+                me = await cliente.get_me()
+                nome_conta = me.first_name if me else "Sem Nome"
+                telefone = f"+{me.phone}" if me and me.phone else "Oculto"
+                
+                status_lista.append({
+                    "id": idx + 1, "sessao": nome_sessao, "nome": nome_conta, "telefone": telefone,
+                    "status": "Operante", "cor": "green", "icone": "✅"
+                })
+            except Exception as e:
+                # Se deu erro no get_me(), a sessão está corrompida, banida ou deslogada
+                status_lista.append({
+                    "id": idx + 1, "sessao": nome_sessao, 
+                    "status": "Sessão Morta/Banida", "cor": "red", "icone": "💀", "detalhe": str(e)
+                })
+
+    finally:
+        # 4. DEVOLVE TODO MUNDO PRA FILA (Super importante para não quebrar o sistema)
+        for c in clientes_temporarios:
+            await fila_clientes.put(c)
+
+    return {"sucesso": True, "contas": status_lista}
