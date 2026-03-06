@@ -198,7 +198,7 @@ async def consultar_cnh(cpf: str, request: Request):
             await cliente_atual.send_message(BOT_USERNAME, f'/cpf {cpf_limpo}')
             
             msg_botoes = None
-            texto_menu_original = "" # 💡 NOVO: Guarda o texto original do menu
+            texto_menu_original = "" # 💡 Guarda o texto original do menu
             for _ in range(15):
                 await asyncio.sleep(2)
                 mensagens = await cliente_atual.get_messages(BOT_USERNAME, limit=5)
@@ -226,33 +226,58 @@ async def consultar_cnh(cpf: str, request: Request):
             if not clicou:
                 return {"sucesso": False, "erro": "Opção CNH indisponível para este documento."}
 
-            msg_resultado = None # 💡 Mudamos de 'msg_foto' para 'msg_resultado'
+            msg_resultado = None 
+            erro_bot = None # 💡 Variável para capturar a resposta de erro
+
             for _ in range(45): 
                 await asyncio.sleep(2)
                 
-                # 1. Verifica se a mensagem original foi EDITADA (comum quando o bot manda só texto)
+                # 1. Verifica se a mensagem original foi EDITADA (comum quando o bot manda só texto ou erro)
                 msg_editada = await cliente_atual.get_messages(BOT_USERNAME, ids=msg_botoes.id)
                 if msg_editada and msg_editada.text and msg_editada.text != texto_menu_original:
+                    texto_editado = msg_editada.text
+                    texto_lower = texto_editado.lower()
+                    
+                    # 🚨 RADAR DE ERRO
+                    if "não possui" in texto_lower or "⚠️" in texto_lower or "não encontrad" in texto_lower:
+                        erro_bot = texto_editado
+                        break
+                    
                     msg_resultado = msg_editada
                     break
 
-                # 2. Verifica se chegou uma mensagem NOVA (com foto ou apenas texto)
+                # 2. Verifica se chegou uma mensagem NOVA (com foto ou apenas texto/erro)
                 mensagens_finais = await cliente_atual.get_messages(BOT_USERNAME, limit=5)
                 for msg in mensagens_finais:
                     if msg.id > msg_botoes.id:
                         texto_legenda = msg.text or ""
+                        
+                        # 🚨 RADAR DE ERRO
+                        texto_lower = texto_legenda.lower()
+                        if "não possui" in texto_lower or "⚠️" in texto_lower or "não encontrad" in texto_lower:
+                            erro_bot = texto_legenda
+                            break
+                        
+                        # Se não for erro, procura os dados do CPF
                         numeros_legenda = ''.join(filter(str.isdigit, texto_legenda))
                         if cpf_limpo in numeros_legenda:
                             msg_resultado = msg
                             break
-                if msg_resultado: break
+                
+                # Interrompe o loop se achou o resultado OU se achou um erro
+                if msg_resultado or erro_bot: break
+
+            # 🛑 SE O BOT RETORNOU ERRO, DEVOLVE NA HORA PARA O USUÁRIO
+            if erro_bot:
+                erro_limpo = sanitizar_resposta(erro_bot) # Limpa o @ do bot, caso venha junto
+                return {"sucesso": False, "erro": erro_limpo}
 
             if not msg_resultado:
                 return {"sucesso": False, "erro": "O servidor principal está congestionado. Tente novamente."}
 
             foto_b64 = ""
             
-            # 💡 NOVO: Só tenta baixar a foto SE existir uma foto na mensagem
+            # 💡 Só tenta baixar a foto SE existir uma foto na mensagem (nova arquitetura híbrida)
             if msg_resultado.photo:
                 # 📥 BAIXA A FOTO TEMPORARIAMENTE
                 os.makedirs("static/cnh", exist_ok=True)
