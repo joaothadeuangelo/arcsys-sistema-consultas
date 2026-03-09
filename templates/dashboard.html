@@ -48,19 +48,6 @@
     </a>
     {% endif %}
 
-    {% if manutencao %}
-    <div class="modulo-card offline-card">
-        <div class="badge-offline">OFFLINE</div>
-        <img src="/static/img/separador.png" alt="Separador de CPF" class="modulo-icon">
-        <h3>SEPARADOR</h3><p>Em Manutenção</p>
-    </div>
-    {% else %}
-    <a href="/separador" class="modulo-card" style="text-decoration: none; color: inherit;">
-        <img src="/static/img/separador.png" alt="Separador de CPF" class="modulo-icon">
-        <h3>SEPARADOR DE CPF</h3><p>Filtro de Listas</p>
-    </a>
-    {% endif %}
-
     {% if manutencao_comparador or manutencao %}
     <div class="modulo-card offline-card">
         <div class="badge-offline">OFFLINE</div>
@@ -71,6 +58,19 @@
     <a href="/comparador" class="modulo-card" style="text-decoration: none; color: inherit;">
         <img src="/static/img/similar.png" alt="Similar Face" class="modulo-icon">
         <h3>SIMILAR FACE</h3><p>Comparador Facial em lote</p>
+    </a>
+    {% endif %}
+
+    {% if manutencao %}
+    <div class="modulo-card offline-card">
+        <div class="badge-offline">OFFLINE</div>
+        <img src="/static/img/separador.png" alt="Separador de CPF" class="modulo-icon">
+        <h3>SEPARADOR</h3><p>Em Manutenção</p>
+    </div>
+    {% else %}
+    <a href="/separador" class="modulo-card" style="text-decoration: none; color: inherit;">
+        <img src="/static/img/separador.png" alt="Separador de CPF" class="modulo-icon">
+        <h3>SEPARADOR DE CPF</h3><p>Filtro de Listas</p>
     </a>
     {% endif %}
 

@@ -2,19 +2,16 @@
 // MÓDULO 4: COMPARADOR FACIAL EM LOTE
 // ==========================================
 
-// Variáveis Globais para a Paginação
 let resultadosGlobais = [];
 let paginaAtual = 1;
 const itensPorPagina = 20;
 
-// 1. ESCUTADORES DE EVENTO
 const inputBase = document.getElementById('inputBase');
 const inputLote = document.getElementById('inputLote');
 
 if (inputBase) inputBase.addEventListener('change', handleBaseUpload);
 if (inputLote) inputLote.addEventListener('change', handleLoteUpload);
 
-// 2. FUNÇÃO: PREVIEW DA IMAGEM BASE
 function handleBaseUpload(e) {
     const file = e.target.files[0];
     if (!file) return;
@@ -30,13 +27,11 @@ function handleBaseUpload(e) {
     reader.readAsDataURL(file);
 }
 
-// 3. FUNÇÃO: PREVIEW DO LOTE DE IMAGENS
 function handleLoteUpload(e) {
     const files = e.target.files;
     const total = files.length;
     if (total === 0) return;
 
-    // Trava Front-end Rápida
     if (total > 250) {
         exibirErro("⚠️ Limite de segurança excedido! Selecione no máximo 250 fotos por lote.");
         e.target.value = ''; 
@@ -73,7 +68,6 @@ function handleLoteUpload(e) {
     document.getElementById('txtArquivosSelecionados').innerText = `Arquivos selecionados: ${total}`;
 }
 
-// 4. FUNÇÃO PRINCIPAL: ENVIAR PARA O BACK-END
 async function iniciarComparacao() {
     const fileBase = inputBase.files[0];
     const filesLote = inputLote.files;
@@ -119,7 +113,6 @@ async function iniciarComparacao() {
 
         const data = await response.json();
 
-        // 🎯 A CORREÇÃO ESTÁ AQUI: Separamos a lógica de Sucesso da lógica de Erro
         if (data.sucesso) {
             if (data.resultados && data.resultados.task_id) {
                 document.getElementById('textoLoader').innerHTML = `Processando biometria...<br><span style="font-size: 0.8em; color: #5288c1;">Isso pode levar alguns segundos.</span>`;
@@ -130,7 +123,6 @@ async function iniciarComparacao() {
                 btn.disabled = false;
             }
         } else {
-            // Se der erro no Back-end (Rate Limit, +250 fotos, Manutenção, etc), mostra aqui!
             exibirErro(data.erro); 
             loader.style.display = 'none';
             btn.disabled = false;
@@ -143,7 +135,6 @@ async function iniciarComparacao() {
     } 
 }
 
-// 5. O LOOPING ESPIÃO: FICA PERGUNTANDO SE ESTÁ PRONTO
 async function verificarStatusFila(taskId, btn, loader, resultContainer, resultBox) {
     try {
         const response = await fetch(`/api/comparar_facial/status/${taskId}`);
@@ -169,7 +160,6 @@ async function verificarStatusFila(taskId, btn, loader, resultContainer, resultB
     }
 }
 
-// 6. PREPARAÇÃO DOS DADOS: Ordena e Salva
 function prepararDados(dadosJson, resultContainer) {
     try {
         resultadosGlobais = dadosJson.chunk.results;
@@ -179,7 +169,6 @@ function prepararDados(dadosJson, resultContainer) {
             return;
         }
 
-        // Ordenação: Do maior Match (99%) para o menor (0%)
         resultadosGlobais.sort((a, b) => b.similarity - a.similarity);
 
         paginaAtual = 1; 
@@ -193,7 +182,6 @@ function prepararDados(dadosJson, resultContainer) {
     }
 }
 
-// 7. O CONSTRUTOR DE PÁGINAS: Desenha a tabela de 20 em 20
 function renderizarPaginaAtual() {
     const resultBox = document.getElementById('resultado');
     const totalPaginas = Math.ceil(resultadosGlobais.length / itensPorPagina);
@@ -202,23 +190,8 @@ function renderizarPaginaAtual() {
     const fim = inicio + itensPorPagina;
     const itensDestaPagina = resultadosGlobais.slice(inicio, fim);
 
+    // 🎯 HTML LIMPO! Sem tags <style>
     let htmlTabela = `
-        <style>
-            .arcsys-table { width: 100%; border-collapse: collapse; margin-top: 15px; background: #17212b; border-radius: 8px; overflow: hidden; }
-            .arcsys-table th { background: #242f3d; color: #5288c1; padding: 15px; text-align: left; }
-            .arcsys-table td { padding: 15px; border-bottom: 1px solid #242f3d; vertical-align: middle; }
-            .arcsys-table tr:hover { background: #1a242f; }
-            .img-match { width: 60px; height: 60px; object-fit: cover; border-radius: 8px; border: 2px solid #5288c1; transition: 0.3s; }
-            .img-match:hover { transform: scale(1.5); z-index: 10; position: relative; }
-            .badge-porcentagem { background: #2ecc71; color: #000; padding: 6px 12px; border-radius: 6px; font-weight: bold; font-size: 1.1em; display: inline-block; }
-            .badge-baixo { background: #e74c3c; color: #fff; }
-            
-            .paginacao-container { display: flex; justify-content: center; align-items: center; gap: 15px; margin-top: 25px; margin-bottom: 10px; }
-            .btn-paginacao { background: #242f3d; color: #5288c1; border: 1px solid #5288c1; padding: 8px 16px; border-radius: 6px; cursor: pointer; transition: 0.2s; font-weight: bold; }
-            .btn-paginacao:hover:not(:disabled) { background: #5288c1; color: #fff; }
-            .btn-paginacao:disabled { opacity: 0.5; cursor: not-allowed; border-color: #3b4b5e; color: #8aa3ba; }
-            .paginacao-info { color: #8aa3ba; font-size: 0.95em; font-weight: 500; text-align: center; }
-        </style>
         <table class="arcsys-table">
             <thead>
                 <tr>
@@ -241,7 +214,7 @@ function renderizarPaginaAtual() {
         htmlTabela += `
             <tr>
                 <td><img src="${imgSrc}" class="img-match" alt="Face" loading="lazy"></td>
-                <td style="color: #8aa3ba; font-weight: 500;">${nome}</td>
+                <td class="nome-arquivo">${nome}</td>
                 <td><span class="${classeBadge}">${porcentagem}%</span></td>
             </tr>
         `;
@@ -264,7 +237,6 @@ function renderizarPaginaAtual() {
     `;
 }
 
-// 8. FUNÇÃO PARA MUDAR A PÁGINA
 function mudarPagina(novaPagina) {
     const totalPaginas = Math.ceil(resultadosGlobais.length / itensPorPagina);
     if (novaPagina >= 1 && novaPagina <= totalPaginas) {
@@ -274,7 +246,6 @@ function mudarPagina(novaPagina) {
     }
 }
 
-// 9. A FUNÇÃO CAÇADORA NINJA
 function resgatarImagemLocal(nomeDoServidor) {
     const filesLote = document.getElementById('inputLote').files;
     
@@ -293,12 +264,10 @@ function resgatarImagemLocal(nomeDoServidor) {
     return 'data:image/svg+xml;charset=UTF-8,%3Csvg xmlns="http://www.w3.org/2000/svg" width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="%238aa3ba" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"%3E%3Cpath d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"%3E%3C/path%3E%3Ccircle cx="12" cy="7" r="4"%3E%3C/circle%3E%3C/svg%3E';
 }
 
-// 10. FUNÇÃO AUXILIAR DE ERRO
 function exibirErro(msg) {
     const resultBox = document.getElementById('resultado');
     const resultContainer = document.getElementById('resultadoContainer');
     
-    // Confirma se não estamos sobrescrevendo um erro de cooldown bonito
     let icone = msg.includes('⏳') ? '' : '❌ ';
     if(msg.startsWith('❌') || msg.startsWith('⚠️') || msg.startsWith('🤖') || msg.startsWith('⏳')) icone = '';
 
