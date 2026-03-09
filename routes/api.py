@@ -493,11 +493,12 @@ async def comparar_facial(request: Request):
                 
             return {"sucesso": True, "resultados": dados_retorno}
 
-    except Exception as e:
+    # 🔒 BLINDAGEM MÁXIMA: Erros mascarados para não vazar IP/URL
+    except Exception:
         # Se der erro no servidor, liberamos o IP para tentar de novo
         if ip_cliente in cooldown_comparador:
             del cooldown_comparador[ip_cliente]
-        return {"sucesso": False, "erro": f"Falha no servidor de processamento: {str(e)}"}
+        return {"sucesso": False, "erro": "O servidor de biometria está temporariamente indisponível ou sobrecarregado. Tente novamente."}
 
 
 # ==========================================
@@ -531,5 +532,6 @@ async def checar_status_facial(task_id: str, request: Request):
             else:
                 return {"sucesso": True, "concluido": False}
 
-    except Exception as e:
-        return {"sucesso": False, "erro": f"Falha ao consultar status: {str(e)}"}
+    # 🔒 BLINDAGEM MÁXIMA: Erros mascarados para não vazar IP/URL
+    except Exception:
+        return {"sucesso": False, "erro": "Perda de conexão com o motor facial durante a verificação."}
