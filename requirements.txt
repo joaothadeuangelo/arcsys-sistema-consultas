@@ -3,3 +3,5 @@ uvicorn
 telethon
 python-dotenv
 jinja2
+python-multipart
+httpx

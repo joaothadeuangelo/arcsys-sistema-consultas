@@ -1,4 +1,5 @@
 import os
+import httpx
 import time
 import asyncio
 import urllib.request
@@ -8,6 +9,7 @@ import re
 from fastapi import APIRouter, Request
 from database import buscar_consulta, salvar_consulta, is_manutencao, is_manutencao_modulo
 import base64
+from fastapi.responses import Response
 
 router = APIRouter()
 
@@ -23,6 +25,7 @@ fila_clientes = asyncio.Queue()
 cooldowns_placa = {}
 cooldowns_cnh = {}
 cooldowns_cpf = {}
+cooldown_comparador = {}
 
 # ==========================================
 # 🛡️ MOTOR DE BLINDAGEM DE FONTE (WHITE-LABEL)
@@ -416,3 +419,117 @@ async def consultar_dados_cpf(cpf: str, request: Request):
 
     except Exception as e:
         return {"sucesso": False, "erro": f"Falha na comunicação: {str(e)}"}
+    
+    
+    
+# ==========================================
+# MÓDULO 4: COMPARADOR FACIAL (PROXY)
+# ==========================================
+@router.post("/api/comparar_facial")
+async def comparar_facial(request: Request):
+    # 1. Verifica se o sistema está em manutenção
+    if is_manutencao():
+        return {"sucesso": False, "erro": "🛠️ MÓDULO EM MANUTENÇÃO!"}
+
+    # 2. Puxa o IP do cliente
+    ip_cliente = request.headers.get("X-Forwarded-For", request.client.host).split(",")[0].strip()
+
+    # 🛡️ TRAVA DE COOLDOWN (RATE LIMIT DE 60 SEGUNDOS)
+    tempo_atual = time.time()
+    tempo_ultimo_uso = cooldown_comparador.get(ip_cliente, 0)
+    tempo_restante = 60 - (tempo_atual - tempo_ultimo_uso)
+    
+    if tempo_restante > 0:
+        return {"sucesso": False, "erro": f"⏳ Aguarde {int(tempo_restante)} segundos para fazer uma nova comparação."}
+
+    # 3. Validação de Segurança do Turnstile
+    token_turnstile = request.headers.get("X-Turnstile-Token")
+    if not await verificar_turnstile(token_turnstile, ip_cliente):
+        return {"sucesso": False, "erro": "🤖 Bloqueado pela Segurança Cloudflare. Verifique se você é humano e tente novamente."}
+
+    # 4. Puxa a URL segura do arquivo .env
+    url_destino = os.getenv("URL_MOTOR_FACIAL")
+    if not url_destino:
+        return {"sucesso": False, "erro": "URL do motor facial não configurada no servidor."}
+
+    try:
+        # 5. Recebe os arquivos do frontend do ARCSYS
+        form_data = await request.form()
+        imagem_base = form_data.get("imagem_base")
+        imagens_lote = form_data.getlist("imagens_lote")
+
+        # 🛡️ VALIDAÇÃO BACK-END: Arquivos ausentes
+        if not imagem_base or not imagens_lote:
+            return {"sucesso": False, "erro": "Imagens ausentes. Envie a base e pelo menos uma imagem no lote."}
+
+        # 🛡️ VALIDAÇÃO BACK-END: Limite Máximo de 250 imagens
+        if len(imagens_lote) > 250:
+            return {"sucesso": False, "erro": f"⚠️ Tentativa de abuso detectada! O limite máximo é de 250 imagens (Você enviou {len(imagens_lote)})."}
+
+        # Atualiza o tempo do último uso deste IP (só bloqueia o tempo se passar das validações)
+        cooldown_comparador[ip_cliente] = tempo_atual
+
+        # 6. Prepara os arquivos com as ETIQUETAS EXATAS que o servidor parceiro exige
+        files = []
+        
+        # 🎯 ETIQUETA CORRETA: base_file
+        conteudo_base = await imagem_base.read()
+        files.append(("base_file", (imagem_base.filename, conteudo_base, imagem_base.content_type)))
+
+        # 🎯 ETIQUETA CORRETA: compare_files[]
+        for img in imagens_lote:
+            conteudo_lote = await img.read()
+            files.append(("compare_files[]", (img.filename, conteudo_lote, img.content_type)))
+
+        # 7. Faz o POST direto para o endpoint de processamento (compare.php)
+        async with httpx.AsyncClient(timeout=120.0) as client:
+            response = await client.post(url_destino, files=files)
+            
+            # 8. Captura a resposta (que agora deve ser o JSON com a task_id)
+            try:
+                dados_retorno = response.json()
+            except:
+                dados_retorno = response.text 
+                
+            return {"sucesso": True, "resultados": dados_retorno}
+
+    except Exception as e:
+        # Se der erro no servidor, liberamos o IP para tentar de novo
+        if ip_cliente in cooldown_comparador:
+            del cooldown_comparador[ip_cliente]
+        return {"sucesso": False, "erro": f"Falha no servidor de processamento: {str(e)}"}
+
+
+# ==========================================
+# ROTA AUXILIAR: RADAR DO STATUS
+# ==========================================
+@router.get("/api/comparar_facial/status/{task_id}")
+async def checar_status_facial(task_id: str, request: Request):
+    if is_manutencao():
+        return {"sucesso": False, "erro": "🛠️ MÓDULO EM MANUTENÇÃO!"}
+
+    url_destino = os.getenv("URL_MOTOR_FACIAL")
+    if not url_destino:
+        return {"sucesso": False, "erro": "URL do motor facial não configurada."}
+
+    # 🎯 O TIRO DE PRECISÃO: Adicionamos o offset e o limit (botei 250 que é o seu limite máximo)
+    url_check = f"{url_destino}?task_id={task_id}&offset=0&limit=250"
+
+    try:
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            response = await client.get(url_check)
+            
+            # Tenta ler a resposta como JSON
+            try:
+                dados_json = response.json()
+            except:
+                return {"sucesso": True, "concluido": False} # Se não for JSON, ainda não tá pronto
+            
+            # 🎯 O VEREDITO: Lê a chave "task_status" que você encontrou na espionagem
+            if dados_json.get("task_status") == "SUCCESS":
+                return {"sucesso": True, "concluido": True, "dados": dados_json}
+            else:
+                return {"sucesso": True, "concluido": False}
+
+    except Exception as e:
+        return {"sucesso": False, "erro": f"Falha ao consultar status: {str(e)}"}

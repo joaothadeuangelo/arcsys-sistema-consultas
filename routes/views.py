@@ -16,7 +16,9 @@ async def render_dashboard(request: Request):
         "manutencao": is_manutencao(),
         "manutencao_placa": is_manutencao_modulo('placa'),
         "manutencao_cnh": is_manutencao_modulo('cnh'),
-        "manutencao_cpf": is_manutencao_modulo('cpf')
+        "manutencao_cpf": is_manutencao_modulo('cpf'),
+        # 🎯 ADICIONADO: Envia o status do Comparador para o Front-end
+        "manutencao_comparador": is_manutencao_modulo('comparador')
     })
 
 # ==========================================
@@ -69,6 +71,20 @@ async def render_separador(request: Request):
         return RedirectResponse(url="/", status_code=303)
         
     return templates.TemplateResponse("modulo_separador.html", {
+        "request": request,
+        "manutencao": is_manutencao()
+    })
+    
+# ==========================================
+# ROTA VISUAL: SIMILAR FACE (COMPARADOR)
+# ==========================================
+@router.get("/comparador", response_class=HTMLResponse)
+async def comparador_page(request: Request):
+    # 🎯 TRAVA DE SEGURANÇA: Respeita a manutenção global E a manutenção individual do módulo
+    if is_manutencao() or is_manutencao_modulo('comparador'):
+        return RedirectResponse(url="/", status_code=303)
+        
+    return templates.TemplateResponse("modulo_comparador.html", {
         "request": request,
         "manutencao": is_manutencao()
     })
