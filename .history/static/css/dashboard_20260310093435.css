@@ -33,12 +33,6 @@
     background: #1a242f;
 }
 
-/* Links de módulo no dashboard (sem sublinhado, cor herdada) */
-a.modulo-card {
-    text-decoration: none;
-    color: inherit;
-}
-
 .modulo-icon {
     height: 50px;
     width: auto;
@@ -65,6 +59,8 @@ a.modulo-card {
         width: calc(33.333% - 10px);
     }
 }
+
+
 
 /* ========================================= */
 /* ESTADO OFFLINE DOS MÓDULOS                */

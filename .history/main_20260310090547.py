@@ -31,6 +31,8 @@ if AMBIENTE == 'producao':
 else:
     app = FastAPI(title="ARCSYS - Central de Consultas")
 
+# ... (Daqui pra baixo o código do main.py continua normal, começando pelo app.mount) ...
+
 # Servindo arquivos estáticos
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
