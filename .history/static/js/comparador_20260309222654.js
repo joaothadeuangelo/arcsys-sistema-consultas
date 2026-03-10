@@ -91,7 +91,6 @@ async function iniciarComparacao() {
     btn.disabled = true;
     resultContainer.style.display = 'none';
     loader.style.display = 'block';
-    limparAcoesDinamicas();
     
     loader.innerHTML = `
         <div class="loader-content">

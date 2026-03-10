@@ -84,6 +84,9 @@ button:disabled {
     100% { transform: rotate(360deg); }
 }
 
+.btn-copiar { margin-top: 15px; width: 100%; background-color: #2b5278; }
+.btn-copiar:hover { background-color: #3b6a9c; }
+
 .destaque-codigo { color: #a1c181; font-family: monospace; font-size: 1.1em; background: rgba(161, 193, 129, 0.1); padding: 2px 4px; border-radius: 4px; }
 .cache-aviso { color: #a1c181; font-size: 0.9em; font-weight: bold; display: block; margin-bottom: 15px; text-align: right; }
 

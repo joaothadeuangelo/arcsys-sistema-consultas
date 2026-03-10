@@ -35,8 +35,10 @@
         
         <textarea id="textoSaida" rows="12" readonly style="width: 100%; padding: 15px; border-radius: 8px; background: #0e1621; border: 1px solid #2ecc71; color: #5288c1; resize: vertical; font-family: monospace; font-size: 1em; box-sizing: border-box;"></textarea>
         
-        <div style="margin-top: 15px; text-align: center;">
-            <button onclick="limparTudo()" style="padding: 12px 30px; background: #e74c3c; color: #fff; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.3s; font-size: 0.95em;">🗑️ Nova Extração</button>
+        <div style="display: flex; gap: 10px; margin-top: 15px; flex-wrap: wrap;">
+            <button onclick="copiarCPFs()" style="flex: 1; min-width: 120px; padding: 12px; background: #242f3d; color: #fff; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.3s;">📋 Copiar Lista</button>
+            <button onclick="baixarTXT()" style="flex: 1; min-width: 120px; padding: 12px; background: #242f3d; color: #fff; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.3s;">💾 Baixar .txt</button>
+            <button onclick="limparTudo()" style="flex: 1; min-width: 120px; padding: 12px; background: #e74c3c; color: #fff; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.3s;">🗑️ Nova Extração</button>
         </div>
     </div>
 

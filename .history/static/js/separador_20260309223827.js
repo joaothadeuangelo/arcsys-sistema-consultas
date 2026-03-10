@@ -102,6 +102,4 @@ function limparTudo() {
     document.getElementById('textoSaida').value = '';
     document.getElementById('boxResultado').style.display = 'none';
     document.getElementById('boxInput').style.display = 'block';
-    const dynActions = document.getElementById('dynamic-actions');
-    if (dynActions) dynActions.innerHTML = '';
 }

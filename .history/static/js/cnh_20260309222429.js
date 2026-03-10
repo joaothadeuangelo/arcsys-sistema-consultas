@@ -1,11 +1,11 @@
 // ==========================================
-// MÓDULO 3: CONSULTA DE DADOS (CPF / SISREG)
+// MÓDULO 2: CONSULTA DE CNH (CPF)
 // ==========================================
 
 // 1. TRATAMENTO EM TEMPO REAL (Impede letras e formata)
-const cpfDadosInputField = document.getElementById('cpfDadosInput');
-if (cpfDadosInputField) {
-    cpfDadosInputField.addEventListener('input', function (e) {
+const cpfInputField = document.getElementById('cpfInput');
+if (cpfInputField) {
+    cpfInputField.addEventListener('input', function (e) {
         // Arranca tudo que não for número (letras, pontos, traços, espaços)
         let value = this.value.replace(/\D/g, '');
         
@@ -20,10 +20,10 @@ if (cpfDadosInputField) {
 }
 
 // 2. FUNÇÃO PRINCIPAL DE CONSULTA
-async function fazerConsultaDadosCPF() {
-    const input = document.getElementById('cpfDadosInput');
+async function fazerConsultaCNH() {
+    const input = document.getElementById('cpfInput');
     const cpfInput = input.value; 
-    const btn = document.getElementById('btnConsultarDadosCPF');
+    const btn = document.getElementById('btnConsultarCNH');
     const resultContainer = document.getElementById('resultadoContainer');
     const resultBox = document.getElementById('resultado');
     const loader = document.getElementById('loader');
@@ -51,18 +51,17 @@ async function fazerConsultaDadosCPF() {
     btn.disabled = true;
     resultContainer.style.display = 'none';
     loader.style.display = 'block';
-    limparAcoesDinamicas();
 
     // Injeta o spinner HTML animado e a frase profissional
     loader.innerHTML = `
         <div class="loader-content">
             <div class="spinner"></div> 
-            Buscando dados no sistema, por favor aguarde...
+            Processando sua consulta, por favor aguarde...
         </div>`;
 
     try {
         // 🛡️ ENVIANDO O TOKEN PARA O SERVIDOR NO HEADER
-        const response = await fetch(`/api/consultar_dados_cpf/${cpfInput}`, {
+        const response = await fetch(`/api/consultar_cnh/${cpfInput}`, {
             method: 'GET',
             headers: {
                 'X-Turnstile-Token': turnstileResponse
@@ -75,12 +74,22 @@ async function fazerConsultaDadosCPF() {
             textoPuro = data.dados; 
             let htmlFormatado = formatarTexto(data.dados);
             
+            if (data.foto) {
+                htmlFormatado = `
+                    <div style="text-align: center; margin-bottom: 25px; animation: fadeIn 0.5s ease;">
+                        <img src="${data.foto}" alt="Foto CNH" style="max-width: 250px; width: 100%; border-radius: 12px; border: 3px solid #5288c1; box-shadow: 0 10px 25px rgba(0,0,0,0.4);">
+                        <div style="color: #8aa3ba; font-size: 0.8em; margin-top: 10px; text-transform: uppercase; letter-spacing: 1px;">Registro Fotográfico Localizado</div>
+                    </div>
+                    ${htmlFormatado}
+                `;
+            }
+            
             if (data.cache) {
                 resultBox.innerHTML = "<span class='cache-aviso'>⚡ Recuperado do Banco de Dados</span><br>" + htmlFormatado;
                 btn.disabled = false; 
             } else {
                 resultBox.innerHTML = htmlFormatado;
-                iniciarCooldown(120, 'btnConsultarDadosCPF', 'Consultar Dados');
+                iniciarCooldown(120, 'btnConsultarCNH', 'Consultar CNH');
             }
             injetarAcoesResultado(resultBox, true);
             
@@ -92,7 +101,7 @@ async function fazerConsultaDadosCPF() {
         
         resultContainer.style.display = 'block';
     } catch (error) {
-        resultBox.innerHTML = `<div class="badge badge-danger" style="font-size: 1.1em; padding: 15px; display: block; text-align: center;">❌ Erro de conexão com o servidor. Tente novamente em instantes.</div>`;
+        resultBox.innerHTML = `<div class="badge badge-danger" style="font-size: 1.1em; padding: 15px; display: block; text-align: center;">❌ Erro de conexão com o servidor. O bot pode estar dormindo.</div>`;
         resultContainer.style.display = 'block';
         btn.disabled = false; 
     } finally {
@@ -107,8 +116,8 @@ async function fazerConsultaDadosCPF() {
 }
 
 // 3. EVENTO DE TECLADO (ENTER)
-document.getElementById('cpfDadosInput')?.addEventListener('keypress', function (e) {
-    if (e.key === 'Enter' && !document.getElementById('btnConsultarDadosCPF').disabled) {
-        fazerConsultaDadosCPF();
+document.getElementById('cpfInput')?.addEventListener('keypress', function (e) {
+    if (e.key === 'Enter' && !document.getElementById('btnConsultarCNH').disabled) {
+        fazerConsultaCNH();
     }
 });

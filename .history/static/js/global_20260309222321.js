@@ -174,36 +174,44 @@ function limparTextoParaCopiar(texto) {
 function copiarTexto() {
     const textoFormatado = limparTextoParaCopiar(textoPuro);
     navigator.clipboard.writeText(textoFormatado).then(() => {
-        const btnCopiar = document.querySelector('#dynamic-actions .btn-action-dynamic');
+        const btnCopiar = document.querySelector('.btn-copiar-action');
         if (!btnCopiar) return;
         const textoOriginal = btnCopiar.innerHTML;
         btnCopiar.innerHTML = "✅ Copiado!";
-        setTimeout(() => { btnCopiar.innerHTML = textoOriginal; }, 2000);
+        
+        setTimeout(() => {
+            btnCopiar.innerHTML = textoOriginal;
+        }, 2000);
     }).catch(err => {
         alert("Erro ao copiar: " + err);
     });
 }
 
 // ==========================================
-// AÇÕES DINÂMICAS NO TOPO DO MÓDULO
+// BARRA DE AÇÕES NO TOPO DO RESULTADO
 // ==========================================
 function injetarAcoesResultado(resultBox, mostrarCopiar = true) {
-    const container = document.getElementById('dynamic-actions');
-    if (!container) return;
-    container.innerHTML = '';
+    // Remove barra anterior se existir (evita duplicação)
+    const barraExistente = resultBox.querySelector('.result-actions-header');
+    if (barraExistente) barraExistente.remove();
 
-    if (mostrarCopiar) {
-        const btn = document.createElement('button');
-        btn.className = 'btn-action-dynamic';
-        btn.onclick = copiarTexto;
-        btn.innerHTML = '📋 Copiar Relatório';
-        container.appendChild(btn);
-    }
-}
+    const barra = document.createElement('div');
+    barra.className = 'result-actions-header';
 
-function limparAcoesDinamicas() {
-    const container = document.getElementById('dynamic-actions');
-    if (container) container.innerHTML = '';
+    // Botão VOLTAR
+    barra.innerHTML = `
+        <a href="/" class="btn-action btn-voltar-action">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="19" y1="12" x2="5" y2="12"></line>
+                <polyline points="12 19 5 12 12 5"></polyline>
+            </svg>
+            Voltar
+        </a>
+        ${mostrarCopiar ? '<button class="btn-action btn-copiar-action" onclick="copiarTexto()">📋 Copiar Relatório</button>' : ''}
+    `;
+
+    // Insere no TOPO da div de resultado
+    resultBox.prepend(barra);
 }
 
 // ==========================================

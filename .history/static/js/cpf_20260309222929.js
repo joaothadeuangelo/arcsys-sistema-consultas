@@ -51,7 +51,6 @@ async function fazerConsultaDadosCPF() {
     btn.disabled = true;
     resultContainer.style.display = 'none';
     loader.style.display = 'block';
-    limparAcoesDinamicas();
 
     // Injeta o spinner HTML animado e a frase profissional
     loader.innerHTML = `
