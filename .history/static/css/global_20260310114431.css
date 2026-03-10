@@ -1,0 +1,173 @@
+/* ========================================= */
+/* CONFIGURAÇÕES GERAIS E LAYOUT BASE        */
+/* ========================================= */
+* { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+body { background-color: #0e1621; color: #fff; display: flex; justify-content: center; padding: 20px; margin: 0; min-height: 100vh; align-items: flex-start; }
+
+.container { background-color: #17212b; padding: 30px; border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.5); width: 100%; max-width: 600px; margin-top: 40px; border-top: 4px solid #5288c1; }
+
+.brand-container { text-align: center; margin-bottom: 30px; }
+.brand-title { font-size: 2.6em; font-weight: 800; margin: 0; letter-spacing: 2px; color: #ffffff; text-transform: uppercase; text-shadow: 2px 2px 4px rgba(0,0,0,0.3); }
+.brand-title span { color: #5288c1; }
+.brand-subtitle { color: #8aa3ba; font-size: 0.85em; text-transform: uppercase; letter-spacing: 4px; margin-top: 8px; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 10px; }
+.brand-subtitle::before, .brand-subtitle::after { content: ""; height: 1px; width: 40px; background-color: #5288c1; opacity: 0.5; }
+
+/* ========================================= */
+/* ANIMAÇÕES GLOBAIS                         */
+/* ========================================= */
+@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes popIn { 0% { opacity: 0; transform: scale(0.8); } 100% { opacity: 1; transform: scale(1); } }
+@keyframes pulse-maintenance { 0%, 100% { transform: scale(1); opacity: 0.8; } 50% { transform: scale(1.05); opacity: 1; text-shadow: 0 0 15px rgba(231, 76, 60, 0.5); } }
+@keyframes pulse-green { 0% { box-shadow: 0 0 0 0 rgba(37, 211, 102, 0.4); } 70% { box-shadow: 0 0 0 10px rgba(37, 211, 102, 0); } 100% { box-shadow: 0 0 0 0 rgba(37, 211, 102, 0); } }
+
+/* ========================================= */
+/* MODAL: MANUTENÇÃO (SISTEMA OFF)           */
+/* ========================================= */
+.modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); backdrop-filter: blur(8px); display: flex; justify-content: center; align-items: center; z-index: 9999; padding: 20px; }
+.maintenance-overlay { background: rgba(10, 15, 22, 0.95) !important; backdrop-filter: blur(10px); }
+.maintenance-content { background: #17212b; border-radius: 12px; width: 100%; max-width: 500px; text-align: center; border: 1px solid #e74c3c !important; box-shadow: 0 10px 40px rgba(231, 76, 60, 0.15) !important; overflow: hidden; animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+.maintenance-header { background: rgba(231, 76, 60, 0.05); padding: 30px 20px 20px 20px; border-bottom: 2px solid rgba(231, 76, 60, 0.2); }
+.maintenance-icon { display: block; font-size: 4em; margin-bottom: 15px; animation: pulse-maintenance 2s ease-in-out infinite; }
+.maintenance-title { color: #e74c3c !important; font-size: 1.5em !important; margin: 0; text-transform: uppercase; letter-spacing: 2px; font-weight: 900; }
+.maintenance-body { background: #0e1621 !important; padding: 30px 25px !important; }
+.maintenance-body p { font-size: 1.05em; line-height: 1.6; color: #aebfd1; margin: 0 0 15px 0; }
+.maintenance-body p strong { color: #e74c3c; }
+.maintenance-divider { height: 1px; background: rgba(231, 76, 60, 0.2); margin: 20px auto; width: 60px; }
+.maintenance-body .maintenance-footer-text { margin-bottom: 0; color: #8aa3ba; font-size: 0.95em; }
+
+/* ========================================= */
+/* MODAL: PREMIUM (MARKETING VIP)            */
+/* ========================================= */
+.premium-overlay { backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); background: rgba(14, 22, 33, 0.85); align-items: center; justify-content: center; }
+.premium-modal { background: linear-gradient(145deg, #17212b 0%, #0e1621 100%); border: 1px solid rgba(82, 136, 193, 0.3); box-shadow: 0 20px 50px rgba(0,0,0,0.5), 0 0 20px rgba(82, 136, 193, 0.1); border-radius: 16px; width: 90%; max-width: 450px; overflow: hidden; display: flex; flex-direction: column; animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+.premium-header { background: linear-gradient(90deg, rgba(82, 136, 193, 0.1) 0%, rgba(23, 33, 43, 0) 100%); padding: 25px 20px 15px; text-align: center; border-bottom: 1px solid rgba(82, 136, 193, 0.15); }
+.premium-icon-header { font-size: 2.5em; filter: drop-shadow(0 0 10px rgba(82, 136, 193, 0.5)); display: block; margin-bottom: 10px; }
+.premium-title { color: #fff; font-size: 1.2em; font-weight: 900; margin: 0 0 5px 0; text-transform: uppercase; letter-spacing: 1px; }
+.premium-subtitle { color: #5288c1; font-size: 0.9em; margin: 0; font-weight: bold; }
+.premium-body { padding: 20px; flex-grow: 1; }
+.service-card { background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 10px; padding: 15px; margin-bottom: 12px; display: flex; align-items: center; gap: 15px; transition: all 0.3s ease; }
+.service-card:hover { background: rgba(82, 136, 193, 0.08); border-color: rgba(82, 136, 193, 0.3); transform: translateX(5px); }
+.service-icon { font-size: 1.8em; display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; background: rgba(0,0,0,0.2); border-radius: 8px; }
+.service-info h4 { color: #fff; margin: 0 0 3px 0; font-size: 0.95em; }
+.service-info p { color: #8aa3ba; margin: 0; font-size: 0.8em; line-height: 1.3; }
+
+.btn-whatsapp { background: linear-gradient(90deg, #25D366 0%, #128C7E 100%); color: #fff; text-decoration: none; padding: 15px; border-radius: 10px; font-weight: 900; font-size: 1em; display: flex; justify-content: center; align-items: center; gap: 10px; width: 100%; box-sizing: border-box; text-transform: uppercase; letter-spacing: 1px; box-shadow: 0 4px 15px rgba(37, 211, 102, 0.3); animation: pulse-green 2s infinite; margin-top: 10px; }
+.btn-whatsapp:hover { filter: brightness(1.1); transform: scale(1.02); }
+
+.premium-footer { background: #0e1621; padding: 15px 20px; border-top: 1px solid rgba(82, 136, 193, 0.1); }
+.btn-premium-action { margin: 0; width: 100%; padding: 15px; font-size: 0.95em; border: none; border-radius: 8px; font-weight: bold; transition: all 0.3s ease; }
+.btn-premium-action:disabled { background: #242f3d; color: #8aa3ba; cursor: not-allowed; }
+.btn-premium-action:not(:disabled) { background: #5288c1; color: #fff; cursor: pointer; box-shadow: 0 4px 15px rgba(82, 136, 193, 0.3); }
+.btn-premium-action:not(:disabled):hover { background: #4174a8; transform: translateY(-2px); }
+
+/* ========================================= */
+/* RODAPÉ INTEGRADO AO CARD                  */
+/* ========================================= */
+.card-footer { margin-top: 30px; padding-top: 20px; border-top: 1px solid #242f3d; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 12px; }
+.badge-free { background: rgba(46, 204, 113, 0.1); color: #2ecc71; padding: 4px 12px; border-radius: 12px; font-size: 0.75em; font-weight: bold; letter-spacing: 1px; text-transform: uppercase; }
+.card-footer p { margin: 0; color: #8aa3ba; font-size: 0.85em; }
+.card-footer .footer-author { margin-top: 15px; font-size: 1.1em; }
+.card-footer .footer-cta { font-size: 0.9em; margin-bottom: 20px; }
+.card-footer strong { color: #5288c1; }
+.btn-dev-contato { display: inline-flex; align-items: center; gap: 8px; background-color: #0e1621; color: #8aa3ba; text-decoration: none; padding: 10px 20px; border-radius: 8px; font-size: 0.85em; font-weight: 600; border: 1px solid #242f3d; transition: all 0.3s ease; }
+.btn-dev-contato:hover { background-color: #5288c1; color: #fff; border-color: #5288c1; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(82, 136, 193, 0.3); }
+.btn-dev-contato svg { width: 16px; height: 16px; }
+.btn-dev-contato-whatsapp { background-color: #2ecc71; color: #fff; box-shadow: 0 4px 15px rgba(46, 204, 113, 0.2); border: none; }
+.btn-dev-contato-whatsapp:hover { background-color: #27ae60; }
+
+/* ========================================= */
+/* RESPONSIVIDADE (SMARTPHONES) - GLOBAL     */
+/* ========================================= */
+@media (max-width: 480px) {
+    .brand-title { font-size: 1.9em; } 
+    .brand-subtitle::before, .brand-subtitle::after { width: 20px; } 
+    .container { padding: 20px; margin-top: 20px; }
+    
+    /* Modais - Ajustes para telas pequenas */
+    .modal-overlay { padding: 15px; }
+    .maintenance-content, .premium-modal { max-height: 95vh; overflow-y: auto; }
+    
+    /* Ajustes Modal Manutenção */
+    .maintenance-icon { font-size: 3em; margin-bottom: 10px; }
+    .maintenance-title { font-size: 1.2em !important; }
+    .maintenance-body { padding: 20px 15px !important; }
+    .maintenance-body p { font-size: 0.95em; }
+    
+    /* Ajustes Modal Premium */
+    .premium-header { padding: 20px 15px 10px; }
+    .premium-icon-header { font-size: 2em; margin-bottom: 5px; }
+    .premium-title { font-size: 1.1em; }
+    .premium-body { padding: 15px; }
+    .service-card { padding: 12px; gap: 10px; margin-bottom: 10px; }
+    .service-icon { width: 35px; height: 35px; font-size: 1.5em; }
+    .service-info h4 { font-size: 0.9em; }
+    .service-info p { font-size: 0.75em; }
+    .btn-whatsapp { padding: 12px; font-size: 0.9em; }
+    .premium-footer { padding: 12px 15px; }
+    .btn-premium-action { padding: 12px; font-size: 0.9em; }
+}
+
+/* ========================================= */
+/* CABEÇALHOS DOS MÓDULOS INDIVIDUAIS        */
+/* ========================================= */
+.module-header { 
+    text-align: center; 
+    margin-bottom: 25px; 
+    border-bottom: 1px solid rgba(82, 136, 193, 0.2); 
+    padding-bottom: 15px; 
+}
+.module-header h2 { 
+    color: #fff; 
+    font-size: 1.4em; 
+    margin: 0; 
+    text-transform: uppercase; 
+    font-weight: 800; 
+    letter-spacing: 1px; 
+}
+.module-header p { 
+    color: #8aa3ba; 
+    font-size: 0.85em; 
+    margin: 5px 0 0 0; 
+}
+
+
+/* ========================================= */
+/* ESTILO: MÓDULOS EM BREVE (DARK/GRAY)      */
+/* ========================================= */
+
+.em-breve-card {
+    filter: grayscale(1); /* Deixa tudo preto e branco */
+    opacity: 0.6;         /* Deixa levemente transparente */
+    cursor: not-allowed;  /* Muda o mouse para sinal de bloqueado */
+    border: 1px dashed #444 !important; /* Borda tracejada para indicar construção */
+    position: relative;
+    overflow: hidden;
+}
+
+.modulo-icon-loading {
+    width: 80px;
+    height: auto;
+    margin-bottom: 15px;
+    transition: transform 0.5s ease;
+}
+
+/* Badge Neutra para "Em Breve" */
+.badge-em-breve {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: #34495e; /* Azul acinzentado escuro */
+    color: #bdc3c7;
+    font-size: 0.65em;
+    padding: 4px 10px;
+    border-radius: 4px;
+    font-weight: 800;
+    letter-spacing: 1px;
+    border: 1px solid #7f8c8d;
+}
+
+/* Efeito de hover sutil para não parecer um erro */
+.em-breve-card:hover {
+    opacity: 0.8;
+    transform: none !important; /* Não flutua como os ativos */
+}

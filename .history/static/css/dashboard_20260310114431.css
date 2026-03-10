@@ -1,0 +1,91 @@
+/* ========================================= */
+/* MENU DE MÓDULOS (DASHBOARD)               */
+/* ========================================= */
+.modulos-grid {
+    display: flex;
+    flex-wrap: wrap; /* 🎯 MÁGICA 1: Permite quebrar a linha no celular */
+    gap: 15px;
+    justify-content: center;
+    margin-bottom: 20px;
+    width: 100%;
+    animation: fadeIn 0.5s ease;
+}
+
+.modulo-card {
+    background: #17212b;
+    border: 1px solid rgba(82, 136, 193, 0.2);
+    border-radius: 12px;
+    padding: 20px 10px;
+    
+    /* 🎯 MÁGICA 2: Em celulares, ocupam metade da tela exata. O 3º cai para baixo! */
+    width: calc(50% - 8px); 
+    
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+}
+
+.modulo-card:hover {
+    transform: translateY(-5px);
+    border-color: #5288c1;
+    box-shadow: 0 8px 25px rgba(82, 136, 193, 0.3);
+    background: #1a242f;
+}
+
+/* Links de módulo no dashboard (sem sublinhado, cor herdada) */
+a.modulo-card {
+    text-decoration: none;
+    color: inherit;
+}
+
+.modulo-icon {
+    height: 50px;
+    width: auto;
+    margin-bottom: 12px;
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
+}
+
+.modulo-card h3 {
+    color: #5288c1;
+    margin: 0 0 5px 0;
+    font-size: 1.1em;
+    font-weight: 900;
+}
+
+.modulo-card p {
+    color: #8aa3ba;
+    font-size: 0.8em;
+    margin: 0;
+}
+
+/* 🎯 MÁGICA 3: Se a tela for grande (PC/Tablet), eles ficam os 3 lado a lado */
+@media (min-width: 768px) {
+    .modulo-card {
+        width: calc(33.333% - 10px);
+    }
+}
+
+/* ========================================= */
+/* ESTADO OFFLINE DOS MÓDULOS                */
+/* ========================================= */
+.offline-card {
+    cursor: not-allowed !important;
+    filter: grayscale(100%);
+    opacity: 0.6;
+    position: relative;
+    pointer-events: none; /* Bloqueia qualquer clique */
+}
+
+.badge-offline {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: #c0392b;
+    color: white;
+    font-size: 0.7em;
+    font-weight: 900;
+    padding: 3px 8px;
+    border-radius: 4px;
+    letter-spacing: 1px;
+}
