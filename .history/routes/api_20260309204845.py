@@ -352,7 +352,7 @@ async def consultar_dados_cpf(cpf: str, request: Request):
     if len(cpf_limpo) != 11:
         return {"sucesso": False, "erro": "CPF inválido. Digite os 11 números corretamente."}
 
-    ip_cliente = obter_ip_real(request)
+    ip_cliente = request.headers.get("X-Forwarded-For", request.client.host).split(",")[0].strip()
     
     # 🛡️ BARREIRA DE SEGURANÇA (BOTS E SCRAPERS)
     token_turnstile = request.headers.get("X-Turnstile-Token")
