@@ -1,6 +1,4 @@
 import os
-from dotenv import load_dotenv
-load_dotenv()
 import httpx
 import time
 import asyncio
@@ -101,6 +99,43 @@ async def verificar_turnstile(token: str, ip: str) -> bool:
         return False
 
 # ==========================================
+# 🔄 FORMATADOR: JSON DA API → TEXTO PARA O FRONT-END
+# ==========================================
+def formatar_resposta_placa_api(dados: dict) -> str:
+    """Converte o JSON retornado pela API Gonzales no formato texto
+    que o front-end (formatarTexto) já sabe renderizar."""
+    linhas = ["🕵️ **CONSULTA DE PLACA**\n"]
+
+    for chave, valor in dados.items():
+        if valor is None or valor == "":
+            continue
+        if isinstance(valor, dict):
+            nome_secao = chave.replace('_', ' ').upper()
+            linhas.append(f"\n**{nome_secao}**")
+            for sub_chave, sub_valor in valor.items():
+                if sub_valor is None or sub_valor == "":
+                    continue
+                label = sub_chave.replace('_', ' ').title()
+                linhas.append(f"**{label}:** `{sub_valor}`")
+        elif isinstance(valor, list):
+            nome_secao = chave.replace('_', ' ').upper()
+            linhas.append(f"\n**{nome_secao}**")
+            for item in valor:
+                if isinstance(item, dict):
+                    for k, v in item.items():
+                        if v is None or v == "":
+                            continue
+                        label = k.replace('_', ' ').title()
+                        linhas.append(f"**{label}:** `{v}`")
+                else:
+                    linhas.append(f"• `{item}`")
+        else:
+            label = chave.replace('_', ' ').title()
+            linhas.append(f"**{label}:** `{valor}`")
+
+    return "\n".join(linhas)
+
+# ==========================================
 # MÓDULO 1: CONSULTA DE PLACAS (API DIRETA)
 # ==========================================
 @router.get("/api/consultar/{placa}")
@@ -125,19 +160,21 @@ async def consultar_placa(placa: str, request: Request):
     ultimo_tempo = cooldowns_placa.get(ip_cliente, 0)
     
     try:
-        # 📦 CACHE: Tenta recuperar do banco (salvo como JSON string)
         dados_salvos = buscar_consulta(placa)
         if dados_salvos and "Consultando" not in dados_salvos:
-            try:
-                dados_cache = json.loads(dados_salvos)
-                return {"sucesso": True, "dados": dados_cache, "cache": True}
-            except json.JSONDecodeError:
-                pass
+            return {"sucesso": True, "dados": dados_salvos, "cache": True}
 
         if (tempo_atual - ultimo_tempo) < TEMPO_COOLDOWN:
             return {"sucesso": False, "erro": f"🚨 Aguarde mais {int(TEMPO_COOLDOWN - (tempo_atual - ultimo_tempo))} segundos."}
 
-        # 🚀 REQUISIÇÃO DIRETA À API GONZALES
+        if AMBIENTE == "desenvolvimento":
+            await asyncio.sleep(2)
+            resposta_mock = f"🕵️ **CONSULTA DE PLACA**\n\n• **Placa:** `{placa}`\n• **Situação:** `NORMAL`\n• **Roubo / Furto:** `NAO`"
+            salvar_consulta(placa, resposta_mock)
+            cooldowns_placa[ip_cliente] = time.time()
+            return {"sucesso": True, "dados": resposta_mock, "cache": False}
+
+        # 🚀 REQUISIÇÃO DIRETA À API GONZALES (SEM BOT TELEGRAM)
         async with httpx.AsyncClient(timeout=15.0) as client:
             response = await client.get("https://apis.gonzalesdev.shop/", params={
                 "token": GONZALES_API_TOKEN,
@@ -150,14 +187,15 @@ async def consultar_placa(placa: str, request: Request):
 
         dados_api = response.json()
 
+        # Verifica se a API retornou um erro próprio
         if isinstance(dados_api, dict) and dados_api.get("erro"):
             return {"sucesso": False, "erro": "Placa não encontrada ou indisponível no momento."}
 
-        # Salva o JSON integral no banco para cache futuro
-        salvar_consulta(placa, json.dumps(dados_api))
+        resposta_formatada = formatar_resposta_placa_api(dados_api)
+        salvar_consulta(placa, resposta_formatada)
         cooldowns_placa[ip_cliente] = time.time()
 
-        return {"sucesso": True, "dados": dados_api, "cache": False}
+        return {"sucesso": True, "dados": resposta_formatada, "cache": False}
             
     except Exception:
         return {"sucesso": False, "erro": "Erro interno no servidor. Tente novamente."}

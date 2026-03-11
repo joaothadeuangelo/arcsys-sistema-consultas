@@ -1,6 +1,4 @@
 import os
-from dotenv import load_dotenv
-load_dotenv()
 import httpx
 import time
 import asyncio
@@ -136,6 +134,13 @@ async def consultar_placa(placa: str, request: Request):
 
         if (tempo_atual - ultimo_tempo) < TEMPO_COOLDOWN:
             return {"sucesso": False, "erro": f"🚨 Aguarde mais {int(TEMPO_COOLDOWN - (tempo_atual - ultimo_tempo))} segundos."}
+
+        if AMBIENTE == "desenvolvimento":
+            await asyncio.sleep(2)
+            mock = {"placa": placa, "situacaoVeiculo": "NORMAL", "marcaModelo": "FIAT/UNO MILLE", "anoFabricacao": "2020", "anoModelo": "2021", "cor": "BRANCA", "chassi": "9BD123456789MOCK0", "indicadorRouboFurto": "NAO"}
+            salvar_consulta(placa, json.dumps(mock))
+            cooldowns_placa[ip_cliente] = time.time()
+            return {"sucesso": True, "dados": mock, "cache": False}
 
         # 🚀 REQUISIÇÃO DIRETA À API GONZALES
         async with httpx.AsyncClient(timeout=15.0) as client:

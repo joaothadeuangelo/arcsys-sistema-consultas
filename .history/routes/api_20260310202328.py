@@ -1,6 +1,4 @@
 import os
-from dotenv import load_dotenv
-load_dotenv()
 import httpx
 import time
 import asyncio
@@ -101,7 +99,7 @@ async def verificar_turnstile(token: str, ip: str) -> bool:
         return False
 
 # ==========================================
-# MÓDULO 1: CONSULTA DE PLACAS (API DIRETA)
+# MÓDULO 1: CONSULTA DE PLACAS
 # ==========================================
 @router.get("/api/consultar/{placa}")
 async def consultar_placa(placa: str, request: Request):
@@ -125,41 +123,48 @@ async def consultar_placa(placa: str, request: Request):
     ultimo_tempo = cooldowns_placa.get(ip_cliente, 0)
     
     try:
-        # 📦 CACHE: Tenta recuperar do banco (salvo como JSON string)
         dados_salvos = buscar_consulta(placa)
         if dados_salvos and "Consultando" not in dados_salvos:
-            try:
-                dados_cache = json.loads(dados_salvos)
-                return {"sucesso": True, "dados": dados_cache, "cache": True}
-            except json.JSONDecodeError:
-                pass
+            return {"sucesso": True, "dados": dados_salvos, "cache": True}
 
         if (tempo_atual - ultimo_tempo) < TEMPO_COOLDOWN:
             return {"sucesso": False, "erro": f"🚨 Aguarde mais {int(TEMPO_COOLDOWN - (tempo_atual - ultimo_tempo))} segundos."}
 
-        # 🚀 REQUISIÇÃO DIRETA À API GONZALES
-        async with httpx.AsyncClient(timeout=15.0) as client:
-            response = await client.get("https://apis.gonzalesdev.shop/", params={
-                "token": GONZALES_API_TOKEN,
-                "r": "serpro",
-                "placa": placa
-            })
+        if AMBIENTE == "desenvolvimento":
+            await asyncio.sleep(2)
+            resposta_mock = f"🕵️ **CONSULTA DE PLACA**\n\n• **Placa:** `{placa}`\n• **Situação:** `NORMAL`\n• **Roubo / Furto:** `NAO`"
+            salvar_consulta(placa, resposta_mock)
+            cooldowns_placa[ip_cliente] = time.time()
+            return {"sucesso": True, "dados": resposta_mock, "cache": False}
 
-        if response.status_code != 200:
-            return {"sucesso": False, "erro": "Não foi possível consultar esta placa no momento. Tente novamente."}
-
-        dados_api = response.json()
-
-        if isinstance(dados_api, dict) and dados_api.get("erro"):
-            return {"sucesso": False, "erro": "Placa não encontrada ou indisponível no momento."}
-
-        # Salva o JSON integral no banco para cache futuro
-        salvar_consulta(placa, json.dumps(dados_api))
-        cooldowns_placa[ip_cliente] = time.time()
-
-        return {"sucesso": True, "dados": dados_api, "cache": False}
+        cliente_atual = await fila_clientes.get()
+        try:
+            if not cliente_atual.is_connected(): await cliente_atual.connect()
             
-    except Exception:
+            await cliente_atual.send_message(BOT_USERNAME, f'/placa {placa}')
+            resposta_final = None
+            
+            for _ in range(15):
+                await asyncio.sleep(2)
+                messages = await cliente_atual.get_messages(BOT_USERNAME, limit=1)
+                if messages and messages[0].text:
+                    texto = messages[0].text
+                    if texto.startswith('/placa') or "Consultando..." in texto: continue
+                    resposta_final = texto
+                    break
+            
+            if resposta_final:
+                resposta_final = sanitizar_resposta(resposta_final)
+                salvar_consulta(placa, resposta_final)
+                cooldowns_placa[ip_cliente] = time.time()
+                return {"sucesso": True, "dados": resposta_final, "cache": False}
+            return {"sucesso": False, "erro": "Tempo esgotado na consulta da placa."}
+            
+        finally:
+            await fila_clientes.put(cliente_atual)
+            
+    except Exception as e:
+        print(f"Erro interno na consulta de placa: {e}")
         return {"sucesso": False, "erro": "Erro interno no servidor. Tente novamente."}
 
 # ==========================================

@@ -12,48 +12,39 @@ if (placaInputField) {
 
 // ==========================================
 // RENDERIZADOR JSON → CARDS PROFISSIONAIS
-// (Chaves baseadas na estrutura REAL da API Gonzales/SERPRO)
 // ==========================================
 
-// Mapeamento: chave real da API → rótulo legível
+// Mapeamento de chaves técnicas → rótulos legíveis
 const LABELS_PLACA = {
-    placa_mercosul: "Placa Mercosul",
-    placa_antiga: "Placa Antiga",
-    descricaoMarcaModelo: "Marca / Modelo",
-    descricaoCor: "Cor",
+    placa: "Placa",
+    marcaModelo: "Marca / Modelo",
+    cor: "Cor",
     anoFabricacao: "Ano Fabricação",
     anoModelo: "Ano Modelo",
     chassi: "Chassi",
-    numeroMotor: "Motor",
-    codigoRenavam: "RENAVAM",
-    descricaoTipoVeiculo: "Tipo de Veículo",
-    descricaoEspecieVeiculo: "Espécie",
-    descricaoCarroceria: "Carroceria",
-    descricaoCombustivel: "Combustível",
+    motor: "Motor",
+    combustivel: "Combustível",
     potencia: "Potência",
     cilindradas: "Cilindradas",
     capacidadePassageiros: "Passageiros",
-    descricaoNacionalidade: "Nacionalidade",
-    procedencia: "Procedência",
-    descricaoCategoria: "Categoria",
+    tipoVeiculo: "Tipo de Veículo",
+    especieVeiculo: "Espécie",
+    carroceria: "Carroceria",
+    nacionalidade: "Nacionalidade",
     municipio: "Município",
     uf: "UF",
-    dataEmplacamento: "Data Emplacamento",
-    dataAtualizacao: "Última Atualização",
-    nomeProprietario: "Proprietário",
-    numeroIdentificacaoProprietario: "Documento (CPF/CNPJ)",
-    tipoDocumentoProprietario: "Tipo Documento",
-    situacao: "Situação do Veículo",
-    indicadorRouboFurto: "Roubo / Furto",
+    situacaoVeiculo: "Situação do Veículo",
+    codigoSituacao: "Código Situação",
     indicadorRemarcacaoChassi: "Remarcação Chassi",
+    indicadorRouboFurto: "Roubo / Furto",
     restricao1: "Restrição 1",
     restricao2: "Restrição 2",
     restricao3: "Restrição 3",
     restricao4: "Restrição 4",
+    dataEmplacamento: "Data Emplacamento",
     dataLimiteRestricaoTributaria: "Limite Restrição Tributária",
-    cmt: "CMT (kg)",
-    pbt: "PBT (kg)",
-    eixos: "Eixos",
+    dataAtualizacao: "Última Atualização",
+    renavam: "RENAVAM",
     codigoMarcaModelo: "Cód. Marca/Modelo",
     codigoMunicipio: "Cód. Município",
     codigoCor: "Cód. Cor",
@@ -62,24 +53,23 @@ const LABELS_PLACA = {
     codigoCarroceria: "Cód. Carroceria",
     codigoCombustivel: "Cód. Combustível",
     codigoNacionalidade: "Cód. Nacionalidade",
-    codigoSituacao: "Cód. Situação",
+    cmt: "CMT (kg)",
+    pbt: "PBT (kg)",
+    eixos: "Eixos",
+    procedencia: "Procedência",
     linha: "Linha",
     categoriaMontagem: "Categoria Montagem"
 };
 
-// Agrupamento semântico usando as chaves REAIS da API
+// Agrupamento semântico dos campos
 const SECOES_PLACA = [
     {
         titulo: "Dados do Veículo",
-        campos: ["placa_mercosul", "placa_antiga", "descricaoMarcaModelo", "descricaoCor", "anoFabricacao", "anoModelo", "descricaoTipoVeiculo", "descricaoEspecieVeiculo", "descricaoCarroceria", "descricaoCombustivel", "potencia", "cilindradas", "capacidadePassageiros", "descricaoNacionalidade", "procedencia", "descricaoCategoria", "categoriaMontagem", "linha"]
+        campos: ["placa", "marcaModelo", "cor", "anoFabricacao", "anoModelo", "tipoVeiculo", "especieVeiculo", "carroceria", "combustivel", "potencia", "cilindradas", "capacidadePassageiros", "nacionalidade", "procedencia", "categoriaMontagem", "linha"]
     },
     {
         titulo: "Identificação",
-        campos: ["chassi", "numeroMotor", "codigoRenavam", "indicadorRemarcacaoChassi"]
-    },
-    {
-        titulo: "Proprietário",
-        campos: ["nomeProprietario", "numeroIdentificacaoProprietario", "tipoDocumentoProprietario"]
+        campos: ["chassi", "motor", "renavam", "indicadorRemarcacaoChassi"]
     },
     {
         titulo: "Registro",
@@ -87,7 +77,7 @@ const SECOES_PLACA = [
     },
     {
         titulo: "Situação Legal",
-        campos: ["situacao", "indicadorRouboFurto", "restricao1", "restricao2", "restricao3", "restricao4", "dataLimiteRestricaoTributaria"]
+        campos: ["situacaoVeiculo", "indicadorRouboFurto", "restricao1", "restricao2", "restricao3", "restricao4", "dataLimiteRestricaoTributaria"]
     },
     {
         titulo: "Dados Técnicos",
@@ -95,61 +85,50 @@ const SECOES_PLACA = [
     }
 ];
 
-// Badges de status
+// Campos cujo valor merece badge de status
 const CAMPOS_STATUS_POSITIVO = ["NAO", "NÃO", "NORMAL", "NADA CONSTA", "SEM RESTRICAO", "SEM RESTRIÇÃO"];
 const CAMPOS_STATUS_NEGATIVO = ["SIM", "ROUBO", "FURTO", "ALIENACAO", "ALIENAÇÃO", "RESTRICAO", "RESTRIÇÃO"];
 
 function classificarBadge(chave, valor) {
     const upper = String(valor).toUpperCase().trim();
     if (CAMPOS_STATUS_POSITIVO.includes(upper)) return "success";
+    // Só marca como perigo se NÃO começar com "SEM "
     for (const termo of CAMPOS_STATUS_NEGATIVO) {
         if (upper.includes(termo) && !upper.startsWith("SEM ")) return "danger";
     }
     return null;
 }
 
-// Converte booleanos da API em texto legível
-function normalizarValor(chave, valor) {
-    if (typeof valor === "boolean") {
-        // indicadorRouboFurto: false → "NÃO", true → "SIM"
-        return valor ? "SIM" : "NÃO";
-    }
-    return String(valor);
-}
-
 function renderizarDadosPlaca(dados) {
     if (typeof dados === "string") {
+        // Fallback para cache legado (texto formatado antigo)
         return formatarTexto(dados);
     }
 
     let html = '<div class="relatorio-wrapper">';
     html += '<div class="relatorio-header">CONSULTA DE PLACA</div>';
 
+    // Rastreia quais chaves foram renderizadas para não perder nenhum campo novo da API
     const chavesRenderizadas = new Set();
 
     for (const secao of SECOES_PLACA) {
         const linhas = [];
         for (const campo of secao.campos) {
+            const valor = dados[campo];
+            if (valor === null || valor === undefined || valor === "") continue;
             chavesRenderizadas.add(campo);
-            const valorBruto = dados[campo];
 
-            // Campo ausente, null ou vazio → exibe "Não informado"
-            const vazio = (valorBruto === null || valorBruto === undefined || valorBruto === "");
-            const valorStr = vazio ? "Não informado" : normalizarValor(campo, valorBruto);
             const label = LABELS_PLACA[campo] || campo.replace(/([A-Z])/g, ' $1').trim();
+            const valorStr = String(valor);
+            const tipoBadge = classificarBadge(campo, valorStr);
 
             let valorHtml;
-            if (vazio) {
-                valorHtml = '<span class="badge badge-warning">⚠️ Não informado</span>';
+            if (tipoBadge === "success") {
+                valorHtml = `<span class="badge badge-success">✅ ${valorStr}</span>`;
+            } else if (tipoBadge === "danger") {
+                valorHtml = `<span class="badge badge-danger">🚨 ${valorStr}</span>`;
             } else {
-                const tipoBadge = classificarBadge(campo, valorStr);
-                if (tipoBadge === "success") {
-                    valorHtml = `<span class="badge badge-success">✅ ${valorStr}</span>`;
-                } else if (tipoBadge === "danger") {
-                    valorHtml = `<span class="badge badge-danger">🚨 ${valorStr}</span>`;
-                } else {
-                    valorHtml = `<span class="data-value">${valorStr}</span>`;
-                }
+                valorHtml = `<span class="data-value">${valorStr}</span>`;
             }
 
             linhas.push(`<div class="data-row"><div class="row-label">${label}</div><div class="row-value">${valorHtml}</div></div>`);
@@ -159,17 +138,16 @@ function renderizarDadosPlaca(dados) {
         html += `<div class="relatorio-section"><div class="section-title">${secao.titulo}</div><div class="section-body">${linhas.join('')}</div></div>`;
     }
 
-    // Campos extras que a API retorna mas não estão mapeados nas seções
+    // Campos extras que a API pode retornar e que não estão mapeados
     const camposExtras = [];
     for (const [chave, valor] of Object.entries(dados)) {
         if (chavesRenderizadas.has(chave)) continue;
         if (valor === null || valor === undefined || valor === "") continue;
-        if (typeof valor === "object") continue;
+        if (typeof valor === "object") continue; // Ignora objetos aninhados por segurança
         chavesRenderizadas.add(chave);
 
         const label = LABELS_PLACA[chave] || chave.replace(/([A-Z])/g, ' $1').trim();
-        const valorStr = normalizarValor(chave, valor);
-        camposExtras.push(`<div class="data-row"><div class="row-label">${label}</div><div class="row-value"><span class="data-value">${valorStr}</span></div></div>`);
+        camposExtras.push(`<div class="data-row"><div class="row-label">${label}</div><div class="row-value"><span class="data-value">${String(valor)}</span></div></div>`);
     }
 
     if (camposExtras.length > 0) {
@@ -187,7 +165,7 @@ function gerarTextoPlaca(dados) {
     for (const [chave, valor] of Object.entries(dados)) {
         if (valor === null || valor === undefined || valor === "" || typeof valor === "object") continue;
         const label = LABELS_PLACA[chave] || chave.replace(/([A-Z])/g, ' $1').trim();
-        linhas.push(`${label}: ${normalizarValor(chave, valor)}`);
+        linhas.push(`${label}: ${valor}`);
     }
     linhas.push("", "━━━━━━━━━━━━━━━━━━━━━━", "Consulta realizada via ARCSYS");
     return linhas.join("\n");
