@@ -146,8 +146,7 @@ async def consultar_placa(placa: str, request: Request):
             })
 
         if response.status_code != 200:
-            corpo_log = response.text[:500] if len(response.text) > 500 else response.text
-            print(f"ERRO GONZALES STATUS: {response.status_code} - BODY: {corpo_log}")
+            print(f"ERRO GONZALES STATUS: {response.status_code} - BODY: {response.text}")
             return {"sucesso": False, "erro": "Não foi possível consultar esta placa no momento. Tente novamente."}
 
         dados_api = response.json()
@@ -156,11 +155,6 @@ async def consultar_placa(placa: str, request: Request):
             print(f"ERRO GONZALES API: {dados_api}")
             return {"sucesso": False, "erro": "Placa não encontrada ou indisponível no momento."}
 
-        # 🛡️ VALIDAÇÃO ESTRUTURAL: Só salva no cache se o retorno parecer dados reais de veículo
-        if not isinstance(dados_api, dict) or not any(k in dados_api for k in ("chassi", "placa_mercosul", "placa_antiga", "codigoRenavam", "descricaoMarcaModelo")):
-            print(f"GONZALES RETORNO INESPERADO (não é dados de veículo): {str(dados_api)[:300]}")
-            return {"sucesso": False, "erro": "Resposta inválida do sistema de consulta. Tente novamente."}
-
         # Salva o JSON integral no banco para cache futuro
         salvar_consulta(placa, json.dumps(dados_api))
         cooldowns_placa[ip_cliente] = time.time()
@@ -168,9 +162,7 @@ async def consultar_placa(placa: str, request: Request):
         return {"sucesso": True, "dados": dados_api, "cache": False}
             
     except Exception as e:
-        # 🛡️ Sanitiza a mensagem: exceções httpx podem conter a URL completa com o token na query string
-        msg_erro = re.sub(r'token=[^&\s]+', 'token=***', str(e))
-        print(f"EXCEÇÃO INTERNA ROTA PLACA: {msg_erro}")
+        print(f"EXCEÇÃO INTERNA ROTA PLACA: {e}")
         return {"sucesso": False, "erro": "Erro interno no servidor. Tente novamente."}
 
 # ==========================================
