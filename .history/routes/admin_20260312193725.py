@@ -18,21 +18,7 @@ from database import (
     obter_historico_paginado
 )
 
-
-def normalizar_prefixo_admin(prefixo: str) -> str:
-    p = (prefixo or "").strip()
-    if not p:
-        p = "/arcsys-comando"
-    if not p.startswith("/"):
-        p = "/" + p
-    if len(p) > 1 and p.endswith("/"):
-        p = p[:-1]
-    return p
-
-
-ADMIN_ROUTE_PREFIX = normalizar_prefixo_admin(os.getenv("ADMIN_ROUTE_PREFIX", "/arcsys-comando"))
-
-router = APIRouter(prefix=ADMIN_ROUTE_PREFIX)
+router = APIRouter()
 ADMIN_TOKEN = os.getenv('ADMIN_TOKEN', '')
 AMBIENTE = os.getenv('AMBIENTE', 'producao')
 COOKIE_ADMIN = "admin_session"
@@ -60,14 +46,14 @@ def admin_autenticado(request: Request) -> bool:
 templates = Jinja2Templates(directory="templates")
 
 
-@router.get("/login", response_class=HTMLResponse)
+@router.get("/admin/login", response_class=HTMLResponse)
 async def admin_login_get(request: Request):
     if admin_autenticado(request):
-        return RedirectResponse(url=f"{ADMIN_ROUTE_PREFIX}/lista", status_code=302)
+        return RedirectResponse(url="/admin/lista", status_code=302)
     return templates.TemplateResponse("admin_login.html", {"request": request, "erro": ""})
 
 
-@router.post("/login", response_class=HTMLResponse)
+@router.post("/admin/login", response_class=HTMLResponse)
 async def admin_login_post(request: Request, token: str = Form("")):
     if not token_admin_valido(token):
         return templates.TemplateResponse(
@@ -76,7 +62,7 @@ async def admin_login_post(request: Request, token: str = Form("")):
             status_code=403,
         )
 
-    response = RedirectResponse(url=f"{ADMIN_ROUTE_PREFIX}/lista", status_code=302)
+    response = RedirectResponse(url="/admin/lista", status_code=302)
     response.set_cookie(
         key=COOKIE_ADMIN,
         value=token,
@@ -89,16 +75,16 @@ async def admin_login_post(request: Request, token: str = Form("")):
     return response
 
 
-@router.get("/logout")
+@router.get("/admin/logout")
 async def admin_logout():
-    response = RedirectResponse(url=f"{ADMIN_ROUTE_PREFIX}/login", status_code=302)
+    response = RedirectResponse(url="/admin/login", status_code=302)
     response.delete_cookie(key=COOKIE_ADMIN, path="/")
     return response
 
 # ==========================================
 # ROTA DE AÇÃO (LIGAR/DESLIGAR)
 # ==========================================
-@router.get("/toggle")
+@router.get("/admin/toggle")
 async def alternar_status(request: Request, modulo: str = None):
     if not admin_autenticado(request):
         return HTMLResponse("<h1>Acesso Negado</h1>", status_code=403)
@@ -109,15 +95,15 @@ async def alternar_status(request: Request, modulo: str = None):
     else:
         toggle_manutencao()
         
-    return RedirectResponse(url=f"{ADMIN_ROUTE_PREFIX}/lista", status_code=302)
+    return RedirectResponse(url="/admin/lista", status_code=302)
 
 # ==========================================
 # ROTA VISUAL: DASHBOARD DE ADMINISTRAÇÃO
 # ==========================================
-@router.get("/lista", response_class=HTMLResponse)
+@router.get("/admin/lista", response_class=HTMLResponse)
 async def ver_historico(request: Request, pagina: int = 1):
     if not admin_autenticado(request):
-        return RedirectResponse(url=f"{ADMIN_ROUTE_PREFIX}/login", status_code=302)
+        return RedirectResponse(url="/admin/login", status_code=302)
 
     # --- LÓGICA DE PAGINAÇÃO ---
     ITENS_POR_PAGINA = 50
@@ -163,7 +149,7 @@ async def ver_historico(request: Request, pagina: int = 1):
 # ==========================================
 # ROTA ADMIN: STATUS DAS CONTAS TELEGRAM
 # ==========================================
-@router.get("/api/status_contas")
+@router.get("/api/admin/status_contas")
 async def verificar_status_contas(request: Request):
     # 🛡️ PROTEÇÃO: Endpoint sensível agora exige token admin
     if not admin_autenticado(request):

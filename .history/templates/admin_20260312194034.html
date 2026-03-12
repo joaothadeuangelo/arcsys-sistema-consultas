@@ -246,7 +246,7 @@
 <body>
     <div class="topo-admin">
         <h1>ARCSYS <span style="color: #fff;">Centro de Comando</span></h1>
-        <a class="btn-logout" href="{{ request.url_for('admin_logout') }}">Sair do Painel</a>
+        <a class="btn-logout" href="/admin/logout">Sair do Painel</a>
     </div>
     <p class="subtitulo">Controle modular de APIs e Bot.</p>
 
@@ -257,7 +257,7 @@
                 <span class="modulo-nome">{{ titulo }}</span>
                 <span class="modulo-status">{{ "ON" if is_on else "OFF" }}</span>
             </div>
-                <a href="{{ request.url_for('alternar_status') }}{% if nome_modulo %}?modulo={{ nome_modulo }}{% endif %}"
+            <a href="/admin/toggle{% if nome_modulo %}?modulo={{ nome_modulo }}{% endif %}"
                class="switch-link {{ 'on' if is_on else 'off' }}"
                title="Alternar módulo">
                 <span class="switch-knob"></span>
@@ -328,7 +328,7 @@
 
     <div class="paginacao">
         {% if pagina_atual > 1 %}
-            <a href="{{ request.url_for('ver_historico') }}?pagina={{ pagina_atual - 1 }}" class="btn-page">◀ Anterior</a>
+            <a href="/admin/lista?pagina={{ pagina_atual - 1 }}" class="btn-page">◀ Anterior</a>
         {% else %}
             <a href="#" class="btn-page disabled">◀ Anterior</a>
         {% endif %}
@@ -336,7 +336,7 @@
         <span style="color: #8aa3ba; padding: 10px; font-weight: bold;">Página {{ pagina_atual }} de {{ total_paginas }}</span>
 
         {% if pagina_atual < total_paginas %}
-            <a href="{{ request.url_for('ver_historico') }}?pagina={{ pagina_atual + 1 }}" class="btn-page">Próxima ▶</a>
+            <a href="/admin/lista?pagina={{ pagina_atual + 1 }}" class="btn-page">Próxima ▶</a>
         {% else %}
             <a href="#" class="btn-page disabled">Próxima ▶</a>
         {% endif %}
@@ -352,7 +352,7 @@
         grid.innerHTML = "<div class='sessao-line' style='padding: 6px 0;'>Testando conexão de todas as sessões na nuvem. Isso pode levar alguns segundos...</div>";
 
         try {
-            const response = await fetch("{{ request.url_for('verificar_status_contas') }}");
+            const response = await fetch('/api/admin/status_contas');
             const data = await response.json();
 
             if (data.sucesso) {

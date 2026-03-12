@@ -1,6 +1,6 @@
 import os
 import hmac
-from fastapi import APIRouter, Request, Form
+from fastapi import APIRouter, Request, Header
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 
@@ -18,26 +18,8 @@ from database import (
     obter_historico_paginado
 )
 
-
-def normalizar_prefixo_admin(prefixo: str) -> str:
-    p = (prefixo or "").strip()
-    if not p:
-        p = "/arcsys-comando"
-    if not p.startswith("/"):
-        p = "/" + p
-    if len(p) > 1 and p.endswith("/"):
-        p = p[:-1]
-    return p
-
-
-ADMIN_ROUTE_PREFIX = normalizar_prefixo_admin(os.getenv("ADMIN_ROUTE_PREFIX", "/arcsys-comando"))
-
-router = APIRouter(prefix=ADMIN_ROUTE_PREFIX)
+router = APIRouter()
 ADMIN_TOKEN = os.getenv('ADMIN_TOKEN', '')
-AMBIENTE = os.getenv('AMBIENTE', 'producao')
-COOKIE_ADMIN = "admin_session"
-COOKIE_SECURE = AMBIENTE == 'producao'
-COOKIE_MAX_AGE = 60 * 60 * 12  # 12h
 
 
 def token_admin_valido(token: str) -> bool:
@@ -48,59 +30,15 @@ def token_admin_valido(token: str) -> bool:
         return False
     return hmac.compare_digest(token, ADMIN_TOKEN)
 
-
-def obter_token_cookie(request: Request) -> str:
-    return request.cookies.get(COOKIE_ADMIN, "")
-
-
-def admin_autenticado(request: Request) -> bool:
-    return token_admin_valido(obter_token_cookie(request))
-
 # Configurando o renderizador de HTML
 templates = Jinja2Templates(directory="templates")
-
-
-@router.get("/login", response_class=HTMLResponse)
-async def admin_login_get(request: Request):
-    if admin_autenticado(request):
-        return RedirectResponse(url=f"{ADMIN_ROUTE_PREFIX}/lista", status_code=302)
-    return templates.TemplateResponse("admin_login.html", {"request": request, "erro": ""})
-
-
-@router.post("/login", response_class=HTMLResponse)
-async def admin_login_post(request: Request, token: str = Form("")):
-    if not token_admin_valido(token):
-        return templates.TemplateResponse(
-            "admin_login.html",
-            {"request": request, "erro": "Token inválido."},
-            status_code=403,
-        )
-
-    response = RedirectResponse(url=f"{ADMIN_ROUTE_PREFIX}/lista", status_code=302)
-    response.set_cookie(
-        key=COOKIE_ADMIN,
-        value=token,
-        httponly=True,
-        secure=COOKIE_SECURE,
-        samesite="lax",
-        max_age=COOKIE_MAX_AGE,
-        path="/",
-    )
-    return response
-
-
-@router.get("/logout")
-async def admin_logout():
-    response = RedirectResponse(url=f"{ADMIN_ROUTE_PREFIX}/login", status_code=302)
-    response.delete_cookie(key=COOKIE_ADMIN, path="/")
-    return response
 
 # ==========================================
 # ROTA DE AÇÃO (LIGAR/DESLIGAR)
 # ==========================================
-@router.get("/toggle")
-async def alternar_status(request: Request, modulo: str = None):
-    if not admin_autenticado(request):
+@router.get("/admin/toggle")
+async def alternar_status(token: str, modulo: str = None):
+    if not token_admin_valido(token):
         return HTMLResponse("<h1>Acesso Negado</h1>", status_code=403)
     
     # 🎯 ADICIONADO O 'comparador' NA LISTA DE MÓDULOS PERMITIDOS
@@ -109,15 +47,15 @@ async def alternar_status(request: Request, modulo: str = None):
     else:
         toggle_manutencao()
         
-    return RedirectResponse(url=f"{ADMIN_ROUTE_PREFIX}/lista", status_code=302)
+    return RedirectResponse(url=f"/admin/lista?token={token}")
 
 # ==========================================
 # ROTA VISUAL: DASHBOARD DE ADMINISTRAÇÃO
 # ==========================================
-@router.get("/lista", response_class=HTMLResponse)
-async def ver_historico(request: Request, pagina: int = 1):
-    if not admin_autenticado(request):
-        return RedirectResponse(url=f"{ADMIN_ROUTE_PREFIX}/login", status_code=302)
+@router.get("/admin/lista", response_class=HTMLResponse)
+async def ver_historico(request: Request, token: str, pagina: int = 1):
+    if not token_admin_valido(token):
+        return HTMLResponse("<h1>Acesso Negado</h1>", status_code=403)
 
     # --- LÓGICA DE PAGINAÇÃO ---
     ITENS_POR_PAGINA = 50
@@ -145,6 +83,7 @@ async def ver_historico(request: Request, pagina: int = 1):
     # 4. Envia os dados mastigados para o HTML
     contexto = {
         "request": request,
+        "token": token,
         "rows": rows,
         "pagina_atual": pagina,
         "total_paginas": total_paginas,
@@ -163,10 +102,10 @@ async def ver_historico(request: Request, pagina: int = 1):
 # ==========================================
 # ROTA ADMIN: STATUS DAS CONTAS TELEGRAM
 # ==========================================
-@router.get("/api/status_contas")
-async def verificar_status_contas(request: Request):
+@router.get("/api/admin/status_contas")
+async def verificar_status_contas(request: Request, token: str = ""):
     # 🛡️ PROTEÇÃO: Endpoint sensível agora exige token admin
-    if not admin_autenticado(request):
+    if not token_admin_valido(token):
         return {"sucesso": False, "erro": "Acesso negado."}
     
     status_lista = []
