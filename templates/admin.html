@@ -352,7 +352,10 @@
         grid.innerHTML = "<div class='sessao-line' style='padding: 6px 0;'>Testando conexão de todas as sessões na nuvem. Isso pode levar alguns segundos...</div>";
 
         try {
-            const response = await fetch("{{ request.url_for('verificar_status_contas') }}");
+            const response = await fetch("{{ request.url_for('verificar_status_contas') }}", {
+                method: 'GET',
+                credentials: 'same-origin'
+            });
             const data = await response.json();
 
             if (data.sucesso) {
