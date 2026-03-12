@@ -1,7 +1,7 @@
 import os
 import hmac
 from fastapi import APIRouter, Request, Form
-from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
 
 # ==========================================
@@ -171,14 +171,14 @@ async def verificar_status_contas(request: Request):
     
     status_lista = []
     clientes_temporarios = []
-    
-    # 1. Pega quantos clientes estão livres na fila agora
-    quantidade = fila_clientes.qsize()
-    
-    if quantidade == 0:
-        return {"sucesso": False, "erro": "Nenhuma conta na fila (ou todas estão em uso no exato momento)."}
 
     try:
+        # 1. Pega quantos clientes estão livres na fila agora
+        quantidade = fila_clientes.qsize()
+
+        if quantidade == 0:
+            return {"sucesso": False, "erro": "Nenhuma conta na fila (ou todas estão em uso no exato momento)."}
+
         # 2. Retira todos da fila para testar
         for _ in range(quantidade):
             cliente = await fila_clientes.get()
@@ -192,7 +192,7 @@ async def verificar_status_contas(request: Request):
 
             if not cliente.is_connected():
                 status_lista.append({
-                    "id": idx + 1, "sessao": nome_sessao, 
+                    "id": idx + 1, "sessao": nome_sessao,
                     "status": "Desconectada", "cor": "red", "icone": "❌"
                 })
                 continue
@@ -201,20 +201,23 @@ async def verificar_status_contas(request: Request):
                 me = await cliente.get_me()
                 nome_conta = me.first_name if me else "Sem Nome"
                 telefone = f"+{me.phone}" if me and me.phone else "Oculto"
-                
+
                 status_lista.append({
                     "id": idx + 1, "sessao": nome_sessao, "nome": nome_conta, "telefone": telefone,
                     "status": "Operante", "cor": "green", "icone": "✅"
                 })
             except Exception as e:
                 status_lista.append({
-                    "id": idx + 1, "sessao": nome_sessao, 
+                    "id": idx + 1, "sessao": nome_sessao,
                     "status": "Sessão Morta/Banida", "cor": "red", "icone": "💀", "detalhe": str(e)
                 })
+
+        return {"sucesso": True, "contas": status_lista}
+
+    except Exception as e:
+        return JSONResponse(content={"sucesso": False, "erro": "falha interna"}, status_code=500)
 
     finally:
         # 4. DEVOLVE TODO MUNDO PRA FILA
         for c in clientes_temporarios:
             await fila_clientes.put(c)
-
-    return {"sucesso": True, "contas": status_lista}

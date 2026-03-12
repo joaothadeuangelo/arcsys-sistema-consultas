@@ -354,9 +354,15 @@
         try {
             const response = await fetch("{{ request.url_for('verificar_status_contas') }}", {
                 method: 'GET',
-                credentials: 'same-origin'
+                credentials: 'include'
             });
-            const data = await response.json();
+
+            let data;
+            try {
+                data = await response.json();
+            } catch (_) {
+                throw new Error('Resposta não-JSON do endpoint de status.');
+            }
 
             if (data.sucesso) {
                 grid.innerHTML = ''; // Limpa a grid
