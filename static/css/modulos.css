@@ -432,27 +432,26 @@ button:disabled {
 }
 
 .resultado-nome-filtro {
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff;
+    padding: 10px;
+    border-radius: 5px;
+    border: 1px solid rgba(255,255,255,0.3);
     width: 100%;
-    padding: 11px 13px;
-    border-radius: 10px;
-    border: 1px solid rgba(82, 136, 193, 0.35);
-    background: linear-gradient(145deg, rgba(18, 28, 38, 0.94), rgba(26, 36, 47, 0.9));
-    color: #e6eff9;
     font-size: 0.9em;
     outline: none;
     text-transform: none;
     text-align: left;
-    transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .resultado-nome-filtro::placeholder {
-    color: #8aa3ba;
+    color: rgba(255, 255, 255, 0.72);
 }
 
 .resultado-nome-filtro:focus {
-    border-color: rgba(125, 181, 255, 0.75);
-    box-shadow: 0 0 0 3px rgba(82, 136, 193, 0.16);
-    background: linear-gradient(145deg, rgba(19, 31, 44, 0.96), rgba(28, 40, 53, 0.92));
+    border-color: rgba(255,255,255,0.5);
+    box-shadow: 0 0 0 3px rgba(255,255,255,0.08);
 }
 
 .nome-resumo-head {

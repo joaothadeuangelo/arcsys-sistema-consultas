@@ -7,33 +7,6 @@ if (nomeInputField) {
 
 let resultadosNomeAtuais = [];
 
-function limparTextoNome(valor) {
-    return String(valor || '-')
-        .replace(/\*|`/g, '')
-        .replace(/\s+/g, ' ')
-        .trim();
-}
-
-function escaparHtml(valor) {
-    return String(valor || '-')
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#039;');
-}
-
-function normalizarResultadoNome(item = {}) {
-    return {
-        nome: limparTextoNome(item.nome),
-        cpf: limparTextoNome(item.cpf),
-        sexo: limparTextoNome(item.sexo),
-        data_nascimento: limparTextoNome(item.data_nascimento),
-        nome_mae: limparTextoNome(item.nome_mae),
-        situacao: limparTextoNome(item.situacao)
-    };
-}
-
 function normalizarTextoFiltro(valor) {
     return String(valor || '')
         .toLowerCase()
@@ -62,8 +35,7 @@ function aplicarFiltroResultadosNome() {
     avisoVazio.style.display = visiveis === 0 && cards.length > 0 ? 'block' : 'none';
 }
 
-function montarTextoCopiarResultado(item) {
-    const dados = normalizarResultadoNome(item);
+function montarTextoCopiarResultado(dados) {
     return [
         `Nome: ${dados.nome}`,
         `CPF: ${dados.cpf}`,
@@ -75,11 +47,11 @@ function montarTextoCopiarResultado(item) {
 }
 
 async function copiarResultadoNome(index, btn) {
-    const item = resultadosNomeAtuais[index];
-    if (!item) return;
+    const dados = resultadosNomeAtuais[index];
+    if (!dados) return;
 
     try {
-        await navigator.clipboard.writeText(montarTextoCopiarResultado(item));
+        await navigator.clipboard.writeText(montarTextoCopiarResultado(dados));
         const original = btn.innerHTML;
         btn.innerHTML = '✅ Copiado';
         setTimeout(() => {
@@ -103,42 +75,53 @@ function renderizarResultadosNome(resultados = []) {
         return;
     }
 
-    resultadosNomeAtuais = resultados.map(normalizarResultadoNome);
+    let html = '';
+    resultadosNomeAtuais = [];
 
-    lista.innerHTML = resultadosNomeAtuais.map((item, index) => {
-        const nome = escaparHtml(item.nome);
-        const cpf = escaparHtml(item.cpf);
-        const sexo = escaparHtml(item.sexo);
-        const dataNascimento = escaparHtml(item.data_nascimento);
-        const nomeMae = escaparHtml(item.nome_mae);
-        const situacao = escaparHtml(item.situacao);
-        const searchPayload = escaparHtml(`${item.nome} ${item.cpf} ${item.data_nascimento}`);
+    resultados.forEach((item, index) => {
+        let nomeLimpo = item.nome ? item.nome.replace(/[*`]/g, '').trim() : '-';
+        let cpfLimpo = item.cpf ? item.cpf.replace(/[*`]/g, '').trim() : '-';
+        let sexoLimpo = item.sexo ? item.sexo.replace(/[*`]/g, '').trim() : '-';
+        let nascLimpo = item.data_nascimento ? item.data_nascimento.replace(/[*`]/g, '').trim() : '-';
+        let maeLimpo = item.nome_mae ? item.nome_mae.replace(/[*`]/g, '').trim() : '-';
+        let situacaoLimpa = item.situacao ? item.situacao.replace(/[*`]/g, '').trim() : '-';
 
-        return `
-            <div class="result-card" data-search="${searchPayload}">
-                <div class="nome-resultado-head result-card-head">
-                    <div class="nome-head-info">
-                        <span class="nome-resultado-indice">#${index + 1}</span>
-                        <span class="nome-resultado-titulo">${nome}</span>
-                    </div>
-                    <button class="result-card-copy" data-index="${index}" type="button">📋 Copiar</button>
-                </div>
-                <div class="nome-resultado-grid">
-                    <div class="nome-campo"><span class="nome-label">CPF</span><span class="nome-valor">${cpf}</span></div>
-                    <div class="nome-campo"><span class="nome-label">Sexo</span><span class="nome-valor">${sexo}</span></div>
-                    <div class="nome-campo"><span class="nome-label">Nascimento</span><span class="nome-valor">${dataNascimento}</span></div>
-                    <div class="nome-campo"><span class="nome-label">Mãe</span><span class="nome-valor">${nomeMae}</span></div>
-                    <div class="nome-campo nome-campo-full"><span class="nome-label">Situação</span><span class="nome-valor">${situacao}</span></div>
-                </div>
-            </div>
+        nomeLimpo = nomeLimpo.replace(/\s+/g, ' ');
+        cpfLimpo = cpfLimpo.replace(/\s+/g, ' ');
+        sexoLimpo = sexoLimpo.replace(/\s+/g, ' ');
+        nascLimpo = nascLimpo.replace(/\s+/g, ' ');
+        maeLimpo = maeLimpo.replace(/\s+/g, ' ');
+        situacaoLimpa = situacaoLimpa.replace(/\s+/g, ' ');
+
+        resultadosNomeAtuais.push({
+            nome: nomeLimpo,
+            cpf: cpfLimpo,
+            sexo: sexoLimpo,
+            data_nascimento: nascLimpo,
+            nome_mae: maeLimpo,
+            situacao: situacaoLimpa
+        });
+
+        html += `
+   <div class="result-card" data-search="${nomeLimpo} ${cpfLimpo} ${nascLimpo}" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); padding: 15px; border-radius: 8px; margin-bottom: 10px; position: relative;">
+       <h4 style="margin: 0 0 10px 0; color: #fff;">${nomeLimpo}</h4>
+       <p style="margin: 3px 0; color: #ccc;"><strong>CPF:</strong> ${cpfLimpo}</p>
+       <p style="margin: 3px 0; color: #ccc;"><strong>Sexo:</strong> ${sexoLimpo}</p>
+       <p style="margin: 3px 0; color: #ccc;"><strong>Nascimento:</strong> ${nascLimpo}</p>
+       <p style="margin: 3px 0; color: #ccc;"><strong>Mae:</strong> ${maeLimpo}</p>
+       <p style="margin: 3px 0; color: #ccc;"><strong>Situacao:</strong> ${situacaoLimpa}</p>
+       <button class="btn-copy" data-index="${index}" style="position: absolute; top: 15px; right: 15px; background: #007bff; border: none; padding: 5px 10px; border-radius: 5px; color: white; cursor: pointer;">📋 Copiar</button>
+   </div>
         `;
-    }).join('');
+    });
+
+    lista.innerHTML = html;
 
     aplicarFiltroResultadosNome();
 }
 
 document.getElementById('resultadoNomeLista')?.addEventListener('click', function (event) {
-    const botao = event.target.closest('.result-card-copy');
+    const botao = event.target.closest('.btn-copy');
     if (!botao) return;
 
     const index = Number(botao.getAttribute('data-index'));
