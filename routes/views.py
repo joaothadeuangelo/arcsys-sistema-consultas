@@ -30,6 +30,7 @@ async def render_dashboard(request: Request):
         "manutencao_placa": is_manutencao_modulo('placa'),
         "manutencao_cnh": is_manutencao_modulo('cnh'),
         "manutencao_cpf": is_manutencao_modulo('cpf'),
+        "manutencao_nome": is_manutencao_modulo('nome'),
         # 🎯 ADICIONADO: Envia o status do Comparador para o Front-end
         "manutencao_comparador": is_manutencao_modulo('comparador')
     })
@@ -71,6 +72,20 @@ async def render_cpf(request: Request):
         
     return templates.TemplateResponse("modulo_cpf.html", {
         "request": request, 
+        "manutencao": is_manutencao()
+    })
+
+
+# ==========================================
+# ROTA VISUAL: MÓDULO DE CONSULTA POR NOME
+# ==========================================
+@router.get("/nome")
+async def render_nome(request: Request):
+    if is_manutencao() or is_manutencao_modulo('nome'):
+        return RedirectResponse(url="/", status_code=303)
+
+    return templates.TemplateResponse("modulo_nome.html", {
+        "request": request,
         "manutencao": is_manutencao()
     })
     

@@ -420,6 +420,124 @@ button:disabled {
 .paginacao-info { color: #8aa3ba; font-size: 0.95em; font-weight: 500; text-align: center; }
 
 /* ==========================================
+   MÓDULO 6: CONSULTA DE NOME
+   ========================================== */
+
+.resultado-nome-meta {
+    margin-bottom: 12px;
+}
+
+.nome-resumo-head {
+    background: rgba(82, 136, 193, 0.12);
+    border: 1px solid rgba(82, 136, 193, 0.25);
+    border-radius: 10px;
+    padding: 10px 12px;
+    color: #dceaf8;
+    font-size: 0.9em;
+}
+
+.resultado-nome-lista {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    max-height: 500px;
+    overflow-y: auto;
+    padding-right: 6px;
+}
+
+.nome-resultado-card {
+    background: linear-gradient(145deg, rgba(26, 36, 47, 0.95), rgba(18, 28, 38, 0.95));
+    border: 1px solid rgba(82, 136, 193, 0.25);
+    border-radius: 12px;
+    padding: 12px;
+    box-shadow: 0 8px 18px rgba(0, 0, 0, 0.25);
+}
+
+.nome-resultado-head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.nome-resultado-indice {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 36px;
+    height: 26px;
+    border-radius: 999px;
+    background: rgba(82, 136, 193, 0.22);
+    color: #90c4ff;
+    font-weight: 700;
+    font-size: 0.78em;
+}
+
+.nome-resultado-titulo {
+    color: #f0f6fd;
+    font-weight: 700;
+    font-size: 0.98em;
+}
+
+.nome-resultado-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+}
+
+.nome-campo {
+    background: rgba(14, 22, 33, 0.72);
+    border: 1px solid rgba(138, 163, 186, 0.2);
+    border-radius: 8px;
+    padding: 8px;
+}
+
+.nome-campo-full {
+    grid-column: 1 / -1;
+}
+
+.nome-label {
+    display: block;
+    color: #8aa3ba;
+    font-size: 0.72em;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+}
+
+.nome-valor {
+    display: block;
+    color: #e6eef8;
+    font-size: 0.92em;
+    word-break: break-word;
+}
+
+.nome-card-vazio {
+    background: #17212b;
+    border: 1px solid #334253;
+    border-radius: 10px;
+    color: #9ab2c8;
+    padding: 14px;
+    text-align: center;
+    font-size: 0.9em;
+}
+
+.resultado-nome-lista::-webkit-scrollbar {
+    width: 6px;
+}
+
+.resultado-nome-lista::-webkit-scrollbar-thumb {
+    background: #3b4c5d;
+    border-radius: 10px;
+}
+
+@media (max-width: 680px) {
+    .nome-resultado-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* ==========================================
    🛠️ O SEGREDO DA RESPONSIVIDADE MOBILE
    ========================================== */
 @media (max-width: 768px) {

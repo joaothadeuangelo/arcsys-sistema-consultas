@@ -104,8 +104,8 @@ async def alternar_status(request: Request, modulo: str = None):
     if not admin_autenticado(request):
         return HTMLResponse("<h1>Acesso Negado</h1>", status_code=403)
     
-    # 🎯 ADICIONADO O 'comparador' NA LISTA DE MÓDULOS PERMITIDOS
-    if modulo in ['placa', 'cnh', 'cpf', 'comparador']:
+    # 🎯 ADICIONADO O 'nome' NA LISTA DE MÓDULOS PERMITIDOS
+    if modulo in ['placa', 'cnh', 'cpf', 'nome', 'comparador']:
         toggle_manutencao_modulo(modulo)
     else:
         toggle_manutencao()
@@ -154,6 +154,7 @@ async def ver_historico(request: Request, pagina: int = 1):
         "status_placa": status_todos.get('manutencao_placa', False),
         "status_cnh": status_todos.get('manutencao_cnh', False),
         "status_cpf": status_todos.get('manutencao_cpf', False),
+        "status_nome": status_todos.get('manutencao_nome', False),
         # 🎯 ADICIONADO O STATUS DO COMPARADOR
         "status_comparador": status_todos.get('manutencao_comparador', False)
     }

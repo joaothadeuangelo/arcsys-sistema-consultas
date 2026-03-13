@@ -8,9 +8,12 @@ import urllib.request
 import urllib.parse
 import json
 import re
+import unicodedata
 from fastapi import APIRouter, Request
 from database import buscar_consulta, salvar_consulta, is_manutencao, is_manutencao_modulo, registrar_evento_telemetria_background
 import base64
+import aiohttp
+from bs4 import BeautifulSoup
 
 router = APIRouter()
 
@@ -27,6 +30,7 @@ fila_clientes = asyncio.Queue()
 cooldowns_placa = {}
 cooldowns_cnh = {}
 cooldowns_cpf = {}
+cooldowns_nome = {}
 cooldown_comparador = {}
 
 
@@ -110,6 +114,142 @@ async def verificar_turnstile(token: str, ip: str) -> bool:
     except Exception as e:
         print(f"Erro na validação do Turnstile: {e}")
         return False
+
+
+def _normalizar_chave(texto: str) -> str:
+    if not texto:
+        return ""
+    base = unicodedata.normalize('NFKD', texto)
+    base = base.encode('ascii', 'ignore').decode('ascii').lower()
+    base = re.sub(r'[^a-z0-9\s]', ' ', base)
+    return ' '.join(base.split())
+
+
+def _campo_nome_por_label(label: str):
+    normalizado = _normalizar_chave(label)
+
+    if 'nome da mae' in normalizado or normalizado == 'mae':
+        return 'nome_mae'
+    if 'data de nascimento' in normalizado or normalizado.startswith('nascimento'):
+        return 'data_nascimento'
+    if 'cpf' in normalizado:
+        return 'cpf'
+    if 'sexo' in normalizado:
+        return 'sexo'
+    if normalizado.startswith('situacao'):
+        return 'situacao'
+    if normalizado == 'nome' or normalizado.startswith('nome '):
+        return 'nome'
+    return None
+
+
+def _deduplicar_resultados_nome(resultados: list[dict]) -> list[dict]:
+    saida = []
+    vistos = set()
+
+    for item in resultados:
+        nome = (item.get('nome') or '').strip().lower()
+        cpf = re.sub(r'\D', '', item.get('cpf') or '')
+        chave = (nome, cpf)
+        if chave in vistos:
+            continue
+        vistos.add(chave)
+        saida.append(item)
+
+    return saida
+
+
+def parse_resultados_nome(texto: str) -> list[dict]:
+    if not texto:
+        return []
+
+    linhas = [linha.strip() for linha in texto.replace('\r', '\n').split('\n')]
+    resultados = []
+    atual = {}
+
+    for linha in linhas:
+        if not linha or ':' not in linha:
+            continue
+
+        chave, valor = linha.split(':', 1)
+        campo = _campo_nome_por_label(chave)
+        if not campo:
+            continue
+
+        valor_limpo = valor.strip()
+        if not valor_limpo:
+            continue
+
+        if campo == 'nome' and atual and any(k in atual for k in ('cpf', 'data_nascimento', 'sexo', 'nome_mae', 'situacao')):
+            resultados.append(atual)
+            atual = {}
+
+        atual[campo] = valor_limpo
+
+    if atual:
+        resultados.append(atual)
+
+    return _deduplicar_resultados_nome(resultados)
+
+
+def extrair_url_resultado_completo(msg) -> str:
+    botoes = getattr(msg, 'buttons', None)
+    if not botoes:
+        return ""
+
+    for linha in botoes:
+        for botao in linha:
+            texto_botao = (getattr(botao, 'text', '') or '').strip().lower()
+            url_botao = getattr(botao, 'url', '') or ''
+            if url_botao and ('resultado completo' in texto_botao or 'ver resultado completo' in texto_botao):
+                return url_botao
+
+    return ""
+
+
+async def extrair_resultados_telegraph(url: str) -> list[dict]:
+    if not re.match(r'^https?://(?:telegra\.ph|graph\.org)/', (url or '').strip(), flags=re.IGNORECASE):
+        return []
+
+    timeout = aiohttp.ClientTimeout(total=20)
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+    }
+
+    async with aiohttp.ClientSession(timeout=timeout, headers=headers) as session:
+        async with session.get(url, allow_redirects=True) as response:
+            if response.status != 200:
+                return []
+            html = await response.text()
+
+    soup = BeautifulSoup(html, 'html.parser')
+    container = soup.select_one('.tl_article') or soup.select_one('article') or soup.body
+    if not container:
+        return []
+
+    texto = container.get_text('\n', strip=True)
+    return parse_resultados_nome(texto)
+
+
+async def aguardar_retorno_consulta_nome(cliente, id_msg_comando: int):
+    for _ in range(30):
+        await asyncio.sleep(2)
+        mensagens = await cliente.get_messages(BOT_USERNAME, limit=8)
+
+        for msg in mensagens:
+            if msg.id <= id_msg_comando:
+                continue
+
+            texto = (msg.text or '').strip()
+            url_resultado = extrair_url_resultado_completo(msg)
+
+            if url_resultado:
+                return {'texto': texto, 'url_resultado': url_resultado}
+
+            if texto and any(trecho in texto.lower() for trecho in ('nome:', 'cpf:', 'consulta conclu', 'total de resultados')):
+                return {'texto': texto, 'url_resultado': ''}
+
+    return None
 
 # ==========================================
 # MÓDULO 1: CONSULTA DE PLACAS (API DIRETA)
@@ -477,6 +617,100 @@ async def consultar_dados_cpf(cpf: str, request: Request):
 # ==========================================
 # MÓDULO 4: COMPARADOR FACIAL (PROXY)
 # ==========================================
+@router.get('/api/consultar/nome/{nome_buscado}')
+async def consultar_nome(nome_buscado: str, request: Request):
+    if is_manutencao() or is_manutencao_modulo('nome'):
+        return {'sucesso': False, 'erro': '🛠️ MÓDULO EM MANUTENÇÃO!'}
+
+    nome_limpo = re.sub(r'\s+', ' ', (nome_buscado or '')).strip()
+    if len(nome_limpo) < 3:
+        return {'sucesso': False, 'erro': 'Digite ao menos 3 caracteres para consultar por nome.'}
+    if len(nome_limpo) > 80:
+        return {'sucesso': False, 'erro': 'Nome muito longo para consulta.'}
+
+    ip_cliente = obter_ip_real(request)
+    token_turnstile = request.headers.get('X-Turnstile-Token')
+    if not await verificar_turnstile(token_turnstile, ip_cliente):
+        return {'sucesso': False, 'erro': '🤖 Bloqueado pela Segurança Cloudflare. Verifique se você é humano e tente novamente.'}
+
+    registrar_evento_telemetria_background('uso_modulo', 'nome', ip_cliente)
+
+    tempo_atual = time.time()
+    ultimo_tempo = cooldowns_nome.get(ip_cliente, 0)
+    if (tempo_atual - ultimo_tempo) < TEMPO_COOLDOWN:
+        return {'sucesso': False, 'erro': f'Aguarde {int(TEMPO_COOLDOWN - (tempo_atual - ultimo_tempo))} segundos.'}
+
+    cache_key = f'NOME_{nome_limpo.upper()}'
+
+    try:
+        dados_salvos = buscar_consulta(cache_key)
+        if dados_salvos and 'Consultando' not in dados_salvos:
+            try:
+                cache_json = json.loads(dados_salvos)
+                if isinstance(cache_json, dict) and isinstance(cache_json.get('resultados'), list):
+                    return {
+                        'sucesso': True,
+                        'resultados': cache_json['resultados'],
+                        'fonte': cache_json.get('fonte', 'cache'),
+                        'cache': True
+                    }
+            except json.JSONDecodeError:
+                pass
+
+        if AMBIENTE == 'desenvolvimento':
+            await asyncio.sleep(1)
+            mock = [
+                {
+                    'nome': 'USUARIO TESTE ARCSYS',
+                    'cpf': '000.000.000-00',
+                    'sexo': 'N/I',
+                    'data_nascimento': '01/01/1990'
+                }
+            ]
+            cooldowns_nome[ip_cliente] = time.time()
+            return {'sucesso': True, 'resultados': mock, 'fonte': 'mock_dev'}
+
+        cliente_atual = await fila_clientes.get()
+        try:
+            if not cliente_atual.is_connected():
+                await cliente_atual.connect()
+
+            msg_comando = await cliente_atual.send_message(BOT_USERNAME, f'/nome {nome_limpo}')
+            retorno = await aguardar_retorno_consulta_nome(cliente_atual, msg_comando.id)
+
+            if not retorno:
+                return {'sucesso': False, 'erro': 'O sistema central demorou para responder. Tente novamente.'}
+
+            resultados = []
+            fonte = 'chat'
+
+            if retorno.get('url_resultado'):
+                resultados = await extrair_resultados_telegraph(retorno['url_resultado'])
+                fonte = 'telegraph'
+
+            if not resultados:
+                texto_retorno = retorno.get('texto', '')
+                resultados = parse_resultados_nome(texto_retorno)
+                if resultados:
+                    fonte = 'chat'
+
+            if not resultados:
+                return {'sucesso': False, 'erro': 'Nenhum resultado estruturado foi encontrado para este nome.'}
+
+            pacote_salvar = json.dumps({'resultados': resultados, 'fonte': fonte}, ensure_ascii=False)
+            salvar_consulta(cache_key, pacote_salvar)
+
+            cooldowns_nome[ip_cliente] = time.time()
+            return {'sucesso': True, 'resultados': resultados, 'fonte': fonte, 'cache': False}
+
+        finally:
+            await fila_clientes.put(cliente_atual)
+
+    except Exception as e:
+        print(f'EXCEÇÃO INTERNA ROTA NOME: {mascarar_tokens_em_texto(str(e))}')
+        return {'sucesso': False, 'erro': 'Erro interno no servidor. Tente novamente.'}
+
+
 @router.post("/api/comparar_facial")
 async def comparar_facial(request: Request):
     # 1. Verifica se o sistema está em manutenção

@@ -50,6 +50,19 @@
     </a>
     {% endif %}
 
+    {% if manutencao_nome or manutencao %}
+    <div class="modulo-card offline-card">
+        <div class="badge-offline">OFFLINE</div>
+        <img src="./static/img/name.png" alt="Consulta por Nome" class="modulo-icon">
+        <h3>NOME</h3><p>Em Manutenção</p>
+    </div>
+    {% else %}
+    <a href="/nome" class="modulo-card">
+        <img src="./static/img/name.png" alt="Consulta por Nome" class="modulo-icon">
+        <h3>NOME</h3><p>Busca por Nome Completo</p>
+    </a>
+    {% endif %}
+
     {% if manutencao_comparador or manutencao %}
     <div class="modulo-card offline-card">
         <div class="badge-offline">OFFLINE</div>

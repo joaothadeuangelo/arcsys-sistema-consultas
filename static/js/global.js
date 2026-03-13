@@ -247,4 +247,5 @@ document.addEventListener('DOMContentLoaded', () => {
     iniciarCooldown(0, 'btnConsultarPlaca', 'Consultar');
     iniciarCooldown(0, 'btnConsultarCNH', 'Consultar CNH');
     iniciarCooldown(0, 'btnConsultarDadosCPF', 'Consultar Dados');
+    iniciarCooldown(0, 'btnConsultarNome', 'Consultar Nome');
 });
