@@ -51,24 +51,27 @@ window.onload = function() {
 
     // 2. LÓGICA DO MODAL DE AVISO
     const modalAviso = document.getElementById('modalAviso');
-    const btn = document.getElementById('btnAceitarModal');
+    const linkAcessoGratis = document.getElementById('btnAceitarModal');
 
     // Verifica na memória do navegador se o usuário JÁ fechou o modal hoje
     if (!sessionStorage.getItem('avisoFechado')) {
         // Se NÃO fechou, mostra o modal e inicia o timer
-        if (modalAviso && btn) {
+        if (modalAviso && linkAcessoGratis) {
             modalAviso.style.display = 'flex'; // Torna visível
+            linkAcessoGratis.classList.add('locked');
+            linkAcessoGratis.classList.remove('unlocked');
+            linkAcessoGratis.innerText = `Liberando acesso gratuito em ${tempoLeitura}s...`;
             
             timerInterval = setInterval(() => {
                 if (tempoLeitura > 0) {
-                    btn.innerText = `⏳ EXIBINDO ANÚNCIO... (${tempoLeitura}s)`;
+                    linkAcessoGratis.innerText = `Liberando acesso gratuito em ${tempoLeitura}s...`;
                     tempoLeitura--;
                 } else {
                     clearInterval(timerInterval);
-                    btn.disabled = false;
-                    btn.classList.remove('bloqueado');
-                    btn.classList.add('liberado');
-                    btn.innerText = "ENTRAR NO SISTEMA GRATUITO 🚀";
+                    linkAcessoGratis.classList.remove('locked');
+                    linkAcessoGratis.classList.add('unlocked');
+                    linkAcessoGratis.innerText = "Nao quero ajuda profissional. Acessar sistema gratuito.";
+                    linkAcessoGratis.onclick = fecharModal;
                 }
             }, 1000);
         }

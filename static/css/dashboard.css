@@ -1,21 +1,35 @@
 /* ========================================= */
 /* MENU DE MÓDULOS (DASHBOARD)               */
 /* ========================================= */
+.dashboard-panel {
+    background: rgba(15, 23, 42, 0.72);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-radius: 16px;
+    padding: 22px 18px;
+    box-shadow: 0 18px 44px rgba(0, 0, 0, 0.36);
+}
+
+.dashboard-panel .brand-title {
+    text-shadow: 0 0 8px rgba(82, 136, 193, 0.45), 0 0 20px rgba(82, 136, 193, 0.16);
+}
+
 .modulos-grid {
     display: flex;
     flex-wrap: wrap; /* 🎯 MÁGICA 1: Permite quebrar a linha no celular */
-    gap: 15px;
+    gap: 16px;
     justify-content: center;
-    margin-bottom: 20px;
+    margin-bottom: 24px;
     width: 100%;
     animation: fadeIn 0.5s ease;
 }
 
 .modulo-card {
-    background: #17212b;
-    border: 1px solid rgba(82, 136, 193, 0.2);
-    border-radius: 12px;
-    padding: 20px 10px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid transparent;
+    border-radius: 14px;
+    padding: 12px 10px;
     
     /* 🎯 MÁGICA 2: Em celulares, ocupam metade da tela exata. O 3º cai para baixo! */
     width: calc(50% - 8px); 
@@ -23,14 +37,14 @@
     text-align: center;
     cursor: pointer;
     transition: all 0.3s ease;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+    box-shadow: none;
 }
 
 .modulo-card:hover {
     transform: translateY(-5px);
-    border-color: #5288c1;
-    box-shadow: 0 8px 25px rgba(82, 136, 193, 0.3);
-    background: #1a242f;
+    border-color: rgba(125, 181, 255, 0.65);
+    box-shadow: 0 10px 24px rgba(82, 136, 193, 0.22), 0 0 14px rgba(82, 136, 193, 0.24);
+    background: rgba(255, 255, 255, 0.06);
 }
 
 /* Links de módulo no dashboard (sem sublinhado, cor herdada) */
@@ -40,21 +54,30 @@ a.modulo-card {
 }
 
 .modulo-icon {
-    height: 50px;
-    width: auto;
-    margin-bottom: 12px;
-    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
+    width: 76px;
+    height: 76px;
+    min-width: 70px;
+    min-height: 70px;
+    object-fit: contain;
+    margin-bottom: 10px;
+    padding: 0;
+    background: transparent;
+    border: none;
+    border-radius: 0;
+    filter: drop-shadow(0 4px 10px rgba(0,0,0,0.32));
 }
 
 .modulo-card h3 {
-    color: #5288c1;
+    color: #b8dbff;
     margin: 0 0 5px 0;
-    font-size: 1.1em;
-    font-weight: 900;
+    font-size: 1.12em;
+    font-weight: 700;
+    letter-spacing: 0.4px;
+    text-shadow: 0 0 8px rgba(82, 136, 193, 0.25);
 }
 
 .modulo-card p {
-    color: #8aa3ba;
+    color: rgba(255, 255, 255, 0.6);
     font-size: 0.8em;
     margin: 0;
 }
@@ -72,7 +95,7 @@ a.modulo-card {
 .offline-card {
     cursor: not-allowed !important;
     filter: grayscale(100%);
-    opacity: 0.6;
+    opacity: 0.68;
     position: relative;
     pointer-events: none; /* Bloqueia qualquer clique */
 }
@@ -88,4 +111,21 @@ a.modulo-card {
     padding: 3px 8px;
     border-radius: 4px;
     letter-spacing: 1px;
+}
+
+.dashboard-panel .badge-free {
+    background: rgba(22, 61, 44, 0.6);
+    color: #63ff9a;
+    border: 1px solid rgba(99, 255, 154, 0.35);
+    text-shadow: 0 0 8px rgba(99, 255, 154, 0.35);
+}
+
+.dashboard-panel .btn-dev-contato-whatsapp {
+    border-radius: 12px;
+    animation: pulse-green 1.8s infinite;
+    box-shadow: 0 8px 20px rgba(46, 204, 113, 0.28);
+}
+
+.dashboard-panel .btn-dev-contato-whatsapp:hover {
+    transform: translateY(-2px) scale(1.02);
 }

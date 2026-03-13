@@ -38,27 +38,26 @@ body { background-color: #0e1621; color: #fff; display: flex; justify-content: c
 /* ========================================= */
 /* MODAL: PREMIUM (MARKETING VIP)            */
 /* ========================================= */
-.premium-overlay { backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); background: rgba(14, 22, 33, 0.85); align-items: center; justify-content: center; }
-.premium-modal { background: linear-gradient(145deg, #17212b 0%, #0e1621 100%); border: 1px solid rgba(82, 136, 193, 0.3); box-shadow: 0 20px 50px rgba(0,0,0,0.5), 0 0 20px rgba(82, 136, 193, 0.1); border-radius: 16px; width: 90%; max-width: 450px; overflow: hidden; display: flex; flex-direction: column; animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
-.premium-header { background: linear-gradient(90deg, rgba(82, 136, 193, 0.1) 0%, rgba(23, 33, 43, 0) 100%); padding: 25px 20px 15px; text-align: center; border-bottom: 1px solid rgba(82, 136, 193, 0.15); }
-.premium-icon-header { font-size: 2.5em; filter: drop-shadow(0 0 10px rgba(82, 136, 193, 0.5)); display: block; margin-bottom: 10px; }
-.premium-title { color: #fff; font-size: 1.2em; font-weight: 900; margin: 0 0 5px 0; text-transform: uppercase; letter-spacing: 1px; }
-.premium-subtitle { color: #5288c1; font-size: 0.9em; margin: 0; font-weight: bold; }
-.premium-body { padding: 20px; flex-grow: 1; }
-.service-card { background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 10px; padding: 15px; margin-bottom: 12px; display: flex; align-items: center; gap: 15px; transition: all 0.3s ease; }
-.service-card:hover { background: rgba(82, 136, 193, 0.08); border-color: rgba(82, 136, 193, 0.3); transform: translateX(5px); }
-.service-icon { font-size: 1.8em; display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; background: rgba(0,0,0,0.2); border-radius: 8px; }
-.service-info h4 { color: #fff; margin: 0 0 3px 0; font-size: 0.95em; }
-.service-info p { color: #8aa3ba; margin: 0; font-size: 0.8em; line-height: 1.3; }
+.premium-overlay { backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); background: rgba(10, 16, 24, 0.82); align-items: center; justify-content: center; }
+.premium-modal { background: linear-gradient(165deg, rgba(25, 36, 50, 0.95) 0%, rgba(12, 19, 29, 0.96) 100%); border: 1px solid rgba(127, 162, 197, 0.28); box-shadow: 0 24px 60px rgba(0,0,0,0.58), 0 0 30px rgba(37, 211, 102, 0.08); border-radius: 18px; width: 92%; max-width: 500px; overflow: hidden; display: flex; flex-direction: column; animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+.premium-header { padding: 24px 22px 8px; text-align: center; border-bottom: 1px solid rgba(127, 162, 197, 0.14); }
+.premium-icon-header { font-size: 2.6em; display: block; margin-bottom: 8px; filter: drop-shadow(0 0 8px rgba(231, 76, 60, 0.45)); }
+.premium-title { color: #ffffff; font-size: 1.6em; font-weight: 900; margin: 0 0 8px 0; text-transform: uppercase; letter-spacing: 1.2px; line-height: 1.15; }
+.premium-subtitle { color: #c7d7e7; font-size: 0.93em; margin: 0; font-weight: 500; line-height: 1.45; }
 
-.btn-whatsapp { background: linear-gradient(90deg, #25D366 0%, #128C7E 100%); color: #fff; text-decoration: none; padding: 15px; border-radius: 10px; font-weight: 900; font-size: 1em; display: flex; justify-content: center; align-items: center; gap: 10px; width: 100%; box-sizing: border-box; text-transform: uppercase; letter-spacing: 1px; box-shadow: 0 4px 15px rgba(37, 211, 102, 0.3); animation: pulse-green 2s infinite; margin-top: 10px; }
-.btn-whatsapp:hover { filter: brightness(1.1); transform: scale(1.02); }
+.premium-body { padding: 18px 22px 16px; }
+.service-list { background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(127, 162, 197, 0.18); border-radius: 12px; padding: 12px 14px; margin-bottom: 16px; }
+.service-item { margin: 8px 0; color: #e4edf6; font-size: 0.95em; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+.check-icon { color: #2ecc71; font-size: 1.1em; line-height: 1; }
 
-.premium-footer { background: #0e1621; padding: 15px 20px; border-top: 1px solid rgba(82, 136, 193, 0.1); }
-.btn-premium-action { margin: 0; width: 100%; padding: 15px; font-size: 0.95em; border: none; border-radius: 8px; font-weight: bold; transition: all 0.3s ease; }
-.btn-premium-action:disabled { background: #242f3d; color: #8aa3ba; cursor: not-allowed; }
-.btn-premium-action:not(:disabled) { background: #5288c1; color: #fff; cursor: pointer; box-shadow: 0 4px 15px rgba(82, 136, 193, 0.3); }
-.btn-premium-action:not(:disabled):hover { background: #4174a8; transform: translateY(-2px); }
+.btn-whatsapp { background: #25D366; color: #fff; text-decoration: none; padding: 18px 16px; border-radius: 14px; font-weight: 900; font-size: 1.02em; display: flex; justify-content: center; align-items: center; gap: 10px; width: 100%; box-sizing: border-box; text-transform: uppercase; letter-spacing: 0.9px; box-shadow: 0 10px 28px rgba(37, 211, 102, 0.45), inset 0 -2px 0 rgba(0, 0, 0, 0.16); animation: pulse-green 1.6s infinite; margin-top: 8px; }
+.btn-whatsapp:hover { filter: brightness(1.07); transform: translateY(-1px) scale(1.01); }
+
+.premium-footer { text-align: center; padding: 10px 16px 14px; }
+.free-access-link { color: #90a0b2; font-size: 0.81em; text-decoration: none; cursor: pointer; transition: 0.2s; }
+.free-access-link.locked { pointer-events: none; opacity: 0.75; }
+.free-access-link.unlocked { pointer-events: auto; color: #b8c7d8; text-decoration: underline; }
+.free-access-link.unlocked:hover { color: #dce8f4; }
 
 /* ========================================= */
 /* RODAPÉ INTEGRADO AO CARD                  */
@@ -96,15 +95,13 @@ body { background-color: #0e1621; color: #fff; display: flex; justify-content: c
     /* Ajustes Modal Premium */
     .premium-header { padding: 20px 15px 10px; }
     .premium-icon-header { font-size: 2em; margin-bottom: 5px; }
-    .premium-title { font-size: 1.1em; }
+    .premium-title { font-size: 1.25em; }
     .premium-body { padding: 15px; }
-    .service-card { padding: 12px; gap: 10px; margin-bottom: 10px; }
-    .service-icon { width: 35px; height: 35px; font-size: 1.5em; }
-    .service-info h4 { font-size: 0.9em; }
-    .service-info p { font-size: 0.75em; }
-    .btn-whatsapp { padding: 12px; font-size: 0.9em; }
-    .premium-footer { padding: 12px 15px; }
-    .btn-premium-action { padding: 12px; font-size: 0.9em; }
+    .service-list { padding: 10px 12px; }
+    .service-item { font-size: 0.88em; }
+    .btn-whatsapp { padding: 14px 12px; font-size: 0.86em; }
+    .premium-footer { padding: 10px 12px 12px; }
+    .free-access-link { font-size: 0.78em; }
 }
 
 /* ========================================= */
