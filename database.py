@@ -2,9 +2,12 @@ import os
 import sqlite3
 import asyncio
 import hashlib
+from datetime import datetime, timedelta, timezone
+from zoneinfo import ZoneInfo
 
 DB_PATH = '/data/consultas.db' if os.path.exists('/data') else 'consultas.db'
 TELEMETRIA_SALT = os.getenv('TELEMETRIA_SALT', 'arcsys-telemetria-salt')
+TZ_BRASIL = ZoneInfo('America/Sao_Paulo')
 
 # ==========================================
 # CONEXÃO BLINDADA (O Segredo para não perder dados)
@@ -87,7 +90,15 @@ def contar_total_consultas() -> int:
 def obter_historico_paginado(limite: int, offset: int):
     conn = obter_conexao()
     cursor = conn.cursor()
-    cursor.execute('SELECT placa, dados, data_consulta FROM registro_placas ORDER BY data_consulta DESC LIMIT ? OFFSET ?', (limite, offset))
+    cursor.execute('''
+        SELECT
+            placa,
+            dados,
+            datetime(data_consulta, '-3 hours') AS data_consulta_br
+        FROM registro_placas
+        ORDER BY data_consulta DESC
+        LIMIT ? OFFSET ?
+    ''', (limite, offset))
     rows = cursor.fetchall()
     conn.close()
     return rows
@@ -180,28 +191,38 @@ def obter_resumo_telemetria_hoje() -> dict:
     conn = obter_conexao()
     cursor = conn.cursor()
 
+    agora_sp = datetime.now(TZ_BRASIL)
+    inicio_dia_sp = datetime.combine(agora_sp.date(), datetime.min.time(), tzinfo=TZ_BRASIL)
+    fim_dia_sp = inicio_dia_sp + timedelta(days=1)
+
+    inicio_utc = inicio_dia_sp.astimezone(timezone.utc).strftime('%Y-%m-%d %H:%M:%S')
+    fim_utc = fim_dia_sp.astimezone(timezone.utc).strftime('%Y-%m-%d %H:%M:%S')
+
     cursor.execute('''
         SELECT COUNT(DISTINCT ip_hash)
         FROM telemetria
         WHERE tipo_evento = 'page_view'
           AND detalhe = 'home'
-          AND date(data_hora, 'localtime') = date('now', 'localtime')
-    ''')
+          AND data_hora >= ?
+          AND data_hora < ?
+    ''', (inicio_utc, fim_utc))
     total_visitas_unicas = cursor.fetchone()[0] or 0
 
     cursor.execute('''
         SELECT detalhe, COUNT(*)
         FROM telemetria
         WHERE tipo_evento = 'uso_modulo'
-          AND date(data_hora, 'localtime') = date('now', 'localtime')
+          AND data_hora >= ?
+          AND data_hora < ?
         GROUP BY detalhe
         ORDER BY COUNT(*) DESC
-    ''')
+    ''', (inicio_utc, fim_utc))
     uso_modulos = {detalhe: total for detalhe, total in cursor.fetchall()}
 
     conn.close()
     return {
-        'data': "hoje",
+        'data': agora_sp.strftime('%d/%m/%Y'),
+        'timezone': 'America/Sao_Paulo',
         'total_visitas_unicas': total_visitas_unicas,
         'uso_modulos': uso_modulos
     }
