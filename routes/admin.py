@@ -15,7 +15,8 @@ from database import (
     toggle_manutencao_modulo, 
     get_status_todos_modulos, 
     contar_total_consultas, 
-    obter_historico_paginado
+    obter_historico_paginado,
+    obter_resumo_telemetria_hoje
 )
 
 
@@ -221,3 +222,19 @@ async def verificar_status_contas(request: Request):
         # 4. DEVOLVE TODO MUNDO PRA FILA
         for c in clientes_temporarios:
             await fila_clientes.put(c)
+
+
+@router.get("/api/telemetria_hoje")
+async def telemetria_hoje(request: Request):
+    if not admin_autenticado(request):
+        return {"sucesso": False, "erro": "Acesso negado."}
+
+    return {"sucesso": True, "resumo": obter_resumo_telemetria_hoje()}
+
+
+@router.get("/api/telemetria/resumo")
+async def telemetria_resumo(request: Request):
+    if not admin_autenticado(request):
+        return {"sucesso": False, "erro": "Acesso negado."}
+
+    return {"sucesso": True, "resumo": obter_resumo_telemetria_hoje()}

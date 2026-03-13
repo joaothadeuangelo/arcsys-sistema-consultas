@@ -9,7 +9,7 @@ import urllib.parse
 import json
 import re
 from fastapi import APIRouter, Request
-from database import buscar_consulta, salvar_consulta, is_manutencao, is_manutencao_modulo
+from database import buscar_consulta, salvar_consulta, is_manutencao, is_manutencao_modulo, registrar_evento_telemetria_background
 import base64
 
 router = APIRouter()
@@ -132,6 +132,8 @@ async def consultar_placa(placa: str, request: Request):
     if not await verificar_turnstile(token_turnstile, ip_cliente):
         return {"sucesso": False, "erro": "🤖 Bloqueado pela Segurança Cloudflare. Verifique se você é humano e tente novamente."}
 
+    registrar_evento_telemetria_background("uso_modulo", "placa", ip_cliente)
+
     tempo_atual = time.time()
     ultimo_tempo = cooldowns_placa.get(ip_cliente, 0)
     
@@ -210,6 +212,8 @@ async def consultar_cnh(cpf: str, request: Request):
     token_turnstile = request.headers.get("X-Turnstile-Token")
     if not await verificar_turnstile(token_turnstile, ip_cliente):
         return {"sucesso": False, "erro": "🤖 Bloqueado pela Segurança Cloudflare. Verifique se você é humano e tente novamente."}
+
+    registrar_evento_telemetria_background("uso_modulo", "cnh", ip_cliente)
 
     tempo_atual = time.time()
     ultimo_tempo = cooldowns_cnh.get(ip_cliente, 0)
@@ -381,6 +385,8 @@ async def consultar_dados_cpf(cpf: str, request: Request):
     if not await verificar_turnstile(token_turnstile, ip_cliente):
         return {"sucesso": False, "erro": "🤖 Bloqueado pela Segurança Cloudflare. Verifique se você é humano e tente novamente."}
 
+    registrar_evento_telemetria_background("uso_modulo", "cpf", ip_cliente)
+
     tempo_atual = time.time()
     ultimo_tempo = cooldowns_cpf.get(ip_cliente, 0)
 
@@ -492,6 +498,8 @@ async def comparar_facial(request: Request):
     token_turnstile = request.headers.get("X-Turnstile-Token")
     if not await verificar_turnstile(token_turnstile, ip_cliente):
         return {"sucesso": False, "erro": "🤖 Bloqueado pela Segurança Cloudflare. Verifique se você é humano e tente novamente."}
+
+    registrar_evento_telemetria_background("uso_modulo", "comparador", ip_cliente)
 
     # 4. Puxa a URL segura do arquivo .env
     url_destino = os.getenv("URL_MOTOR_FACIAL")

@@ -1,16 +1,29 @@
 from fastapi import APIRouter, Request
 from fastapi.responses import RedirectResponse, HTMLResponse
 from fastapi.templating import Jinja2Templates
-from database import is_manutencao, is_manutencao_modulo
+from database import is_manutencao, is_manutencao_modulo, registrar_evento_telemetria_background
 
 router = APIRouter()
 templates = Jinja2Templates(directory="templates")
+
+
+def obter_ip_telemetria(request: Request) -> str:
+    ip_cloudflare = request.headers.get("CF-Connecting-IP")
+    if ip_cloudflare:
+        return ip_cloudflare
+
+    ip_proxy = request.headers.get("X-Forwarded-For")
+    if ip_proxy:
+        return ip_proxy.split(",")[0].strip()
+
+    return request.client.host if request.client else "anonimo"
 
 # ==========================================
 # ROTA VISUAL: DASHBOARD
 # ==========================================
 @router.get("/")
 async def render_dashboard(request: Request):
+    registrar_evento_telemetria_background("page_view", "home", obter_ip_telemetria(request))
     return templates.TemplateResponse("dashboard.html", {
         "request": request, 
         "manutencao": is_manutencao(),

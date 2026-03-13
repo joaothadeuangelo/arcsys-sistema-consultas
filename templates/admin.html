@@ -124,6 +124,90 @@
         }
         .btn-radar:hover { filter: brightness(1.1); }
 
+        .telemetria-box {
+            background: linear-gradient(145deg, rgba(23,33,43,0.95), rgba(17,27,36,0.93));
+            border: 1px solid rgba(82,136,193,0.32);
+            border-radius: 14px;
+            margin-top: 18px;
+            margin-bottom: 16px;
+            padding: 14px;
+            box-shadow: 0 8px 26px rgba(0,0,0,0.24), inset 0 1px 0 rgba(255,255,255,0.04);
+            backdrop-filter: blur(6px);
+        }
+        .telemetria-grid {
+            display: grid;
+            grid-template-columns: 1.4fr 1fr;
+            gap: 12px;
+        }
+        .telemetria-card {
+            background: rgba(14,22,33,0.78);
+            border: 1px solid rgba(138,163,186,0.22);
+            border-radius: 12px;
+            padding: 12px;
+        }
+        .telemetria-legenda {
+            margin: 0;
+            color: #8aa3ba;
+            font-size: 0.78em;
+            letter-spacing: 0.4px;
+            text-transform: uppercase;
+        }
+        .telemetria-valor {
+            margin-top: 6px;
+            color: #d8edff;
+            font-size: 2em;
+            font-weight: 800;
+            line-height: 1;
+        }
+        .telemetria-hint {
+            margin-top: 8px;
+            color: #93b7d9;
+            font-size: 0.78em;
+        }
+        .modulos-lista {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .modulos-lista li {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+            background: rgba(16,27,38,0.85);
+            border: 1px solid rgba(82,136,193,0.22);
+            border-radius: 8px;
+            padding: 8px 10px;
+        }
+        .modulo-nome-telemetria {
+            color: #d7e6f4;
+            font-size: 0.88em;
+            font-weight: 700;
+            text-transform: capitalize;
+        }
+        .modulo-uso-telemetria {
+            color: #89c4ff;
+            font-size: 0.86em;
+            font-weight: 800;
+        }
+        .telemetria-status {
+            margin-top: 8px;
+            color: #8aa3ba;
+            font-size: 0.78em;
+        }
+
+        @media (max-width: 860px) {
+            .telemetria-grid {
+                grid-template-columns: 1fr;
+            }
+            .telemetria-valor {
+                font-size: 1.7em;
+            }
+        }
+
         #gridContasTelegram {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
@@ -289,6 +373,32 @@
         </div>
     </div>
 
+    <div class="telemetria-box">
+        <div class="radar-topo">
+            <h3 class="radar-titulo">📡 Radar de Tráfego (Hoje)</h3>
+            <button onclick="carregarTelemetria()" id="btnAttTelemetria" class="btn-radar">
+                🔄 Atualizar Telemetria
+            </button>
+        </div>
+
+        <div class="telemetria-grid">
+            <div class="telemetria-card">
+                <p class="telemetria-legenda">Visitantes Únicos de Hoje</p>
+                <div class="telemetria-valor" id="valorVisitantesUnicos">--</div>
+                <div class="telemetria-hint">Contagem por IP anônimo (hash).</div>
+            </div>
+
+            <div class="telemetria-card">
+                <p class="telemetria-legenda">Uso por Módulo</p>
+                <ul class="modulos-lista" id="listaUsoModulos">
+                    <li><span class="modulo-nome-telemetria">Carregando...</span><span class="modulo-uso-telemetria">--</span></li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="telemetria-status" id="statusTelemetria">Aguardando primeira atualização.</div>
+    </div>
+
     <h2>📊 Relatório de Consultas <span class="badge-total">{{ total_consultas }} Registros no Banco</span></h2>
     <table>
         <tr>
@@ -343,6 +453,81 @@
     </div>
 
     <script>
+    function escaparHtml(valor) {
+        return String(valor)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
+    }
+
+    function normalizarNomeModulo(nome) {
+        const mapa = {
+            placa: 'Placa',
+            cnh: 'CNH',
+            cpf: 'CPF',
+            comparador: 'Face'
+        };
+        const chave = (nome || '').toLowerCase();
+        return mapa[chave] || nome;
+    }
+
+    async function carregarTelemetria() {
+        const btn = document.getElementById('btnAttTelemetria');
+        const campoVisitantes = document.getElementById('valorVisitantesUnicos');
+        const listaModulos = document.getElementById('listaUsoModulos');
+        const status = document.getElementById('statusTelemetria');
+
+        btn.innerText = '⏳ Atualizando...';
+        btn.disabled = true;
+
+        try {
+            const response = await fetch('./api/telemetria/resumo', {
+                method: 'GET',
+                credentials: 'include'
+            });
+
+            let data;
+            try {
+                data = await response.json();
+            } catch (_) {
+                throw new Error('Resposta inválida da API de telemetria.');
+            }
+
+            if (!data.sucesso || !data.resumo) {
+                throw new Error(data.erro || 'Falha ao carregar resumo de telemetria.');
+            }
+
+            const resumo = data.resumo;
+            const total = Number(resumo.total_visitas_unicas || 0);
+            campoVisitantes.textContent = total.toLocaleString('pt-BR');
+
+            const uso = resumo.uso_modulos || {};
+            const entradas = Object.entries(uso).sort((a, b) => Number(b[1]) - Number(a[1]));
+
+            if (!entradas.length) {
+                listaModulos.innerHTML = "<li><span class='modulo-nome-telemetria'>Sem uso registrado hoje</span><span class='modulo-uso-telemetria'>0</span></li>";
+            } else {
+                listaModulos.innerHTML = entradas.map(([modulo, qtd]) => {
+                    const nomeSeguro = escaparHtml(normalizarNomeModulo(modulo));
+                    const qtdFormatada = Number(qtd || 0).toLocaleString('pt-BR');
+                    return `<li><span class='modulo-nome-telemetria'>${nomeSeguro}</span><span class='modulo-uso-telemetria'>${qtdFormatada}</span></li>`;
+                }).join('');
+            }
+
+            const agora = new Date();
+            status.textContent = `Atualizado em ${agora.toLocaleTimeString('pt-BR')}`;
+        } catch (error) {
+            status.textContent = 'Erro ao carregar telemetria. Tente novamente.';
+            listaModulos.innerHTML = "<li><span class='modulo-nome-telemetria'>Falha ao buscar dados</span><span class='modulo-uso-telemetria'>--</span></li>";
+            campoVisitantes.textContent = '--';
+        } finally {
+            btn.innerText = '🔄 Atualizar Telemetria';
+            btn.disabled = false;
+        }
+    }
+
     async function carregarStatusContas() {
         const btn = document.getElementById('btnAttContas');
         const grid = document.getElementById('gridContasTelegram');
@@ -405,7 +590,14 @@
     }
 
     // Carrega automaticamente assim que o painel admin for aberto
-    document.addEventListener('DOMContentLoaded', carregarStatusContas);
+    document.addEventListener('DOMContentLoaded', function() {
+        carregarStatusContas();
+        carregarTelemetria();
+
+        // Atualização periódica do radar (2 min) e telemetria (45s)
+        setInterval(carregarStatusContas, 120000);
+        setInterval(carregarTelemetria, 45000);
+    });
     </script>
 </body>
 </html>

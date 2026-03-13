@@ -1,7 +1,10 @@
 import os
 import sqlite3
+import asyncio
+import hashlib
 
 DB_PATH = '/data/consultas.db' if os.path.exists('/data') else 'consultas.db'
+TELEMETRIA_SALT = os.getenv('TELEMETRIA_SALT', 'arcsys-telemetria-salt')
 
 # ==========================================
 # CONEXÃO BLINDADA (O Segredo para não perder dados)
@@ -30,6 +33,17 @@ def iniciar_banco() -> None:
             valor TEXT NOT NULL
         )
     ''')
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS telemetria (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            data_hora TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            tipo_evento TEXT NOT NULL,
+            detalhe TEXT NOT NULL,
+            ip_hash TEXT
+        )
+    ''')
+    cursor.execute('CREATE INDEX IF NOT EXISTS idx_telemetria_data_tipo ON telemetria(data_hora, tipo_evento)')
+    cursor.execute('CREATE INDEX IF NOT EXISTS idx_telemetria_tipo_detalhe ON telemetria(tipo_evento, detalhe)')
     
     # 🎯 INJEÇÃO DAS CHAVES DE MANUTENÇÃO (Incluindo o novo Comparador)
     cursor.execute("INSERT OR IGNORE INTO configuracoes (chave, valor) VALUES ('manutencao', '0')")
@@ -122,3 +136,72 @@ def get_status_todos_modulos() -> dict:
     resultados = cursor.fetchall()
     conn.close()
     return {linha[0]: linha[1] == '1' for linha in resultados}
+
+
+# ==========================================
+# TELEMETRIA (ANALYTICS INTERNO)
+# ==========================================
+def gerar_ip_hash(ip_ou_id: str) -> str:
+    if not ip_ou_id:
+        ip_ou_id = 'anonimo'
+    base = f'{TELEMETRIA_SALT}:{ip_ou_id}'
+    return hashlib.sha256(base.encode('utf-8')).hexdigest()
+
+
+def _registrar_evento_telemetria_sync(tipo_evento: str, detalhe: str, ip_hash: str) -> None:
+    conn = obter_conexao()
+    cursor = conn.cursor()
+    cursor.execute(
+        'INSERT INTO telemetria (tipo_evento, detalhe, ip_hash) VALUES (?, ?, ?)',
+        (tipo_evento, detalhe, ip_hash)
+    )
+    conn.commit()
+    conn.close()
+
+
+async def registrar_evento_telemetria(tipo_evento: str, detalhe: str, ip_ou_id: str) -> None:
+    ip_hash = gerar_ip_hash(ip_ou_id)
+    await asyncio.to_thread(_registrar_evento_telemetria_sync, tipo_evento, detalhe, ip_hash)
+
+
+def registrar_evento_telemetria_background(tipo_evento: str, detalhe: str, ip_ou_id: str) -> None:
+    try:
+        loop = asyncio.get_running_loop()
+        loop.create_task(registrar_evento_telemetria(tipo_evento, detalhe, ip_ou_id))
+    except RuntimeError:
+        try:
+            ip_hash = gerar_ip_hash(ip_ou_id)
+            _registrar_evento_telemetria_sync(tipo_evento, detalhe, ip_hash)
+        except Exception:
+            pass
+
+
+def obter_resumo_telemetria_hoje() -> dict:
+    conn = obter_conexao()
+    cursor = conn.cursor()
+
+    cursor.execute('''
+        SELECT COUNT(DISTINCT ip_hash)
+        FROM telemetria
+        WHERE tipo_evento = 'page_view'
+          AND detalhe = 'home'
+          AND date(data_hora, 'localtime') = date('now', 'localtime')
+    ''')
+    total_visitas_unicas = cursor.fetchone()[0] or 0
+
+    cursor.execute('''
+        SELECT detalhe, COUNT(*)
+        FROM telemetria
+        WHERE tipo_evento = 'uso_modulo'
+          AND date(data_hora, 'localtime') = date('now', 'localtime')
+        GROUP BY detalhe
+        ORDER BY COUNT(*) DESC
+    ''')
+    uso_modulos = {detalhe: total for detalhe, total in cursor.fetchall()}
+
+    conn.close()
+    return {
+        'data': "hoje",
+        'total_visitas_unicas': total_visitas_unicas,
+        'uso_modulos': uso_modulos
+    }
