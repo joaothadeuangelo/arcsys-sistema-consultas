@@ -257,7 +257,7 @@
                 <span class="modulo-nome">{{ titulo }}</span>
                 <span class="modulo-status">{{ "ON" if is_on else "OFF" }}</span>
             </div>
-                <a href="{{ request.url_for('alternar_status') }}{% if nome_modulo %}?modulo={{ nome_modulo }}{% endif %}"
+                <a href="./toggle{% if nome_modulo %}?modulo={{ nome_modulo }}{% endif %}"
                class="switch-link {{ 'on' if is_on else 'off' }}"
                title="Alternar módulo">
                 <span class="switch-knob"></span>
@@ -352,7 +352,7 @@
         grid.innerHTML = "<div class='sessao-line' style='padding: 6px 0;'>Testando conexão de todas as sessões na nuvem. Isso pode levar alguns segundos...</div>";
 
         try {
-            const response = await fetch("{{ request.url_for('verificar_status_contas') }}", {
+            const response = await fetch("./api/status_contas", {
                 method: 'GET',
                 credentials: 'include'
             });
