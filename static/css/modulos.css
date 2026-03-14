@@ -3,29 +3,56 @@
 /* ========================================= */
 
 /* ========================================= */
-/* LIMPEZA RADICAL DE MOLDURAS (DASHBOARD)   */
+/* FLATTEN UI (DASHBOARD)                    */
 /* ========================================= */
-.container,
-.dashboard-panel,
-#painel-modulos,
-#menuModulos,
-.main-card,
-.glass-panel {
+
+/* Unico container visual com glassmorphism no dashboard */
+.container:has(.dashboard-panel) {
+    background-color: #17212b !important;
+    border-top: 4px solid #5288c1 !important;
+    border-radius: 12px !important;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5) !important;
+    padding: 34px 24px 30px !important;
+    background-image: none !important;
+    outline: none !important;
+}
+
+/* Remove qualquer pseudo-borda residual no painel principal */
+.container:has(.dashboard-panel)::before,
+.container:has(.dashboard-panel)::after {
+    content: none !important;
     border: none !important;
     box-shadow: none !important;
-    outline: none !important;
     background-image: none !important;
 }
 
-.radar-box,
-#radar-sessoes,
-.container-radar,
-.card-sessoes,
-.radar-card {
+/* Wrappers internos devem ser planos/transparantes */
+.dashboard-panel,
+.dashboard-panel .brand-container,
+.dashboard-panel #menuModulos,
+.dashboard-panel .modulos-grid,
+.dashboard-panel .container-radar,
+.dashboard-panel .card-sessoes,
+.dashboard-panel #radar-sessoes,
+.dashboard-panel .radar-box,
+.dashboard-panel .radar-card,
+.dashboard-panel .main-card,
+.dashboard-panel .glass-panel {
+    background: transparent !important;
     border: none !important;
     box-shadow: none !important;
     outline: none !important;
     background-image: none !important;
+    margin: 0;
+}
+
+/* Preserve respiracao entre blocos sem caixas extras */
+.dashboard-panel .brand-container {
+    margin-bottom: 26px !important;
+}
+
+.dashboard-panel .modulos-grid {
+    margin-bottom: 24px !important;
 }
 
 .input-group { 

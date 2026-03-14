@@ -2,7 +2,7 @@
 /* MENU DE MÓDULOS (DASHBOARD)               */
 /* ========================================= */
 .dashboard-panel {
-    background: rgba(15, 23, 42, 0.72);
+    background: transparent;
     border: none;
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
