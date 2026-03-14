@@ -10,7 +10,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     
-    <link rel="stylesheet" href="/static/css/global.css?v=119.0">
+    <link rel="stylesheet" href="/static/css/global.css?v=999">
     <link rel="stylesheet" href="/static/css/dashboard.css?v=119.0">
     <link rel="stylesheet" href="/static/css/modulos.css?v=119.0">
     
@@ -27,10 +27,33 @@
             <div class="maintenance-body">
                 <p>Nossos servidores estão passando por uma atualização técnica estrutural para garantir <strong>maior estabilidade, segurança e precisão</strong> nas consultas.</p>
                 <div class="maintenance-divider"></div>
-                <p class="maintenance-footer-text">
-                    A equipe de engenharia da ARCSYS está operando para restabelecer os serviços o mais breve possível.<br>
-                    Por favor, aguarde alguns instantes e tente novamente.
-                </p>
+
+                <div class="timer-container" aria-label="Tempo estimado de conclusão">
+                    <div class="timer-block">
+                        <span id="timer-days" class="timer-number">00</span>
+                        <span class="timer-label">Dias</span>
+                    </div>
+                    <div class="timer-block">
+                        <span id="timer-hours" class="timer-number">01</span>
+                        <span class="timer-label">Horas</span>
+                    </div>
+                    <div class="timer-block">
+                        <span id="timer-minutes" class="timer-number">30</span>
+                        <span class="timer-label">Minutos</span>
+                    </div>
+                    <div class="timer-block">
+                        <span id="timer-seconds" class="timer-number">00</span>
+                        <span class="timer-label">Segundos</span>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <span class="maintenance-loading-icon" aria-hidden="true">⟳</span>
+                    <p class="maintenance-footer-text">
+                        A equipe de engenharia da ARCSYS esta finalizando os ultimos ajustes.<br>
+                        Aguarde alguns instantes e tente novamente.
+                    </p>
+                </div>
             </div>
         </div>
     </div>
@@ -70,7 +93,7 @@
         
     </div>
 
-    <script src="/static/js/global.js?v=119.0"></script>
+    <script src="/static/js/global.js?v=999"></script>
     
     {% block scripts %}{% endblock %}
 

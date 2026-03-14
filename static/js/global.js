@@ -4,6 +4,61 @@
 let tempoLeitura = 5; 
 let timerInterval;
 let textoPuro = "";
+let maintenanceTimerInterval = null;
+
+// Temporizador ficticio inicial: 00d 01h 30m 00s
+let maintenanceTotalSeconds = (1 * 60 * 60) + (30 * 60);
+
+function formatarDoisDigitos(valor) {
+    const numero = Math.max(0, Number(valor) || 0);
+    return String(numero).padStart(2, '0');
+}
+
+function animarNumeroTimer(el) {
+    if (!el) return;
+    el.classList.remove('is-updating');
+    // Forca reflow para reiniciar animacao de fade
+    void el.offsetWidth;
+    el.classList.add('is-updating');
+}
+
+function updateTimer() {
+    const daysEl = document.getElementById('timer-days');
+    const hoursEl = document.getElementById('timer-hours');
+    const minutesEl = document.getElementById('timer-minutes');
+    const secondsEl = document.getElementById('timer-seconds');
+
+    if (!daysEl || !hoursEl || !minutesEl || !secondsEl) return;
+
+    const dias = Math.floor(maintenanceTotalSeconds / 86400);
+    const horas = Math.floor((maintenanceTotalSeconds % 86400) / 3600);
+    const minutos = Math.floor((maintenanceTotalSeconds % 3600) / 60);
+    const segundos = maintenanceTotalSeconds % 60;
+
+    daysEl.textContent = formatarDoisDigitos(dias);
+    hoursEl.textContent = formatarDoisDigitos(horas);
+    minutesEl.textContent = formatarDoisDigitos(minutos);
+    secondsEl.textContent = formatarDoisDigitos(segundos);
+
+    animarNumeroTimer(daysEl);
+    animarNumeroTimer(hoursEl);
+    animarNumeroTimer(minutesEl);
+    animarNumeroTimer(secondsEl);
+
+    if (maintenanceTotalSeconds > 0) {
+        maintenanceTotalSeconds -= 1;
+    }
+}
+
+function iniciarMaintenanceTimer() {
+    if (maintenanceTimerInterval) {
+        clearInterval(maintenanceTimerInterval);
+        maintenanceTimerInterval = null;
+    }
+
+    updateTimer();
+    maintenanceTimerInterval = setInterval(updateTimer, 1000);
+}
 
 // ==========================================
 // VALIDADOR MATEMÁTICO DE CPF (FRONT-END)
@@ -46,6 +101,7 @@ window.onload = function() {
         document.querySelector('.container').style.display = 'none';
         document.getElementById('modalAviso').style.display = 'none';
         document.getElementById('modalManutencao').style.display = 'flex';
+        iniciarMaintenanceTimer();
         return; 
     }
 
