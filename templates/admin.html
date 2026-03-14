@@ -90,13 +90,12 @@
         .switch-link.off { background: #e74c3c; }
 
         .radar-box {
-            background: #17212b;
-            padding: 14px;
-            border-radius: 10px;
             margin-top: 18px;
             margin-bottom: 16px;
-            border: 1px solid #242f3d;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            padding: 0;
+            background: transparent;
+            border: none;
+            box-shadow: none;
         }
         .radar-topo {
             display: flex;
@@ -105,11 +104,14 @@
             margin-bottom: 10px;
             flex-wrap: wrap;
             gap: 8px;
+            padding-top: 6px;
         }
         .radar-titulo {
             margin: 0;
-            color: #fff;
-            font-size: 1em;
+            color: #8aa3ba;
+            font-size: 1.02em;
+            letter-spacing: 0.3px;
+            text-transform: uppercase;
         }
         .btn-radar {
             background: #5288c1;
@@ -214,17 +216,18 @@
             gap: 10px;
         }
         .sessao-card {
-            background: #0e1621;
-            padding: 10px;
-            border-radius: 8px;
-            border-left: 4px solid #5288c1;
+            background: transparent;
+            padding: 8px 0;
+            border-radius: 0;
+            border-left: none;
+            border-bottom: 1px solid rgba(82,136,193,0.2);
         }
         .sessao-head {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            border-bottom: 1px solid #242f3d;
-            padding-bottom: 6px;
+            border-bottom: none;
+            padding-bottom: 0;
             margin-bottom: 6px;
         }
         .sessao-status {
@@ -363,7 +366,7 @@
 
     <div class="radar-box">
         <div class="radar-topo">
-            <h3 class="radar-titulo">🤖 Radar de Sessões (Telegram)</h3>
+            <h3 class="radar-titulo">radar de sessões: (beta)🦅</h3>
             <button onclick="carregarStatusContas()" id="btnAttContas" class="btn-radar">
                 🔄 Atualizar Radar
             </button>

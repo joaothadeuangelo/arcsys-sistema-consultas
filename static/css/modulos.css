@@ -1,6 +1,33 @@
 /* ========================================= */
 /* ÁREA DE BUSCA (INPUTS E BOTÕES)           */
 /* ========================================= */
+
+/* ========================================= */
+/* LIMPEZA RADICAL DE MOLDURAS (DASHBOARD)   */
+/* ========================================= */
+.container,
+.dashboard-panel,
+#painel-modulos,
+#menuModulos,
+.main-card,
+.glass-panel {
+    border: none !important;
+    box-shadow: none !important;
+    outline: none !important;
+    background-image: none !important;
+}
+
+.radar-box,
+#radar-sessoes,
+.container-radar,
+.card-sessoes,
+.radar-card {
+    border: none !important;
+    box-shadow: none !important;
+    outline: none !important;
+    background-image: none !important;
+}
+
 .input-group { 
     display: flex; 
     gap: 10px; 
