@@ -103,14 +103,37 @@ function renderizarResultadosNome(resultados = []) {
         });
 
         html += `
-   <div class="result-card" data-search="${nomeLimpo} ${cpfLimpo} ${nascLimpo}" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); padding: 15px; border-radius: 8px; margin-bottom: 10px; position: relative;">
-       <h4 style="margin: 0 0 10px 0; color: #fff;">${nomeLimpo}</h4>
-       <p style="margin: 3px 0; color: #ccc;"><strong>CPF:</strong> ${cpfLimpo}</p>
-       <p style="margin: 3px 0; color: #ccc;"><strong>Sexo:</strong> ${sexoLimpo}</p>
-       <p style="margin: 3px 0; color: #ccc;"><strong>Nascimento:</strong> ${nascLimpo}</p>
-       <p style="margin: 3px 0; color: #ccc;"><strong>Mae:</strong> ${maeLimpo}</p>
-       <p style="margin: 3px 0; color: #ccc;"><strong>Situacao:</strong> ${situacaoLimpa}</p>
-       <button class="btn-copy" data-index="${index}" style="position: absolute; top: 15px; right: 15px; background: #007bff; border: none; padding: 5px 10px; border-radius: 5px; color: white; cursor: pointer;">📋 Copiar</button>
+   <div class="result-card" data-search="${nomeLimpo} ${cpfLimpo} ${nascLimpo}">
+       <div class="nome-resultado-head">
+           <div class="nome-head-info">
+               <span class="nome-resultado-indice">#${index + 1}</span>
+               <h4 class="nome-resultado-titulo">${nomeLimpo}</h4>
+           </div>
+           <button class="result-card-copy btn-copy" data-index="${index}">📋 Copiar</button>
+       </div>
+
+       <div class="nome-resultado-grid">
+           <div class="nome-campo">
+               <span class="nome-label">CPF</span>
+               <span class="nome-valor">${cpfLimpo}</span>
+           </div>
+           <div class="nome-campo">
+               <span class="nome-label">Sexo</span>
+               <span class="nome-valor">${sexoLimpo}</span>
+           </div>
+           <div class="nome-campo">
+               <span class="nome-label">Nascimento</span>
+               <span class="nome-valor">${nascLimpo}</span>
+           </div>
+           <div class="nome-campo">
+               <span class="nome-label">Mae</span>
+               <span class="nome-valor">${maeLimpo}</span>
+           </div>
+           <div class="nome-campo nome-campo-full">
+               <span class="nome-label">Situacao</span>
+               <span class="nome-valor">${situacaoLimpa}</span>
+           </div>
+       </div>
    </div>
         `;
     });
