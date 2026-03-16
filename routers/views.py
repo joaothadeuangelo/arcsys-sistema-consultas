@@ -25,7 +25,7 @@ def obter_ip_telemetria(request: Request) -> str:
 async def render_dashboard(request: Request):
     registrar_evento_telemetria_background("page_view", "home", obter_ip_telemetria(request))
     return templates.TemplateResponse("dashboard.html", {
-        "request": request, 
+        "request": request,
         "manutencao": is_manutencao(),
         "manutencao_placa": is_manutencao_modulo('placa'),
         "manutencao_cnh": is_manutencao_modulo('cnh'),
@@ -43,9 +43,9 @@ async def render_placa(request: Request):
     # Se o sistema global ou o módulo placa estiver off, chuta pro início
     if is_manutencao() or is_manutencao_modulo('placa'):
         return RedirectResponse(url="/", status_code=303)
-        
+
     return templates.TemplateResponse("modulo_placa.html", {
-        "request": request, 
+        "request": request,
         "manutencao": is_manutencao()
     })
 
@@ -56,12 +56,12 @@ async def render_placa(request: Request):
 async def render_cnh(request: Request):
     if is_manutencao() or is_manutencao_modulo('cnh'):
         return RedirectResponse(url="/", status_code=303)
-        
+
     return templates.TemplateResponse("modulo_cnh.html", {
-        "request": request, 
+        "request": request,
         "manutencao": is_manutencao()
     })
-    
+
 # ==========================================
 # ROTA VISUAL: MÓDULO DE DADOS (CPF / SISREG)
 # ==========================================
@@ -69,9 +69,9 @@ async def render_cnh(request: Request):
 async def render_cpf(request: Request):
     if is_manutencao() or is_manutencao_modulo('cpf'):
         return RedirectResponse(url="/", status_code=303)
-        
+
     return templates.TemplateResponse("modulo_cpf.html", {
-        "request": request, 
+        "request": request,
         "manutencao": is_manutencao()
     })
 
@@ -88,7 +88,7 @@ async def render_nome(request: Request):
         "request": request,
         "manutencao": is_manutencao()
     })
-    
+
 # ==========================================
 # ROTA VISUAL: SEPARADOR DE CPF (FERRAMENTA 100% FRONT-END)
 # ==========================================
@@ -97,12 +97,12 @@ async def render_separador(request: Request):
     # O separador não tem módulo no DB, mas respeita a manutenção global
     if is_manutencao():
         return RedirectResponse(url="/", status_code=303)
-        
+
     return templates.TemplateResponse("modulo_separador.html", {
         "request": request,
         "manutencao": is_manutencao()
     })
-    
+
 # ==========================================
 # ROTA VISUAL: SIMILAR FACE (COMPARADOR)
 # ==========================================
@@ -111,7 +111,7 @@ async def comparador_page(request: Request):
     # 🎯 TRAVA DE SEGURANÇA: Respeita a manutenção global E a manutenção individual do módulo
     if is_manutencao() or is_manutencao_modulo('comparador'):
         return RedirectResponse(url="/", status_code=303)
-        
+
     return templates.TemplateResponse("modulo_comparador.html", {
         "request": request,
         "manutencao": is_manutencao()

@@ -56,8 +56,8 @@ async def notificar_admin_telegram(modulo: str, erros: int):
 
 # 2. SÓ DEPOIS: Importar os nossos módulos (Agora eles enxergam as senhas)
 from database import iniciar_banco
-from routes.views import router as views_router
-from routes.admin import router as admin_router
+from routers.views import router as views_router
+from routers.admin import router as admin_router
 from routers.shared import fila_clientes
 from routers.placa import router as placa_router
 from routers.cnh import router as cnh_router

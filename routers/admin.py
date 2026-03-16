@@ -8,10 +8,10 @@ from routers.shared import fila_clientes
 
 # Importando TODA a inteligência do nosso database.py (o Model)
 from database import (
-    toggle_manutencao, 
-    toggle_manutencao_modulo, 
-    get_status_todos_modulos, 
-    contar_total_consultas, 
+    toggle_manutencao,
+    toggle_manutencao_modulo,
+    get_status_todos_modulos,
+    contar_total_consultas,
     obter_historico_paginado,
     obter_resumo_telemetria_hoje
 )
@@ -100,13 +100,13 @@ async def admin_logout():
 async def alternar_status(request: Request, modulo: str = None):
     if not admin_autenticado(request):
         return HTMLResponse("<h1>Acesso Negado</h1>", status_code=403)
-    
+
     # 🎯 ADICIONADO O 'nome' NA LISTA DE MÓDULOS PERMITIDOS
     if modulo in ['placa', 'cnh', 'cpf', 'nome', 'comparador']:
         toggle_manutencao_modulo(modulo)
     else:
         toggle_manutencao()
-        
+
     return RedirectResponse(url=f"{ADMIN_ROUTE_PREFIX}/lista", status_code=302)
 
 # ==========================================
@@ -119,16 +119,16 @@ async def ver_historico(request: Request, pagina: int = 1):
 
     # --- LÓGICA DE PAGINAÇÃO ---
     ITENS_POR_PAGINA = 50
-    
+
     # Prevenção: Se alguém digitar ?pagina=-5 ou 0 na URL, forçamos para a página 1
     if pagina < 1:
         pagina = 1
-        
+
     offset = (pagina - 1) * ITENS_POR_PAGINA
 
     # 1. Puxa o total e calcula a quantidade de páginas
     total_consultas = contar_total_consultas()
-    
+
     if total_consultas == 0:
         total_paginas = 1
     else:
@@ -139,7 +139,7 @@ async def ver_historico(request: Request, pagina: int = 1):
 
     # 3. Puxa o status de todos os módulos
     status_todos = get_status_todos_modulos()
-    
+
     # 4. Envia os dados mastigados para o HTML
     contexto = {
         "request": request,
@@ -167,7 +167,7 @@ async def verificar_status_contas(request: Request):
     # 🛡️ PROTEÇÃO: Endpoint sensível agora exige token admin
     if not admin_autenticado(request):
         return {"sucesso": False, "erro": "Acesso negado."}
-    
+
     status_lista = []
     clientes_temporarios = []
 
@@ -213,7 +213,7 @@ async def verificar_status_contas(request: Request):
 
         return {"sucesso": True, "contas": status_lista}
 
-    except Exception as e:
+    except Exception:
         return JSONResponse(content={"sucesso": False, "erro": "falha interna"}, status_code=500)
 
     finally:
