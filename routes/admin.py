@@ -4,10 +4,7 @@ from fastapi import APIRouter, Request, Form
 from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
 
-# ==========================================
-# 🚨 CORREÇÃO: IMPORTANDO A FILA DE CLIENTES
-# ==========================================
-from routes.api import fila_clientes  # <-- Puxando a variável de onde ela nasceu
+from routers.shared import fila_clientes
 
 # Importando TODA a inteligência do nosso database.py (o Model)
 from database import (

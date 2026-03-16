@@ -57,8 +57,14 @@ async def notificar_admin_telegram(modulo: str, erros: int):
 # 2. SÓ DEPOIS: Importar os nossos módulos (Agora eles enxergam as senhas)
 from database import iniciar_banco
 from routes.views import router as views_router
-from routes.api import router as api_router, fila_clientes
 from routes.admin import router as admin_router
+from routers.shared import fila_clientes
+from routers.placa import router as placa_router
+from routers.cnh import router as cnh_router
+from routers.cpf import router as cpf_router
+from routers.nome import router as nome_router
+from routers.comparador import router as comparador_router
+from routers.monitoramento import router as monitoramento_router
 
 AMBIENTE = os.getenv('AMBIENTE', 'producao')
 
@@ -110,7 +116,12 @@ async def startup_event():
 
 # Plugando as Rotas na Aplicação Principal
 app.include_router(views_router)
-app.include_router(api_router)
+app.include_router(placa_router)
+app.include_router(cnh_router)
+app.include_router(cpf_router)
+app.include_router(nome_router)
+app.include_router(comparador_router)
+app.include_router(monitoramento_router)
 app.include_router(admin_router)
 
 # Healthcheck leve — responde instantaneamente, antes de qualquer middleware pesado
