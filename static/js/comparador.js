@@ -14,15 +14,31 @@ if (inputLote) inputLote.addEventListener('change', handleLoteUpload);
 
 function handleBaseUpload(e) {
     const file = e.target.files[0];
-    if (!file) return;
+    const placeholder = document.getElementById('defaultBase');
+    const previewWrap = document.getElementById('previewBase');
+    const previewImg = document.getElementById('imgPreviewBase');
+
+    if (!file) {
+        if (placeholder) placeholder.classList.remove('is-hidden');
+        if (previewWrap) previewWrap.classList.add('is-hidden');
+        if (previewImg) {
+            previewImg.classList.add('is-hidden');
+            previewImg.removeAttribute('src');
+        }
+        return;
+    }
 
     const reader = new FileReader();
     reader.onload = function(event) {
-        document.getElementById('defaultBase').style.display = 'none';
-        document.getElementById('previewBase').style.display = 'flex';
-        document.getElementById('previewBase').style.flexDirection = 'column';
-        document.getElementById('previewBase').style.alignItems = 'center';
-        document.getElementById('imgPreviewBase').src = event.target.result;
+        const previewSrc = event && event.target ? event.target.result : '';
+        if (!previewSrc) return;
+
+        if (previewImg) {
+            previewImg.src = previewSrc;
+            previewImg.classList.remove('is-hidden');
+        }
+        if (placeholder) placeholder.classList.add('is-hidden');
+        if (previewWrap) previewWrap.classList.remove('is-hidden');
     }
     reader.readAsDataURL(file);
 }

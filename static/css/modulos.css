@@ -78,7 +78,7 @@
 }
 
 .is-hidden {
-    display: none;
+    display: none !important;
 }
 
 input { 
@@ -426,8 +426,15 @@ button:disabled {
     height: 120px;
     border-radius: 10px;
     object-fit: cover;
-    border: 3px solid #5288c1;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+    border: none;
+    box-shadow: none;
+    margin: 0 auto;
+}
+
+#previewBase p {
+    color: #8aa3ba;
+    font-size: 0.85em;
+    margin-top: 10px;
 }
 
 /* Miniaturas do Lote */
