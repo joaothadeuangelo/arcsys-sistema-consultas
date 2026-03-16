@@ -550,7 +550,7 @@
         const ledCnh = document.getElementById('led-status-cnh');
 
         try {
-            const response = await fetch('./api/admin/status-circuit-breaker', {
+            const response = await fetch(`./api/admin/status-circuit-breaker?t=${Date.now()}`, {
                 method: 'GET',
                 credentials: 'include'
             });

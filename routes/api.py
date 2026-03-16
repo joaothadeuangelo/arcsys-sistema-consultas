@@ -50,12 +50,11 @@ async def _registrar_falha_modulo(request: Request, modulo: str):
         return
 
     estado[modulo] += 1
-    if estado[modulo] >= 3:
+    # Anti-spam: dispara somente no limiar exato da terceira falha.
+    if estado[modulo] == 3:
         erros = estado[modulo]
         if callable(notificar):
             asyncio.create_task(notificar(modulo, erros))
-        # Reset após acionar o envio para evitar spam contínuo no admin.
-        estado[modulo] = 0
 
 
 @router.get('/api/admin/status-circuit-breaker')
