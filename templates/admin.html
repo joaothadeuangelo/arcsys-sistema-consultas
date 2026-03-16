@@ -52,6 +52,11 @@
             font-size: 0.9em;
             line-height: 1.2;
         }
+        .modulo-nome-linha {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
         .modulo-status {
             display: block;
             margin-top: 3px;
@@ -59,6 +64,41 @@
             color: #8aa3ba;
             text-transform: uppercase;
             letter-spacing: 0.8px;
+        }
+
+        .status-led {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            display: inline-block;
+            flex-shrink: 0;
+            border: 1px solid rgba(255,255,255,0.2);
+            transition: background-color 0.25s ease, box-shadow 0.25s ease, transform 0.25s ease;
+        }
+        .status-operacional {
+            background: #10B981;
+            box-shadow: 0 0 8px rgba(16, 185, 129, 0.55), 0 0 16px rgba(16, 185, 129, 0.25);
+            animation: none;
+        }
+        .status-instavel {
+            background: #F59E0B;
+            box-shadow: 0 0 10px rgba(245, 158, 11, 0.62), 0 0 18px rgba(245, 158, 11, 0.3);
+            animation: pulse-status 1.7s ease-in-out infinite;
+        }
+        .status-offline {
+            background: #EF4444;
+            box-shadow: 0 0 14px rgba(239, 68, 68, 0.85), 0 0 24px rgba(239, 68, 68, 0.45);
+            animation: pulse-status-rapido 0.85s ease-in-out infinite;
+        }
+
+        @keyframes pulse-status {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.14); opacity: 0.86; }
+        }
+
+        @keyframes pulse-status-rapido {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.22); opacity: 0.75; }
         }
 
         .switch-link {
@@ -341,7 +381,14 @@
         {% set is_on = not is_off %}
         <div class="modulo-item">
             <div class="modulo-info">
-                <span class="modulo-nome">{{ titulo }}</span>
+                <span class="modulo-nome modulo-nome-linha">
+                    {{ titulo }}
+                    {% if nome_modulo == 'placa' %}
+                        <span id="led-status-placa" class="status-led status-operacional" title="Operacional" aria-label="Status do módulo Placa"></span>
+                    {% elif nome_modulo == 'cnh' %}
+                        <span id="led-status-cnh" class="status-led status-operacional" title="Operacional" aria-label="Status do módulo CNH"></span>
+                    {% endif %}
+                </span>
                 <span class="modulo-status">{{ "ON" if is_on else "OFF" }}</span>
             </div>
                 <a href="./toggle{% if nome_modulo %}?modulo={{ nome_modulo }}{% endif %}"
@@ -477,6 +524,52 @@
         return mapa[chave] || nome;
     }
 
+    function aplicarStatusCircuitBreaker(led, falhas) {
+        if (!led) return;
+
+        led.classList.remove('status-operacional', 'status-instavel', 'status-offline');
+
+        if (falhas >= 3) {
+            led.classList.add('status-offline');
+            led.title = 'Fora do ar';
+            return;
+        }
+
+        if (falhas > 0) {
+            led.classList.add('status-instavel');
+            led.title = 'Instabilidade';
+            return;
+        }
+
+        led.classList.add('status-operacional');
+        led.title = 'Operacional';
+    }
+
+    async function fetchCircuitBreakerStatus() {
+        const ledPlaca = document.getElementById('led-status-placa');
+        const ledCnh = document.getElementById('led-status-cnh');
+
+        try {
+            const response = await fetch('./api/admin/status-circuit-breaker', {
+                method: 'GET',
+                credentials: 'include'
+            });
+
+            if (!response.ok) {
+                throw new Error('Falha ao consultar status do circuit breaker.');
+            }
+
+            const data = await response.json();
+            const falhasPlaca = Number(data?.placa || 0);
+            const falhasCnh = Number(data?.cnh || 0);
+
+            aplicarStatusCircuitBreaker(ledPlaca, falhasPlaca);
+            aplicarStatusCircuitBreaker(ledCnh, falhasCnh);
+        } catch (_) {
+            // Em falha de comunicação, mantém estado atual dos LEDs para não gerar falso negativo.
+        }
+    }
+
     async function carregarTelemetria() {
         const btn = document.getElementById('btnAttTelemetria');
         const campoVisitantes = document.getElementById('valorVisitantesUnicos');
@@ -597,10 +690,12 @@
     document.addEventListener('DOMContentLoaded', function() {
         carregarStatusContas();
         carregarTelemetria();
+        fetchCircuitBreakerStatus();
 
         // Atualização periódica do radar (2 min) e telemetria (45s)
         setInterval(carregarStatusContas, 120000);
         setInterval(carregarTelemetria, 45000);
+        setInterval(fetchCircuitBreakerStatus, 15000);
     });
     </script>
 </body>

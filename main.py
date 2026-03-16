@@ -1,5 +1,6 @@
 import os
 import asyncio
+import aiohttp
 from dotenv import load_dotenv
 from fastapi import FastAPI, Request
 from fastapi.responses import RedirectResponse, JSONResponse
@@ -16,6 +17,43 @@ SESSOES_STRINGS = [
     value.strip() for key, value in os.environ.items() 
     if key.startswith('SESSAO_') and value.strip()
 ]
+
+# Circuit Breaker passivo: contador simples em memória por módulo crítico.
+falhas_consecutivas = {"placa": 0, "cnh": 0}
+
+
+async def notificar_admin_telegram(modulo: str, erros: int):
+    """Envia alerta ao admin quando um módulo acumula falhas consecutivas."""
+    bot_token = os.getenv("TELEGRAM_BOT_TOKEN", "").strip()
+    admin_chat_id = os.getenv("TELEGRAM_ADMIN_CHAT_ID", "").strip()
+
+    if not bot_token or not admin_chat_id:
+        print("[ALERTA TELEGRAM] TELEGRAM_BOT_TOKEN/TELEGRAM_ADMIN_CHAT_ID não configurados.")
+        return
+
+    texto_alerta = (
+        "🚨 ALERTA DE ESTABILIDADE (ARCSYS)\n"
+        f"Módulo: {modulo.upper()}\n"
+        f"Falhas consecutivas: {erros}\n"
+        "Ação: verificar provedor externo imediatamente."
+    )
+
+    url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
+    payload = {
+        "chat_id": admin_chat_id,
+        "text": texto_alerta,
+        "disable_web_page_preview": True
+    }
+
+    timeout = aiohttp.ClientTimeout(total=10)
+    try:
+        async with aiohttp.ClientSession(timeout=timeout) as session:
+            async with session.post(url, json=payload) as response:
+                if response.status != 200:
+                    detalhe = await response.text()
+                    print(f"[ALERTA TELEGRAM] Falha no envio ({response.status}): {detalhe[:300]}")
+    except Exception as e:
+        print(f"[ALERTA TELEGRAM] Exceção ao notificar admin: {e}")
 
 # 2. SÓ DEPOIS: Importar os nossos módulos (Agora eles enxergam as senhas)
 from database import iniciar_banco
@@ -57,6 +95,10 @@ async def redirecionar_dominio_antigo(request: Request, call_next):
 # Startup das contas do Telegram
 @app.on_event("startup")
 async def startup_event():
+    # Disponibiliza estado e notificador para as rotas sem acoplamento circular.
+    app.state.falhas_consecutivas = falhas_consecutivas
+    app.state.notificar_admin_telegram = notificar_admin_telegram
+
     iniciar_banco()
     print(f"Iniciando {len(SESSOES_STRINGS)} contas do Telegram...")
     for idx, session_str in enumerate(SESSOES_STRINGS):

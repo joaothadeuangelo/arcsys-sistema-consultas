@@ -34,6 +34,42 @@ cooldowns_nome = {}
 cooldown_comparador = {}
 
 
+async def _resetar_falhas_modulo(request: Request, modulo: str):
+    """Zera o contador de falhas consecutivas após sucesso de chamada externa."""
+    estado = getattr(request.app.state, 'falhas_consecutivas', None)
+    if isinstance(estado, dict) and modulo in estado:
+        estado[modulo] = 0
+
+
+async def _registrar_falha_modulo(request: Request, modulo: str):
+    """Incrementa falhas e dispara alerta no limite sem bloquear resposta ao usuário."""
+    estado = getattr(request.app.state, 'falhas_consecutivas', None)
+    notificar = getattr(request.app.state, 'notificar_admin_telegram', None)
+
+    if not isinstance(estado, dict) or modulo not in estado:
+        return
+
+    estado[modulo] += 1
+    if estado[modulo] >= 3:
+        erros = estado[modulo]
+        if callable(notificar):
+            asyncio.create_task(notificar(modulo, erros))
+        # Reset após acionar o envio para evitar spam contínuo no admin.
+        estado[modulo] = 0
+
+
+@router.get('/api/admin/status-circuit-breaker')
+async def status_circuit_breaker(request: Request):
+    """Endpoint leve de monitoramento do contador de falhas consecutivas."""
+    estado = getattr(request.app.state, 'falhas_consecutivas', {})
+
+    # Resposta mínima: expõe apenas os contadores dos módulos monitorados.
+    placa = int(estado.get('placa', 0)) if isinstance(estado, dict) else 0
+    cnh = int(estado.get('cnh', 0)) if isinstance(estado, dict) else 0
+
+    return {'placa': placa, 'cnh': cnh}
+
+
 def mascarar_tokens_em_texto(texto: str) -> str:
     if texto is None:
         return ""
@@ -305,6 +341,9 @@ async def consultar_placa(placa: str, request: Request):
                 "placa": placa
             }, headers=headers)
 
+        if response.status_code in (500, 502, 503):
+            await _registrar_falha_modulo(request, 'placa')
+
         if response.status_code != 200:
             corpo_log = response.text[:500] if len(response.text) > 500 else response.text
             corpo_log = mascarar_tokens_em_texto(corpo_log)
@@ -325,10 +364,12 @@ async def consultar_placa(placa: str, request: Request):
         # Salva o JSON integral no banco para cache futuro
         salvar_consulta(placa, json.dumps(dados_api))
         cooldowns_placa[ip_cliente] = time.time()
+        await _resetar_falhas_modulo(request, 'placa')
 
         return {"sucesso": True, "dados": dados_api, "cache": False}
             
     except Exception as e:
+        await _registrar_falha_modulo(request, 'placa')
         # 🛡️ Sanitiza a mensagem: exceções httpx podem conter a URL completa com o token na query string
         msg_erro = mascarar_tokens_em_texto(str(e))
         print(f"EXCEÇÃO INTERNA ROTA PLACA: {msg_erro}")
@@ -383,6 +424,7 @@ async def consultar_cnh(cpf: str, request: Request):
         if AMBIENTE == "desenvolvimento":
             await asyncio.sleep(3)
             cooldowns_cnh[ip_cliente] = time.time()
+            await _resetar_falhas_modulo(request, 'cnh')
             return {"sucesso": True, "dados": f"🕵️ DADOS DA CNH\n\n**CPF:** {cpf_limpo}\n**Nome:** USUÁRIO TESTE ARCSYS", "foto": "/static/img/cnh.png"}
 
         cliente_atual = await fila_clientes.get()
@@ -406,6 +448,7 @@ async def consultar_cnh(cpf: str, request: Request):
                 if msg_botoes: break
                     
             if not msg_botoes:
+                await _registrar_falha_modulo(request, 'cnh')
                 return {"sucesso": False, "erro": "O sistema central demorou para responder. Tente novamente."}
 
             clicou = False
@@ -418,6 +461,7 @@ async def consultar_cnh(cpf: str, request: Request):
                 if clicou: break
 
             if not clicou:
+                await _registrar_falha_modulo(request, 'cnh')
                 return {"sucesso": False, "erro": "Opção CNH indisponível para este documento."}
 
             msg_resultado = None 
@@ -463,10 +507,12 @@ async def consultar_cnh(cpf: str, request: Request):
 
             # 🛑 SE O BOT RETORNOU ERRO, DEVOLVE NA HORA PARA O USUÁRIO
             if erro_bot:
+                await _registrar_falha_modulo(request, 'cnh')
                 erro_limpo = sanitizar_resposta(erro_bot) # Limpa o @ do bot, caso venha junto
                 return {"sucesso": False, "erro": erro_limpo}
 
             if not msg_resultado:
+                await _registrar_falha_modulo(request, 'cnh')
                 return {"sucesso": False, "erro": "O servidor principal está congestionado. Tente novamente."}
 
             foto_b64 = ""
@@ -497,6 +543,7 @@ async def consultar_cnh(cpf: str, request: Request):
             salvar_consulta(f"CPF_{cpf_limpo}", pacote_salvar)
             
             cooldowns_cnh[ip_cliente] = time.time()
+            await _resetar_falhas_modulo(request, 'cnh')
 
             return {"sucesso": True, "dados": dados_texto, "foto": foto_b64}
 
@@ -504,6 +551,7 @@ async def consultar_cnh(cpf: str, request: Request):
             await fila_clientes.put(cliente_atual)
 
     except Exception:
+        await _registrar_falha_modulo(request, 'cnh')
         return {"sucesso": False, "erro": "Erro interno no servidor. Tente novamente."}
     
 # ==========================================
