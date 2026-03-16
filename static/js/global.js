@@ -97,7 +97,13 @@ function validarCPF(cpf) {
 // ==========================================
 window.onload = function() {
     // 1. VERIFICAÇÃO DE MANUTENÇÃO (Prioridade Máxima)
-    if (window.SISTEMA_EM_MANUTENCAO) {
+    const sistemaEmManutencao =
+        window.SISTEMA_EM_MANUTENCAO === true ||
+        window.SISTEMA_EM_MANUTENCAO === 'true' ||
+        window.SISTEMA_EM_MANUTENCAO === 1 ||
+        window.SISTEMA_EM_MANUTENCAO === '1';
+
+    if (sistemaEmManutencao) {
         document.querySelector('.container').style.display = 'none';
         document.getElementById('modalAviso').style.display = 'none';
         document.getElementById('modalManutencao').style.display = 'flex';

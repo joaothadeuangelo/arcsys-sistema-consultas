@@ -14,11 +14,11 @@
     <link rel="stylesheet" href="/static/css/dashboard.css?v=119.0">
     <link rel="stylesheet" href="/static/css/modulos.css?v=119.0">
     
-    <script>window.SISTEMA_EM_MANUTENCAO = {{ 'true' if manutencao else 'false' }};</script>
+    <script>window.SISTEMA_EM_MANUTENCAO = {{ manutencao | tojson }};</script>
 </head>
 <body>
 
-    <div id="modalManutencao" class="modal-overlay maintenance-overlay is-hidden">
+    <div id="modalManutencao" class="modal-overlay maintenance-overlay" style="display: none;">
         <div class="modal-content maintenance-content">
             <div class="maintenance-header">
                 <span class="maintenance-icon">⚠️</span>
@@ -58,7 +58,7 @@
         </div>
     </div>
 
-    <div id="modalAviso" class="modal-overlay premium-overlay is-hidden">
+    <div id="modalAviso" class="modal-overlay premium-overlay" style="display: none;">
         <div class="premium-modal">
             
             <div class="premium-header">
@@ -93,7 +93,7 @@
         
     </div>
 
-    <script src="/static/js/global.js?v=999"></script>
+    <script src="/static/js/global.js?v=1000"></script>
     
     {% block scripts %}{% endblock %}
 
