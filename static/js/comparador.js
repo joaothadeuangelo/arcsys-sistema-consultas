@@ -46,7 +46,23 @@ function handleBaseUpload(e) {
 function handleLoteUpload(e) {
     const files = e.target.files;
     const total = files.length;
-    if (total === 0) return;
+    const defaultLote = document.getElementById('defaultLote');
+    const previewLote = document.getElementById('previewLote');
+    const containerMiniaturas = document.getElementById('miniaturasLote');
+    const badge = document.getElementById('badgeMaisFotos');
+    const txtArquivosSelecionados = document.getElementById('txtArquivosSelecionados');
+
+    if (total === 0) {
+        if (defaultLote) defaultLote.classList.remove('is-hidden');
+        if (previewLote) previewLote.classList.add('is-hidden');
+        if (containerMiniaturas) containerMiniaturas.innerHTML = '';
+        if (badge) {
+            badge.classList.add('is-hidden');
+            badge.innerText = '+0';
+        }
+        if (txtArquivosSelecionados) txtArquivosSelecionados.innerText = 'Arquivos selecionados: 0';
+        return;
+    }
 
     if (total > 250) {
         exibirErro("⚠️ Limite de segurança excedido! Selecione no máximo 250 fotos por lote.");
@@ -54,18 +70,16 @@ function handleLoteUpload(e) {
         return;
     }
 
-    document.getElementById('defaultLote').style.display = 'none';
-    document.getElementById('previewLote').style.display = 'flex';
-    document.getElementById('previewLote').style.flexDirection = 'column';
-    document.getElementById('previewLote').style.alignItems = 'center';
+    if (defaultLote) defaultLote.classList.add('is-hidden');
+    if (previewLote) previewLote.classList.remove('is-hidden');
 
-    const containerMiniaturas = document.getElementById('miniaturasLote');
-    containerMiniaturas.innerHTML = ''; 
+    if (containerMiniaturas) containerMiniaturas.innerHTML = '';
     const maxThumbnails = 4; 
 
     for (let i = 0; i < Math.min(total, maxThumbnails); i++) {
         const reader = new FileReader();
         reader.onload = function(event) {
+            if (!containerMiniaturas) return;
             const img = document.createElement('img');
             img.src = event.target.result;
             img.className = 'miniatura-lote';
@@ -74,14 +88,15 @@ function handleLoteUpload(e) {
         reader.readAsDataURL(files[i]);
     }
 
-    const badge = document.getElementById('badgeMaisFotos');
     if (total > maxThumbnails) {
-        badge.innerText = `+${total - maxThumbnails}`;
-        badge.style.display = 'block';
+        if (badge) {
+            badge.innerText = `+${total - maxThumbnails}`;
+            badge.classList.remove('is-hidden');
+        }
     } else {
-        badge.style.display = 'none';
+        if (badge) badge.classList.add('is-hidden');
     }
-    document.getElementById('txtArquivosSelecionados').innerText = `Arquivos selecionados: ${total}`;
+    if (txtArquivosSelecionados) txtArquivosSelecionados.innerText = `Arquivos selecionados: ${total}`;
 }
 
 async function iniciarComparacao() {
