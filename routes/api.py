@@ -4,6 +4,7 @@ load_dotenv()
 import httpx
 import time
 import asyncio
+import itertools
 import urllib.request
 import urllib.parse
 import json
@@ -21,7 +22,20 @@ router = APIRouter()
 BOT_USERNAME = os.getenv('BOT_USERNAME', '')
 AMBIENTE = os.getenv("AMBIENTE", "producao")
 TURNSTILE_SECRET_KEY = os.getenv('TURNSTILE_SECRET_KEY', '')
-GONZALES_API_TOKEN = os.getenv('GONZALES_API_TOKEN', '')
+tokens_str = os.getenv("GONZALES_API_TOKENS", "")
+lista_tokens = [t.strip() for t in tokens_str.split(",") if t.strip()]
+
+# Fallback seguro: mantém compatibilidade com o token antigo (singular).
+if not lista_tokens:
+    token_legado = os.getenv('GONZALES_API_TOKEN', '').strip()
+    if token_legado:
+        lista_tokens = [token_legado]
+    else:
+        # Evita crash no startup caso o env ainda não esteja configurado.
+        lista_tokens = [""]
+        print("[PLACA] Aviso: nenhum token GONZALES configurado (GONZALES_API_TOKENS/GONZALES_API_TOKEN).")
+
+token_cycle = itertools.cycle(lista_tokens)
 TEMPO_COOLDOWN = 120
 
 # Estado Compartilhado
@@ -332,10 +346,12 @@ async def consultar_placa(placa: str, request: Request):
             "Connection": "keep-alive"
         }
 
+        current_token = next(token_cycle)
+
         # 🚀 REQUISIÇÃO DIRETA À API GONZALES
         async with httpx.AsyncClient(timeout=15.0) as client:
             response = await client.get("https://apis.gonzalesdev.shop/", params={
-                "token": GONZALES_API_TOKEN,
+                "token": current_token,
                 "r": "serpro",
                 "placa": placa
             }, headers=headers)
