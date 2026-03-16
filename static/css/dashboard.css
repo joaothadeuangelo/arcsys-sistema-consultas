@@ -67,20 +67,6 @@ a.modulo-card {
     filter: drop-shadow(0 4px 10px rgba(0,0,0,0.32));
 }
 
-.modulo-icon-emoji {
-    width: 76px;
-    height: 76px;
-    margin: 0 auto 10px auto;
-    border-radius: 20px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 40px;
-    background: radial-gradient(circle at 30% 30%, rgba(82, 136, 193, 0.42), rgba(15, 23, 42, 0.18));
-    border: 1px solid rgba(125, 181, 255, 0.48);
-    box-shadow: 0 10px 24px rgba(82, 136, 193, 0.22), inset 0 0 10px rgba(255, 255, 255, 0.05);
-}
-
 .modulo-card h3 {
     color: #b8dbff;
     margin: 0 0 5px 0;

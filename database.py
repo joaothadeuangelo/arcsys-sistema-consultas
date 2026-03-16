@@ -17,6 +17,8 @@ def obter_conexao():
     conn = sqlite3.connect(DB_PATH, timeout=20)
     # Ativa o modo WAL (Alta concorrência para leitura/escrita simultânea)
     conn.execute('PRAGMA journal_mode=WAL;')
+    # Reduz risco de lock e melhora throughput mantendo segurança adequada no WAL.
+    conn.execute('PRAGMA synchronous=NORMAL;')
     return conn
 
 def iniciar_banco() -> None:

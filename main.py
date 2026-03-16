@@ -1,5 +1,4 @@
 import os
-import asyncio
 import aiohttp
 from dotenv import load_dotenv
 from fastapi import FastAPI, Request
@@ -10,11 +9,11 @@ from telethon.sessions import StringSession
 
 # 1. PRIMEIRO DE TUDO: Carregar as senhas do .env!
 load_dotenv()
-API_ID = int(os.getenv('API_ID', 0))  
+API_ID = int(os.getenv('API_ID', 0))
 API_HASH = os.getenv('API_HASH', '')
 
 SESSOES_STRINGS = [
-    value.strip() for key, value in os.environ.items() 
+    value.strip() for key, value in os.environ.items()
     if key.startswith('SESSAO_') and value.strip()
 ]
 
@@ -100,20 +99,14 @@ async def startup_event():
     app.state.notificar_admin_telegram = notificar_admin_telegram
 
     iniciar_banco()
-    print(f"Iniciando {len(SESSOES_STRINGS)} contas do Telegram...")
     for idx, session_str in enumerate(SESSOES_STRINGS):
         try:
             client = TelegramClient(StringSession(session_str), API_ID, API_HASH)
             await client.connect()
             if await client.is_user_authorized():
                 await fila_clientes.put(client)
-                print(f"✅ Conta {idx + 1} conectada e pronta!")
-            else:
-                print(f"❌ Conta {idx + 1} deslogada. Ignorando...")
         except Exception as e:
             print(f"❌ Erro na conta {idx + 1}: {e}")
-            
-    print(f"🚀 {fila_clientes.qsize()} contas operacionais!")
 
 # Plugando as Rotas na Aplicação Principal
 app.include_router(views_router)

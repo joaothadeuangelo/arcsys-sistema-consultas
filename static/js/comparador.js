@@ -74,7 +74,6 @@ async function iniciarComparacao() {
     
     const btn = document.getElementById('btnComparar');
     const resultContainer = document.getElementById('resultadoContainer');
-    const resultBox = document.getElementById('resultado');
     const loader = document.getElementById('loader');
 
     if (!fileBase || filesLote.length === 0) {
@@ -117,7 +116,7 @@ async function iniciarComparacao() {
         if (data.sucesso) {
             if (data.resultados && data.resultados.task_id) {
                 document.getElementById('textoLoader').innerHTML = `Processando biometria...<br><span style="font-size: 0.8em; color: #5288c1;">Isso pode levar alguns segundos.</span>`;
-                verificarStatusFila(data.resultados.task_id, btn, loader, resultContainer, resultBox);
+                verificarStatusFila(data.resultados.task_id, btn, loader, resultContainer);
             } else {
                 exibirErro(`❌ O servidor parceiro não retornou o ID da fila.`);
                 loader.style.display = 'none';
@@ -129,14 +128,14 @@ async function iniciarComparacao() {
             btn.disabled = false;
         }
 
-    } catch (error) {
+    } catch (_) {
         exibirErro("❌ O servidor principal não respondeu a tempo.");
         loader.style.display = 'none';
         btn.disabled = false;
     } 
 }
 
-async function verificarStatusFila(taskId, btn, loader, resultContainer, resultBox) {
+async function verificarStatusFila(taskId, btn, loader, resultContainer) {
     try {
         const response = await fetch(`/api/comparar_facial/status/${taskId}`);
         const data = await response.json();
@@ -147,14 +146,14 @@ async function verificarStatusFila(taskId, btn, loader, resultContainer, resultB
                 btn.disabled = false;
                 prepararDados(data.dados, resultContainer);
             } else {
-                setTimeout(() => verificarStatusFila(taskId, btn, loader, resultContainer, resultBox), 3000);
+                setTimeout(() => verificarStatusFila(taskId, btn, loader, resultContainer), 3000);
             }
         } else {
             exibirErro(`❌ ${data.erro}`);
             loader.style.display = 'none';
             btn.disabled = false;
         }
-    } catch (e) {
+    } catch (_) {
         exibirErro("❌ Falha de conexão ao checar o status.");
         loader.style.display = 'none';
         btn.disabled = false;
@@ -178,7 +177,7 @@ function prepararDados(dadosJson, resultContainer) {
         resultContainer.style.display = 'block';
         if (typeof turnstile !== 'undefined') turnstile.reset();
 
-    } catch (e) {
+    } catch (_) {
         exibirErro("❌ Falha ao processar os dados da tabela.");
     }
 }

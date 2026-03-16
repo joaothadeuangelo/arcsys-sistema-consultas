@@ -202,7 +202,7 @@ async function fazerConsultaNome() {
         }
 
         resultContainer.style.display = 'block';
-    } catch (error) {
+    } catch (_) {
         resultMeta.innerHTML = "<div class='badge badge-danger' style='font-size: 1em; padding: 12px; display: block; text-align: center;'>❌ Erro de conexão com o servidor.</div>";
         renderizarResultadosNome([]);
         resultContainer.style.display = 'block';

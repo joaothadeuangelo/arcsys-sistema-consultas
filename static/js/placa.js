@@ -5,7 +5,7 @@
 // 1. TRATAMENTO EM TEMPO REAL (Impede caracteres inválidos e força maiúscula)
 const placaInputField = document.getElementById('placaInput');
 if (placaInputField) {
-    placaInputField.addEventListener('input', function (e) {
+    placaInputField.addEventListener('input', function () {
         this.value = this.value.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
     });
 }
@@ -14,42 +14,6 @@ if (placaInputField) {
 // RENDERIZADOR JSON → CARDS PROFISSIONAIS
 // (UX limpa em 4 blocos semânticos)
 // ==========================================
-
-const CAMPOS_IGNORADOS_PLACA = new Set([
-    "codigoMunicipioEmplacamento",
-    "codigoRemarcacaoChassi",
-    "descricaoRemarcacaoChassi",
-    "codigoTipoVeiculo",
-    "codigoMarcaModelo",
-    "codigoEspecieVeiculo",
-    "codigoTipoCarroceria",
-    "codigoCor",
-    "codigoCategoria",
-    "potencia",
-    "cilindradas",
-    "codigoCombustivel",
-    "cmt",
-    "pbt",
-    "cmc",
-    "codigoTipoProprietario",
-    "qtdEixos",
-    "descricaoDocImportador",
-    "codigoOrgaoRfb",
-    "descricaoOrgaoRfb",
-    "tipoDocFaturado",
-    "numeroIdFaturamento",
-    "ufFaturado",
-    "numeroProcessoImportacao",
-    "codigoPaisTransferencia",
-    "descricaoPaisTransferencia",
-    "tipoDocProprietarioIndicado",
-    "descricaoDocProprietarioIndicado",
-    "codigoOrigemPropriedade",
-    "indicadorRestricaoRfb",
-    "descricaoRestricaoRfb",
-    "isPesquisado",
-    "servicoConsultado"
-]);
 
 // Badges de status
 const CAMPOS_STATUS_POSITIVO = ["NAO", "NÃO", "NORMAL", "NADA CONSTA", "SEM RESTRICAO", "SEM RESTRIÇÃO"];
@@ -378,7 +342,7 @@ async function fazerConsulta() {
         }
         
         resultContainer.style.display = 'block';
-    } catch (error) {
+    } catch (_) {
         resultBox.innerHTML = `<div class="badge badge-danger" style="font-size: 1.1em; padding: 15px; display: block; text-align: center;">❌ Erro de conexão com o servidor. O sistema pode estar offline.</div>`;
         resultContainer.style.display = 'block';
         btn.disabled = false;

@@ -14,24 +14,24 @@
     <h2>🧾 CONSULTA DE NOME</h2>
 </div>
 
-<div id="areaBuscaNome" style="width: 100%;">
+<div id="areaBuscaNome" class="full-width">
     <div class="input-group" id="grupoNomeBusca">
         <input type="text" id="nomeBuscaInput" placeholder="Digite o nome para consulta" maxlength="80" autofocus>
         <button id="btnConsultarNome" onclick="fazerConsultaNome()">Consultar Nome</button>
     </div>
 
-    <div style="display: flex; justify-content: center; margin-top: 15px; margin-bottom: 15px;">
+    <div class="turnstile-wrap">
         <div class="cf-turnstile" data-sitekey="0x4AAAAAACl3rXFR93fDYsnj" data-theme="dark"></div>
     </div>
 
-    <div id="loader" class="loader" style="display: none;"></div>
+    <div id="loader" class="loader"></div>
 
-    <div id="resultadoContainer" class="resultado-container" style="display: none;">
+    <div id="resultadoContainer" class="resultado-container">
         <div id="resultadoNomeMeta" class="resultado-nome-meta"></div>
         <div class="resultado-nome-filtro-wrap">
             <input type="text" id="filtroResultadoNome" class="resultado-nome-filtro" placeholder="Filtrar resultados por Nome, CPF ou Nascimento...">
         </div>
-        <div id="resultadoNomeFiltroVazio" class="nome-card-vazio" style="display: none;">Nenhum card corresponde ao filtro digitado.</div>
+        <div id="resultadoNomeFiltroVazio" class="nome-card-vazio is-hidden">Nenhum card corresponde ao filtro digitado.</div>
         <div id="resultadoNomeLista" class="resultado-nome-lista"></div>
     </div>
 </div>

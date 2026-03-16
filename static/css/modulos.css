@@ -61,6 +61,26 @@
     margin-bottom: 20px; 
 }
 
+.full-width {
+    width: 100%;
+}
+
+.max-width-800 {
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.turnstile-wrap {
+    display: flex;
+    justify-content: center;
+    margin-top: 15px;
+    margin-bottom: 15px;
+}
+
+.is-hidden {
+    display: none;
+}
+
 input { 
     flex: 1; 
     padding: 15px; 

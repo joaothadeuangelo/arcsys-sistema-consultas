@@ -5,7 +5,7 @@
 // 1. TRATAMENTO EM TEMPO REAL (Impede letras e formata)
 const cpfDadosInputField = document.getElementById('cpfDadosInput');
 if (cpfDadosInputField) {
-    cpfDadosInputField.addEventListener('input', function (e) {
+    cpfDadosInputField.addEventListener('input', function () {
         // Arranca tudo que não for número (letras, pontos, traços, espaços)
         let value = this.value.replace(/\D/g, '');
         
@@ -91,7 +91,7 @@ async function fazerConsultaDadosCPF() {
         }
         
         resultContainer.style.display = 'block';
-    } catch (error) {
+    } catch (_) {
         resultBox.innerHTML = `<div class="badge badge-danger" style="font-size: 1.1em; padding: 15px; display: block; text-align: center;">❌ Erro de conexão com o servidor. Tente novamente em instantes.</div>`;
         resultContainer.style.display = 'block';
         btn.disabled = false; 

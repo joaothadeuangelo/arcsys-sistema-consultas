@@ -33,7 +33,6 @@ if not lista_tokens:
     else:
         # Evita crash no startup caso o env ainda não esteja configurado.
         lista_tokens = [""]
-        print("[PLACA] Aviso: nenhum token GONZALES configurado (GONZALES_API_TOKENS/GONZALES_API_TOKEN).")
 
 token_cycle = itertools.cycle(lista_tokens)
 TEMPO_COOLDOWN = 120
@@ -546,7 +545,7 @@ async def consultar_cnh(cpf: str, request: Request):
                 # 🧹 APAGA A FOTO FÍSICA IMEDIATAMENTE APÓS CONVERTER
                 try:
                     os.remove(caminho_salvo)
-                except Exception as e:
+                except Exception:
                     pass # Se der erro ao apagar, ignora e segue a vida
 
             # 🛡️ BLINDAGEM DA FONTE APLICADA
@@ -896,7 +895,7 @@ async def comparar_facial(request: Request):
 # ROTA AUXILIAR: RADAR DO STATUS
 # ==========================================
 @router.get("/api/comparar_facial/status/{task_id}")
-async def checar_status_facial(task_id: str, request: Request):
+async def checar_status_facial(task_id: str):
     if is_manutencao():
         return {"sucesso": False, "erro": "🛠️ MÓDULO EM MANUTENÇÃO!"}
 

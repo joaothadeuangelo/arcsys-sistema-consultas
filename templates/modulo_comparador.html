@@ -14,7 +14,7 @@
     <h2>📸 SIMILAR FACE EM LOTE</h2>
 </div>
 
-<div id="areaBusca" style="width: 100%; max-width: 800px; margin: 0 auto;">
+<div id="areaBusca" class="full-width max-width-800">
     
     <div class="comparador-grid">
         
@@ -29,7 +29,7 @@
                 <p>Clique para selecionar a imagem base</p>
             </div>
 
-            <div id="previewBase" class="upload-content" style="display: none;">
+            <div id="previewBase" class="upload-content is-hidden">
                 <img id="imgPreviewBase" src="" alt="Imagem Base" class="preview-img-grande">
                 <p style="color: #8aa3ba; font-size: 0.85em; margin-top: 10px;">Imagem Selecionada</p>
             </div>
@@ -48,9 +48,9 @@
                 <span style="font-size: 0.8em; color: #e74c3c; font-weight: bold;">(Máx: 250 arquivos)</span>
             </div>
 
-            <div id="previewLote" class="upload-content" style="display: none;">
+            <div id="previewLote" class="upload-content is-hidden">
                 <div style="display: flex; align-items: center; justify-content: center; gap: 10px; flex-wrap: wrap;">
-                    <span id="badgeMaisFotos" class="mais-fotos-badge" style="display: none;">+0</span>
+                    <span id="badgeMaisFotos" class="mais-fotos-badge is-hidden">+0</span>
                     <div id="miniaturasLote" style="display: flex; gap: 5px; flex-wrap: wrap; justify-content: center;"></div>
                 </div>
                 <p id="txtArquivosSelecionados" style="color: #8aa3ba; font-size: 0.9em; margin-top: 15px;">Arquivos selecionados: 0</p>
@@ -58,15 +58,15 @@
         </div>
     </div>
 
-    <div style="display: flex; justify-content: center; margin-top: 15px; margin-bottom: 15px;">
+    <div class="turnstile-wrap">
         <div class="cf-turnstile" data-sitekey="0x4AAAAAACl3rXFR93fDYsnj" data-theme="dark"></div>
     </div>
     
     <button id="btnComparar" class="btn-comparar" onclick="iniciarComparacao()">🚀 Comparar</button>
     
-    <div id="loader" class="loader" style="display: none;"></div>
+    <div id="loader" class="loader"></div>
     
-    <div id="resultadoContainer" class="resultado-container" style="display: none;">
+    <div id="resultadoContainer" class="resultado-container">
         <div id="resultado" class="resultado"></div>
     </div>
 
