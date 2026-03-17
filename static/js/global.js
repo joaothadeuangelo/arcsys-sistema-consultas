@@ -129,12 +129,13 @@ window.onload = function() {
 
             const label = botaoFecharAviso.querySelector('.btn-label');
             if (label) {
-                label.textContent = `ENTENDI E FECHAR AVISO (Aguarde ${tempoLeituraAviso}s)`;
+                label.textContent = 'ENTENDI E FECHAR AVISO';
             } else {
-                botaoFecharAviso.textContent = `ENTENDI E FECHAR AVISO (Aguarde ${tempoLeituraAviso}s)`;
+                botaoFecharAviso.textContent = 'ENTENDI E FECHAR AVISO';
             }
 
             if (miniCounterAviso) {
+                miniCounterAviso.style.display = '';
                 miniCounterAviso.textContent = `${tempoLeituraAviso}s`;
             }
 
@@ -146,11 +147,6 @@ window.onload = function() {
                 tempoLeituraAviso -= 1;
 
                 if (tempoLeituraAviso > 0) {
-                    if (label) {
-                        label.textContent = `ENTENDI E FECHAR AVISO (Aguarde ${tempoLeituraAviso}s)`;
-                    } else {
-                        botaoFecharAviso.textContent = `ENTENDI E FECHAR AVISO (Aguarde ${tempoLeituraAviso}s)`;
-                    }
                     if (miniCounterAviso) {
                         miniCounterAviso.textContent = `${tempoLeituraAviso}s`;
                     }
@@ -170,7 +166,7 @@ window.onload = function() {
                     botaoFecharAviso.textContent = 'ENTENDI E FECHAR AVISO';
                 }
                 if (miniCounterAviso) {
-                    miniCounterAviso.textContent = 'OK';
+                    miniCounterAviso.style.display = 'none';
                 }
             }, 1000);
         }
