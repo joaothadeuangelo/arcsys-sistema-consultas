@@ -7,64 +7,160 @@
     <link rel="icon" type="image/png" href="/static/img/favicon.png">
 
     <style>
-        body { background:#0e1621; color:white; font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding:20px 40px; margin: 0; }
-        h1 { color: #5288c1; font-size: 2em; margin-bottom: 5px; }
-        h2 { color: #8aa3ba; margin-top: 32px; border-bottom: 1px solid #242f3d; padding-bottom: 10px; }
+        :root {
+            --bg: #0e1621;
+            --card: rgba(18, 29, 41, 0.8);
+            --card-solid: #17212b;
+            --line: rgba(82, 136, 193, 0.25);
+            --line-soft: rgba(82, 136, 193, 0.16);
+            --text: #e3edf8;
+            --muted: #8aa3ba;
+            --accent: #5288c1;
+            --ok: #2ecc71;
+            --warn: #f59e0b;
+            --bad: #ef4444;
+        }
 
-        .subtitulo { color: #8aa3ba; margin-top: 0; }
+        body {
+            background: radial-gradient(circle at 15% -10%, rgba(82, 136, 193, 0.16), transparent 38%), var(--bg);
+            color: white;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding: 18px 28px 26px;
+            margin: 0;
+        }
+
+        h1 { color: var(--accent); font-size: 2em; margin-bottom: 2px; }
+        h2 { color: var(--muted); margin-top: 24px; border-bottom: 1px solid var(--line-soft); padding-bottom: 8px; }
+        h3 { margin: 0; }
+        .subtitulo { color: var(--muted); margin-top: 0; margin-bottom: 14px; }
+
+        .glass-panel {
+            background: linear-gradient(150deg, rgba(23, 33, 43, 0.86), rgba(14, 24, 36, 0.86));
+            border: 1px solid var(--line);
+            border-radius: 14px;
+            box-shadow: 0 10px 28px rgba(0,0,0,0.22), inset 0 1px 0 rgba(255,255,255,0.04);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+        }
+
+        .topo-admin {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .btn-logout {
+            background: #242f3d;
+            color: #d5e3f0;
+            border: 1px solid #3b4e61;
+            text-decoration: none;
+            font-size: 0.8em;
+            padding: 8px 12px;
+            border-radius: 7px;
+            font-weight: 700;
+            transition: 0.2s;
+        }
+        .btn-logout:hover { background: #31465b; color: #fff; }
+
+        .kpi-bar {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+        .kpi-chip {
+            padding: 10px 12px;
+            border-radius: 11px;
+            border: 1px solid var(--line-soft);
+            background: rgba(12, 22, 35, 0.72);
+        }
+        .kpi-label {
+            color: var(--muted);
+            text-transform: uppercase;
+            font-size: 0.68em;
+            letter-spacing: 0.65px;
+            font-weight: 700;
+        }
+        .kpi-value {
+            margin-top: 4px;
+            color: var(--text);
+            font-size: 1.35em;
+            font-weight: 800;
+            line-height: 1;
+        }
+        .kpi-hint {
+            margin-top: 3px;
+            color: #7ea6ce;
+            font-size: 0.72em;
+        }
+
+        .admin-layout {
+            display: grid;
+            grid-template-columns: minmax(340px, 1.5fr) minmax(420px, 2fr);
+            gap: 12px;
+            align-items: start;
+        }
 
         .secao-modulos {
-            background: #17212b;
-            border: 1px solid #242f3d;
-            border-radius: 12px;
-            margin-top: 20px;
-            padding: 16px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            padding: 12px;
         }
-        .secao-modulos h3 {
-            margin: 0 0 14px 0;
-            color: #fff;
-            font-size: 1.05em;
-            letter-spacing: 0.3px;
+        .secao-modulos h3,
+        .control-card h3,
+        .expansao-card h3 {
+            color: #d9e8f7;
+            font-size: 0.95em;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
+
         .modulos-grid-compacto {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
-            gap: 12px;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 10px;
         }
+
         .modulo-item {
-            background: #0e1621;
-            border: 1px solid #242f3d;
+            background: rgba(9, 18, 30, 0.7);
+            border: 1px solid var(--line-soft);
             border-radius: 10px;
-            padding: 10px 12px;
+            padding: 10px;
             display: flex;
-            align-items: center;
+            flex-direction: column;
+            gap: 8px;
+            min-height: 126px;
+        }
+        .modulo-topo {
+            display: flex;
             justify-content: space-between;
-            gap: 12px;
+            align-items: flex-start;
+            gap: 6px;
         }
-        .modulo-info {
-            min-width: 0;
-        }
+        .modulo-info { min-width: 0; }
         .modulo-nome {
             display: block;
             color: #fff;
             font-weight: 700;
-            font-size: 0.9em;
+            font-size: 0.78em;
             line-height: 1.2;
-        }
-        .modulo-nome-linha {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
+            letter-spacing: 0.2px;
         }
         .modulo-status {
-            display: block;
-            margin-top: 3px;
-            font-size: 0.75em;
-            color: #8aa3ba;
+            display: inline-flex;
+            margin-top: 4px;
+            font-size: 0.66em;
+            color: #93b7d9;
             text-transform: uppercase;
-            letter-spacing: 0.8px;
+            letter-spacing: 0.7px;
+            padding: 2px 7px;
+            border-radius: 999px;
+            border: 1px solid rgba(255,255,255,0.12);
+            background: rgba(255,255,255,0.05);
         }
+        .modulo-status.on { color: #b7ffd5; border-color: rgba(46,204,113,0.4); background: rgba(46,204,113,0.12); }
+        .modulo-status.off { color: #ffd2cd; border-color: rgba(239,68,68,0.45); background: rgba(239,68,68,0.12); }
 
         .status-led {
             width: 10px;
@@ -74,6 +170,7 @@
             flex-shrink: 0;
             border: 1px solid rgba(255,255,255,0.2);
             transition: background-color 0.25s ease, box-shadow 0.25s ease, transform 0.25s ease;
+            vertical-align: middle;
         }
         .status-operacional {
             background: #10B981;
@@ -90,21 +187,53 @@
             box-shadow: 0 0 14px rgba(239, 68, 68, 0.85), 0 0 24px rgba(239, 68, 68, 0.45);
             animation: pulse-status-rapido 0.85s ease-in-out infinite;
         }
-
         @keyframes pulse-status {
             0%, 100% { transform: scale(1); opacity: 1; }
             50% { transform: scale(1.14); opacity: 0.86; }
         }
-
         @keyframes pulse-status-rapido {
             0%, 100% { transform: scale(1); opacity: 1; }
             50% { transform: scale(1.22); opacity: 0.75; }
         }
 
+        .spark-wrap {
+            border: 1px solid var(--line-soft);
+            border-radius: 8px;
+            background: rgba(10, 18, 28, 0.85);
+            padding: 4px 6px;
+        }
+        .sparkline {
+            width: 100%;
+            height: 28px;
+            display: block;
+        }
+        .spark-label {
+            color: #7ea6ce;
+            font-size: 0.62em;
+            margin-top: 4px;
+            letter-spacing: 0.3px;
+            text-transform: uppercase;
+        }
+
+        .modulo-acoes {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 8px;
+            margin-top: auto;
+        }
+        .modulo-runtime {
+            color: #9ec8ef;
+            font-size: 0.68em;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+
         .switch-link {
             position: relative;
-            width: 48px;
-            height: 26px;
+            width: 44px;
+            height: 24px;
             border-radius: 999px;
             display: inline-block;
             text-decoration: none;
@@ -117,184 +246,162 @@
             position: absolute;
             top: 2px;
             left: 2px;
-            width: 20px;
-            height: 20px;
+            width: 18px;
+            height: 18px;
             border-radius: 50%;
             background: #fff;
             box-shadow: 0 1px 4px rgba(0,0,0,0.35);
             transition: all 0.2s ease;
         }
         .switch-link:hover { filter: brightness(1.08); }
-        .switch-link.on { background: #2ecc71; }
-        .switch-link.on .switch-knob { transform: translateX(22px); }
-        .switch-link.off { background: #e74c3c; }
+        .switch-link.on { background: var(--ok); }
+        .switch-link.on .switch-knob { transform: translateX(20px); }
+        .switch-link.off { background: var(--bad); }
 
-        .radar-box {
-            margin-top: 18px;
-            margin-bottom: 16px;
-            padding: 0;
-            background: transparent;
-            border: none;
-            box-shadow: none;
-        }
-        .radar-topo {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 10px;
-            flex-wrap: wrap;
-            gap: 8px;
-            padding-top: 6px;
-        }
-        .radar-titulo {
-            margin: 0;
-            color: #8aa3ba;
-            font-size: 1.02em;
-            letter-spacing: 0.3px;
-            text-transform: uppercase;
-        }
-        .btn-radar {
-            background: #5288c1;
-            color: white;
-            border: none;
-            padding: 8px 14px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-weight: 700;
-            font-size: 0.8em;
-            transition: 0.2s;
-        }
-        .btn-radar:hover { filter: brightness(1.1); }
-
-        .telemetria-box {
-            background: linear-gradient(145deg, rgba(23,33,43,0.95), rgba(17,27,36,0.93));
-            border: 1px solid rgba(82,136,193,0.32);
-            border-radius: 14px;
-            margin-top: 18px;
-            margin-bottom: 16px;
-            padding: 14px;
-            box-shadow: 0 8px 26px rgba(0,0,0,0.24), inset 0 1px 0 rgba(255,255,255,0.04);
-            backdrop-filter: blur(6px);
-        }
-        .telemetria-grid {
+        .system-grid {
             display: grid;
-            grid-template-columns: 1.4fr 1fr;
-            gap: 12px;
+            grid-template-columns: repeat(3, minmax(180px, 1fr));
+            gap: 10px;
         }
-        .telemetria-card {
-            background: rgba(14,22,33,0.78);
-            border: 1px solid rgba(138,163,186,0.22);
-            border-radius: 12px;
-            padding: 12px;
-        }
-        .telemetria-legenda {
-            margin: 0;
-            color: #8aa3ba;
-            font-size: 0.78em;
-            letter-spacing: 0.4px;
-            text-transform: uppercase;
-        }
-        .telemetria-valor {
-            margin-top: 6px;
-            color: #d8edff;
-            font-size: 2em;
-            font-weight: 800;
-            line-height: 1;
-        }
-        .telemetria-hint {
-            margin-top: 8px;
-            color: #93b7d9;
-            font-size: 0.78em;
-        }
-        .modulos-lista {
-            list-style: none;
-            margin: 0;
-            padding: 0;
+
+        .control-card {
+            padding: 10px;
+            min-height: 196px;
             display: flex;
             flex-direction: column;
             gap: 8px;
         }
-        .modulos-lista li {
+        .control-top {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            gap: 10px;
-            background: rgba(16,27,38,0.85);
-            border: 1px solid rgba(82,136,193,0.22);
-            border-radius: 8px;
-            padding: 8px 10px;
+            gap: 8px;
         }
-        .modulo-nome-telemetria {
-            color: #d7e6f4;
-            font-size: 0.88em;
+
+        .btn-radar {
+            background: var(--accent);
+            color: white;
+            border: none;
+            padding: 7px 10px;
+            border-radius: 6px;
+            cursor: pointer;
             font-weight: 700;
-            text-transform: capitalize;
+            font-size: 0.72em;
+            transition: 0.2s;
+            white-space: nowrap;
         }
-        .modulo-uso-telemetria {
-            color: #89c4ff;
-            font-size: 0.86em;
+        .btn-radar:hover { filter: brightness(1.1); }
+
+        .telemetria-valor {
+            color: #d8edff;
+            font-size: 1.9em;
             font-weight: 800;
+            line-height: 1;
+            margin-top: 2px;
         }
-        .telemetria-status {
-            margin-top: 8px;
-            color: #8aa3ba;
-            font-size: 0.78em;
+        .telemetria-hint { color: #93b7d9; font-size: 0.74em; }
+
+        #gridContasTelegram,
+        .modulos-lista {
+            margin: 0;
+            padding: 0;
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            overflow-y: auto;
+            max-height: 205px;
+            padding-right: 4px;
         }
 
-        @media (max-width: 860px) {
-            .telemetria-grid {
-                grid-template-columns: 1fr;
-            }
-            .telemetria-valor {
-                font-size: 1.7em;
-            }
-        }
-
-        #gridContasTelegram {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
-            gap: 10px;
-        }
+        .modulos-lista li,
         .sessao-card {
-            background: transparent;
-            padding: 8px 0;
-            border-radius: 0;
-            border-left: none;
-            border-bottom: 1px solid rgba(82,136,193,0.2);
+            background: rgba(11, 21, 33, 0.86);
+            border: 1px solid var(--line-soft);
+            border-radius: 8px;
+            padding: 8px;
         }
         .sessao-head {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            border-bottom: none;
-            padding-bottom: 0;
-            margin-bottom: 6px;
+            margin-bottom: 4px;
         }
-        .sessao-status {
-            font-weight: 700;
-            font-size: 0.9em;
-        }
-        .sessao-line {
-            margin: 4px 0;
-            color: #8aa3ba;
-            font-size: 0.78em;
-            line-height: 1.35;
-        }
+        .sessao-status { font-weight: 700; font-size: 0.83em; }
+        .sessao-line { margin: 2px 0; color: var(--muted); font-size: 0.74em; line-height: 1.3; }
         .sessao-line strong { color: #fff; }
         .sessao-erro {
-            margin-top: 6px;
+            margin-top: 5px;
             color: #ffb3ac;
-            font-size: 0.75em;
-            background: rgba(231, 76, 60, 0.1);
+            font-size: 0.73em;
+            background: rgba(231, 76, 60, 0.12);
             padding: 5px;
-            border-radius: 4px;
-            line-height: 1.35;
+            border-radius: 5px;
+            line-height: 1.3;
         }
 
-        table { width:100%; border-collapse:collapse; margin-top: 15px; background: #17212b; border-radius: 8px; overflow: hidden; }
-        th { background:#242f3d; color: #5288c1; padding:13px; text-align: left; font-size: 0.9em; }
-        td { padding:12px; border-bottom: 1px solid #242f3d; vertical-align: top; }
-        tr:hover { background: #1a242f; }
+        .modulo-nome-telemetria {
+            color: #d7e6f4;
+            font-size: 0.84em;
+            font-weight: 700;
+            text-transform: capitalize;
+        }
+        .modulo-uso-telemetria {
+            color: #89c4ff;
+            font-size: 0.82em;
+            font-weight: 800;
+        }
+
+        .telemetria-status {
+            margin-top: auto;
+            color: var(--muted);
+            font-size: 0.73em;
+        }
+
+        .token-hints {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 6px;
+        }
+        .token-chip {
+            background: rgba(13, 25, 39, 0.84);
+            border: 1px solid var(--line-soft);
+            border-radius: 7px;
+            padding: 7px;
+            color: #b7d4ef;
+            font-size: 0.72em;
+        }
+
+        .zonas-expansao {
+            margin-top: 12px;
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 10px;
+        }
+        .expansao-card {
+            padding: 10px;
+            min-height: 94px;
+        }
+        .expansao-placeholder {
+            border: 1px dashed rgba(138,163,186,0.45);
+            border-radius: 9px;
+            padding: 10px;
+            color: #9db8d3;
+            font-size: 0.78em;
+            background: rgba(14, 23, 35, 0.54);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 12px;
+            background: rgba(16, 28, 40, 0.82);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        th { background: rgba(43, 57, 74, 0.85); color: var(--accent); padding: 10px; text-align: left; font-size: 0.88em; }
+        td { padding: 10px; border-bottom: 1px solid #242f3d; vertical-align: top; }
+        tr:hover { background: rgba(27, 38, 52, 0.8); }
 
         .tipo-badge {
             display: inline-block;
@@ -343,31 +450,28 @@
             word-break: break-word;
         }
 
-        .paginacao { display: flex; justify-content: center; align-items: center; gap: 10px; margin-top: 30px; margin-bottom: 40px; }
+        .paginacao { display: flex; justify-content: center; align-items: center; gap: 10px; margin-top: 20px; margin-bottom: 24px; }
         .btn-page { background: #242f3d; color: #5288c1; padding: 10px 20px; text-decoration: none; border-radius: 6px; font-weight: bold; transition: 0.2s; }
         .btn-page:hover { background: #5288c1; color: white; }
         .btn-page.disabled { opacity: 0.5; pointer-events: none; }
         .badge-total { background: #5288c1; color: white; padding: 5px 12px; border-radius: 20px; font-size: 0.8em; vertical-align: middle; margin-left: 10px; }
 
-        .topo-admin {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 10px;
-            flex-wrap: wrap;
+        @media (max-width: 1280px) {
+            .admin-layout { grid-template-columns: 1fr; }
+            .zonas-expansao { grid-template-columns: 1fr; }
         }
-        .btn-logout {
-            background: #242f3d;
-            color: #d5e3f0;
-            border: 1px solid #3b4e61;
-            text-decoration: none;
-            font-size: 0.8em;
-            padding: 8px 12px;
-            border-radius: 7px;
-            font-weight: 700;
-            transition: 0.2s;
+
+        @media (max-width: 980px) {
+            .system-grid { grid-template-columns: 1fr; }
+            .modulos-grid-compacto { grid-template-columns: repeat(2, minmax(140px, 1fr)); }
         }
-        .btn-logout:hover { background: #31465b; color: #fff; }
+
+        @media (max-width: 640px) {
+            body { padding: 14px 14px 22px; }
+            .kpi-bar { grid-template-columns: repeat(2, minmax(130px, 1fr)); }
+            .modulos-grid-compacto { grid-template-columns: 1fr; }
+            th, td { padding: 8px; font-size: 0.84em; }
+        }
     </style>
 </head>
 <body>
@@ -379,75 +483,131 @@
 
     {% macro gerar_toggle(titulo, nome_modulo, is_off) %}
         {% set is_on = not is_off %}
-        <div class="modulo-item">
-            <div class="modulo-info">
-                <span class="modulo-nome modulo-nome-linha">
-                    {{ titulo }}
-                    {% if nome_modulo == 'placa' %}
-                        <span id="led-status-placa" class="status-led status-operacional" title="Operacional" aria-label="Status do módulo Placa"></span>
-                    {% elif nome_modulo == 'cnh' %}
-                        <span id="led-status-cnh" class="status-led status-operacional" title="Operacional" aria-label="Status do módulo CNH"></span>
-                    {% endif %}
-                </span>
-                <span class="modulo-status">{{ "ON" if is_on else "OFF" }}</span>
+        {% set chave_modulo = nome_modulo if nome_modulo else 'global' %}
+        <div class="modulo-item" data-modulo="{{ chave_modulo }}">
+            <div class="modulo-topo">
+                <div class="modulo-info">
+                    <span class="modulo-nome">{{ titulo }}</span>
+                    <span class="modulo-status {{ 'on' if is_on else 'off' }}" id="status-chip-{{ chave_modulo }}">{{ "ON" if is_on else "OFF" }}</span>
+                </div>
+                {% if nome_modulo == 'placa' %}
+                    <span id="led-status-placa" class="status-led status-operacional" title="Operacional" aria-label="Status do módulo Placa"></span>
+                {% elif nome_modulo == 'cnh' %}
+                    <span id="led-status-cnh" class="status-led status-operacional" title="Operacional" aria-label="Status do módulo CNH"></span>
+                {% else %}
+                    <span class="status-led status-operacional" aria-hidden="true"></span>
+                {% endif %}
             </div>
+
+            <div class="spark-wrap">
+                <svg id="spark-{{ chave_modulo }}" class="sparkline" viewBox="0 0 120 28" preserveAspectRatio="none"></svg>
+                <div class="spark-label">Erros 24h</div>
+            </div>
+
+            <div class="modulo-acoes">
                 <a href="./toggle{% if nome_modulo %}?modulo={{ nome_modulo }}{% endif %}"
-               class="switch-link {{ 'on' if is_on else 'off' }}"
-               title="Alternar módulo">
-                <span class="switch-knob"></span>
-            </a>
+                   class="switch-link {{ 'on' if is_on else 'off' }}"
+                   title="Alternar módulo">
+                    <span class="switch-knob"></span>
+                </a>
+
+                <span class="modulo-runtime" id="runtime-{{ chave_modulo }}">● Pronto</span>
+            </div>
         </div>
     {% endmacro %}
 
-    <div class="secao-modulos">
-        <h3>Controle de Módulos</h3>
-        <div class="modulos-grid-compacto">
-            {{ gerar_toggle("⚠️ SISTEMA GLOBAL", "", status_global) }}
-            {{ gerar_toggle("🔍 MÓDULO PLACA", "placa", status_placa) }}
-            {{ gerar_toggle("🪪 MÓDULO CNH", "cnh", status_cnh) }}
-            {{ gerar_toggle("📄 MÓDULO CPF", "cpf", status_cpf) }}
-            {{ gerar_toggle("🧾 CONSULTA DE NOME", "nome", status_nome) }}
-            {{ gerar_toggle("📸 SIMILAR FACE", "comparador", status_comparador) }}
+    <div class="kpi-bar glass-panel">
+        <div class="kpi-chip">
+            <div class="kpi-label">Total Geral</div>
+            <div class="kpi-value" id="kpiTotalGeral">{{ total_consultas }}</div>
+            <div class="kpi-hint">Registros persistidos</div>
+        </div>
+        <div class="kpi-chip">
+            <div class="kpi-label">Consultas Hoje</div>
+            <div class="kpi-value" id="kpiConsultasHoje">--</div>
+            <div class="kpi-hint">Soma de uso dos módulos</div>
+        </div>
+        <div class="kpi-chip">
+            <div class="kpi-label">Falhas Ativas</div>
+            <div class="kpi-value" id="kpiFalhasAtivas">--</div>
+            <div class="kpi-hint">Circuit breaker em alerta</div>
+        </div>
+        <div class="kpi-chip">
+            <div class="kpi-label">Módulos ON</div>
+            <div class="kpi-value" id="kpiModulosOn">--</div>
+            <div class="kpi-hint">Disponibilidade instantânea</div>
+        </div>
+        <div class="kpi-chip">
+            <div class="kpi-label">Sessões Operantes</div>
+            <div class="kpi-value" id="kpiSessoesOn">--</div>
+            <div class="kpi-hint">Conexões Telegram válidas</div>
         </div>
     </div>
 
-    <div class="radar-box">
-        <div class="radar-topo">
-            <h3 class="radar-titulo">radar de sessões: (beta)🦅</h3>
-            <button onclick="carregarStatusContas()" id="btnAttContas" class="btn-radar">
-                🔄 Atualizar Radar
-            </button>
-        </div>
-        
-        <div id="gridContasTelegram">
-            <div class="sessao-line" style="padding: 6px 0;">Verificando status das conexões...</div>
-        </div>
-    </div>
-
-    <div class="telemetria-box">
-        <div class="radar-topo">
-            <h3 class="radar-titulo">📡 Radar de Tráfego (Hoje)</h3>
-            <button onclick="carregarTelemetria()" id="btnAttTelemetria" class="btn-radar">
-                🔄 Atualizar Telemetria
-            </button>
+    <div class="admin-layout">
+        <div class="secao-modulos glass-panel">
+            <h3>Mosaico de Módulos</h3>
+            <div class="modulos-grid-compacto">
+                {{ gerar_toggle("⚠️ SISTEMA GLOBAL", "", status_global) }}
+                {{ gerar_toggle("🔍 MÓDULO PLACA", "placa", status_placa) }}
+                {{ gerar_toggle("🪪 MÓDULO CNH", "cnh", status_cnh) }}
+                {{ gerar_toggle("📄 MÓDULO CPF", "cpf", status_cpf) }}
+                {{ gerar_toggle("🧾 CONSULTA DE NOME", "nome", status_nome) }}
+                {{ gerar_toggle("📸 SIMILAR FACE", "comparador", status_comparador) }}
+            </div>
         </div>
 
-        <div class="telemetria-grid">
-            <div class="telemetria-card">
-                <p class="telemetria-legenda">Visitantes Únicos de Hoje</p>
-                <div class="telemetria-valor" id="valorVisitantesUnicos">--</div>
-                <div class="telemetria-hint">Contagem por IP anônimo (hash).</div>
+        <div class="system-grid">
+            <div class="control-card glass-panel">
+                <div class="control-top">
+                    <h3>Radar de Sessões</h3>
+                    <button onclick="carregarStatusContas()" id="btnAttContas" class="btn-radar">🔄 Radar</button>
+                </div>
+                <div id="gridContasTelegram">
+                    <div class="sessao-line" style="padding: 6px 0;">Verificando status das conexões...</div>
+                </div>
             </div>
 
-            <div class="telemetria-card">
-                <p class="telemetria-legenda">Uso por Módulo</p>
+            <div class="control-card glass-panel">
+                <div class="control-top">
+                    <h3>Telemetria de Tráfego</h3>
+                    <button onclick="carregarTelemetria()" id="btnAttTelemetria" class="btn-radar">🔄 Telemetria</button>
+                </div>
+                <div class="telemetria-valor" id="valorVisitantesUnicos">--</div>
+                <div class="telemetria-hint">Visitantes únicos de hoje</div>
                 <ul class="modulos-lista" id="listaUsoModulos">
                     <li><span class="modulo-nome-telemetria">Carregando...</span><span class="modulo-uso-telemetria">--</span></li>
                 </ul>
+                <div class="telemetria-status" id="statusTelemetria">Aguardando primeira atualização.</div>
+            </div>
+
+            <div class="control-card glass-panel">
+                <div class="control-top">
+                    <h3>System Control</h3>
+                </div>
+                <div class="telemetria-hint">Manutenção global, saúde dos módulos e gestão de tokens.</div>
+                <div class="token-hints">
+                    <div class="token-chip">Global: <strong>{{ 'OFF' if status_global else 'ON' }}</strong></div>
+                    <div class="token-chip">Placa: <strong>{{ 'OFF' if status_placa else 'ON' }}</strong></div>
+                    <div class="token-chip">CNH: <strong>{{ 'OFF' if status_cnh else 'ON' }}</strong></div>
+                    <div class="token-chip">CPF: <strong>{{ 'OFF' if status_cpf else 'ON' }}</strong></div>
+                    <div class="token-chip">Nome: <strong>{{ 'OFF' if status_nome else 'ON' }}</strong></div>
+                    <div class="token-chip">Face: <strong>{{ 'OFF' if status_comparador else 'ON' }}</strong></div>
+                </div>
+                <div class="telemetria-status">Área preparada para gestão avançada de tokens e novos controles.</div>
             </div>
         </div>
+    </div>
 
-        <div class="telemetria-status" id="statusTelemetria">Aguardando primeira atualização.</div>
+    <div class="zonas-expansao">
+        <div class="expansao-card glass-panel">
+            <h3>Zona de Expansão: Feed de Logs</h3>
+            <div class="expansao-placeholder">Espaço reservado para stream de logs em tempo real (WebSocket/SSE), com filtros por módulo e nível.</div>
+        </div>
+        <div class="expansao-card glass-panel">
+            <h3>Alertas Críticos</h3>
+            <div class="expansao-placeholder">Espaço reservado para cards de incidentes P1, timeout em cascata e anomalias de tráfego.</div>
+        </div>
     </div>
 
     <h2>📊 Relatório de Consultas <span class="badge-total">{{ total_consultas }} Registros no Banco</span></h2>
@@ -545,6 +705,86 @@
         led.title = 'Operacional';
     }
 
+    const seriesErro24h = {
+        global: Array(24).fill(0),
+        placa: Array(24).fill(0),
+        cnh: Array(24).fill(0),
+        cpf: Array(24).fill(0),
+        nome: Array(24).fill(0),
+        comparador: Array(24).fill(0)
+    };
+    let serieDataRef = new Date().toDateString();
+
+    function resetarSeriesSeVirouDia() {
+        const hoje = new Date().toDateString();
+        if (hoje === serieDataRef) return;
+        serieDataRef = hoje;
+        Object.keys(seriesErro24h).forEach((modulo) => {
+            seriesErro24h[modulo] = Array(24).fill(0);
+        });
+    }
+
+    function registrarFalhaHora(modulo, valor) {
+        resetarSeriesSeVirouDia();
+        const serie = seriesErro24h[modulo];
+        if (!serie) return;
+        const hora = new Date().getHours();
+        serie[hora] = Number(valor || 0);
+    }
+
+    function desenharSparkline(modulo) {
+        const svg = document.getElementById(`spark-${modulo}`);
+        const serie = seriesErro24h[modulo];
+        if (!svg || !serie) return;
+
+        const largura = 120;
+        const altura = 28;
+        const maximo = Math.max(...serie, 1);
+        const passo = largura / Math.max(serie.length - 1, 1);
+        const pontos = serie.map((valor, idx) => {
+            const x = idx * passo;
+            const y = altura - ((Number(valor || 0) / maximo) * (altura - 4)) - 2;
+            return `${x.toFixed(2)},${y.toFixed(2)}`;
+        }).join(' ');
+
+        const cor = maximo >= 3 ? '#ef4444' : (maximo > 0 ? '#f59e0b' : '#2ecc71');
+        svg.innerHTML = `<polyline points="${pontos}" fill="none" stroke="${cor}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></polyline>`;
+    }
+
+    function desenharSparklinesIniciais() {
+        ['global', 'placa', 'cnh', 'cpf', 'nome', 'comparador'].forEach((modulo) => {
+            desenharSparkline(modulo);
+        });
+    }
+
+    function atualizarKpiModulos() {
+        const total = document.querySelectorAll('.modulo-item').length;
+        const ativos = document.querySelectorAll('.switch-link.on').length;
+        const alvo = document.getElementById('kpiModulosOn');
+        if (alvo) alvo.textContent = `${ativos}/${total}`;
+    }
+
+    function sincronizarRuntimeInicial() {
+        document.querySelectorAll('.modulo-item').forEach((item) => {
+            const modulo = item.getAttribute('data-modulo');
+            const runtime = document.getElementById(`runtime-${modulo}`);
+            const toggle = item.querySelector('.switch-link');
+            if (!runtime || !toggle) return;
+            runtime.textContent = toggle.classList.contains('on') ? '● Pronto' : '● Desligado';
+        });
+    }
+
+    function atualizarKpiFalhasAtivas(falhasPlaca, falhasCnh) {
+        const totalFalhas = Number(falhasPlaca || 0) + Number(falhasCnh || 0);
+        const alvo = document.getElementById('kpiFalhasAtivas');
+        if (alvo) alvo.textContent = String(totalFalhas);
+
+        const statusPlaca = document.getElementById('runtime-placa');
+        const statusCnh = document.getElementById('runtime-cnh');
+        if (statusPlaca) statusPlaca.textContent = falhasPlaca >= 3 ? '● Offline' : (falhasPlaca > 0 ? '● Instável' : '● Pronto');
+        if (statusCnh) statusCnh.textContent = falhasCnh >= 3 ? '● Offline' : (falhasCnh > 0 ? '● Instável' : '● Pronto');
+    }
+
     async function fetchCircuitBreakerStatus() {
         const ledPlaca = document.getElementById('led-status-placa');
         const ledCnh = document.getElementById('led-status-cnh');
@@ -562,6 +802,12 @@
             const data = await response.json();
             const falhasPlaca = Number(data?.placa || 0);
             const falhasCnh = Number(data?.cnh || 0);
+
+            registrarFalhaHora('placa', falhasPlaca);
+            registrarFalhaHora('cnh', falhasCnh);
+            desenharSparkline('placa');
+            desenharSparkline('cnh');
+            atualizarKpiFalhasAtivas(falhasPlaca, falhasCnh);
 
             aplicarStatusCircuitBreaker(ledPlaca, falhasPlaca);
             aplicarStatusCircuitBreaker(ledCnh, falhasCnh);
@@ -602,6 +848,11 @@
 
             const uso = resumo.uso_modulos || {};
             const entradas = Object.entries(uso).sort((a, b) => Number(b[1]) - Number(a[1]));
+            const totalConsultasHoje = entradas.reduce((acc, item) => acc + Number(item[1] || 0), 0);
+            const kpiConsultas = document.getElementById('kpiConsultasHoje');
+            if (kpiConsultas) {
+                kpiConsultas.textContent = totalConsultasHoje.toLocaleString('pt-BR');
+            }
 
             if (!entradas.length) {
                 listaModulos.innerHTML = "<li><span class='modulo-nome-telemetria'>Sem uso registrado hoje</span><span class='modulo-uso-telemetria'>0</span></li>";
@@ -648,11 +899,16 @@
 
             if (data.sucesso) {
                 grid.innerHTML = ''; // Limpa a grid
+                let operantes = 0;
                 
                 data.contas.forEach(conta => {
                     const card = document.createElement('div');
                     card.className = 'sessao-card';
                     card.style.borderLeftColor = conta.cor;
+
+                    if ((conta.status || '').toLowerCase().includes('oper')) {
+                        operantes += 1;
+                    }
                     
                     let detalhesHtml = `<p class="sessao-line"><strong>Arquivo:</strong> ${conta.sessao}</p>`;
                     
@@ -675,6 +931,11 @@
                     `;
                     grid.appendChild(card);
                 });
+
+                const kpiSessoes = document.getElementById('kpiSessoesOn');
+                if (kpiSessoes) {
+                    kpiSessoes.textContent = `${operantes}/${data.contas.length}`;
+                }
             } else {
                 grid.innerHTML = `<div class='sessao-line' style='color: #e74c3c;'>❌ Erro: ${data.erro}</div>`;
             }
@@ -688,6 +949,9 @@
 
     // Carrega automaticamente assim que o painel admin for aberto
     document.addEventListener('DOMContentLoaded', function() {
+        atualizarKpiModulos();
+        sincronizarRuntimeInicial();
+        desenharSparklinesIniciais();
         carregarStatusContas();
         carregarTelemetria();
         fetchCircuitBreakerStatus();
