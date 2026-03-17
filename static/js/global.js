@@ -1,10 +1,10 @@
 // ==========================================
 // VARIÁVEIS GLOBAIS E UTILITÁRIOS
 // ==========================================
-let tempoLeitura = 5; 
-let timerInterval;
 let textoPuro = "";
 let maintenanceTimerInterval = null;
+let tempoLeituraAviso = 5;
+let avisoCountdownInterval = null;
 
 // Temporizador ficticio inicial: 00d 01h 30m 00s
 let maintenanceTotalSeconds = (1 * 60 * 60) + (30 * 60);
@@ -113,27 +113,64 @@ window.onload = function() {
 
     // 2. LÓGICA DO MODAL DE AVISO
     const modalAviso = document.getElementById('modalAviso');
-    const linkAcessoGratis = document.getElementById('btnAceitarModal');
+    const botaoFecharAviso = document.getElementById('btnAceitarModal');
+    const miniCounterAviso = document.getElementById('modalMiniCounter');
 
     // Verifica na memória do navegador se o usuário JÁ fechou o modal hoje
     if (!sessionStorage.getItem('avisoFechado')) {
         // Se NÃO fechou, mostra o modal e inicia o timer
-        if (modalAviso && linkAcessoGratis) {
+        if (modalAviso && botaoFecharAviso) {
             modalAviso.style.display = 'flex'; // Torna visível
-            linkAcessoGratis.classList.add('locked');
-            linkAcessoGratis.classList.remove('unlocked');
-            linkAcessoGratis.innerText = `Liberando acesso gratuito em ${tempoLeitura}s...`;
-            
-            timerInterval = setInterval(() => {
-                if (tempoLeitura > 0) {
-                    linkAcessoGratis.innerText = `Liberando acesso gratuito em ${tempoLeitura}s...`;
-                    tempoLeitura--;
+
+            tempoLeituraAviso = 5;
+            botaoFecharAviso.disabled = true;
+            botaoFecharAviso.classList.add('is-locked');
+            botaoFecharAviso.onclick = null;
+
+            const label = botaoFecharAviso.querySelector('.btn-label');
+            if (label) {
+                label.textContent = `ENTENDI E FECHAR AVISO (Aguarde ${tempoLeituraAviso}s)`;
+            } else {
+                botaoFecharAviso.textContent = `ENTENDI E FECHAR AVISO (Aguarde ${tempoLeituraAviso}s)`;
+            }
+
+            if (miniCounterAviso) {
+                miniCounterAviso.textContent = `${tempoLeituraAviso}s`;
+            }
+
+            if (avisoCountdownInterval) {
+                clearInterval(avisoCountdownInterval);
+            }
+
+            avisoCountdownInterval = setInterval(() => {
+                tempoLeituraAviso -= 1;
+
+                if (tempoLeituraAviso > 0) {
+                    if (label) {
+                        label.textContent = `ENTENDI E FECHAR AVISO (Aguarde ${tempoLeituraAviso}s)`;
+                    } else {
+                        botaoFecharAviso.textContent = `ENTENDI E FECHAR AVISO (Aguarde ${tempoLeituraAviso}s)`;
+                    }
+                    if (miniCounterAviso) {
+                        miniCounterAviso.textContent = `${tempoLeituraAviso}s`;
+                    }
+                    return;
+                }
+
+                clearInterval(avisoCountdownInterval);
+                avisoCountdownInterval = null;
+
+                botaoFecharAviso.disabled = false;
+                botaoFecharAviso.classList.remove('is-locked');
+                botaoFecharAviso.onclick = fecharModal;
+
+                if (label) {
+                    label.textContent = 'ENTENDI E FECHAR AVISO';
                 } else {
-                    clearInterval(timerInterval);
-                    linkAcessoGratis.classList.remove('locked');
-                    linkAcessoGratis.classList.add('unlocked');
-                    linkAcessoGratis.innerText = "Nao quero ajuda profissional. Acessar sistema gratuito.";
-                    linkAcessoGratis.onclick = fecharModal;
+                    botaoFecharAviso.textContent = 'ENTENDI E FECHAR AVISO';
+                }
+                if (miniCounterAviso) {
+                    miniCounterAviso.textContent = 'OK';
                 }
             }, 1000);
         }
@@ -144,6 +181,10 @@ window.onload = function() {
 }
 
 function fecharModal() {
+    if (avisoCountdownInterval) {
+        clearInterval(avisoCountdownInterval);
+        avisoCountdownInterval = null;
+    }
     document.getElementById('modalAviso').style.display = 'none';
     // SALVA NA MEMÓRIA: Marca o modal como visto para não encher o saco nas outras páginas
     sessionStorage.setItem('avisoFechado', 'true');
