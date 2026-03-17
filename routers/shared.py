@@ -262,12 +262,16 @@ async def aguardar_retorno_consulta_nome(cliente, id_msg_comando: int):
                 continue
 
             texto = (msg.text or '').strip()
+            texto_normalizado = texto.lower()
             url_resultado = extrair_url_resultado_completo(msg)
+
+            if texto and 'nome nao encontrado' in _normalizar_chave(texto_normalizado):
+                return {'texto': texto, 'url_resultado': '', 'status': 'not_found'}
 
             if url_resultado:
                 return {'texto': texto, 'url_resultado': url_resultado}
 
-            if texto and any(trecho in texto.lower() for trecho in ('nome:', 'cpf:', 'consulta conclu', 'total de resultados')):
+            if texto and any(trecho in texto_normalizado for trecho in ('nome:', 'cpf:', 'consulta conclu', 'total de resultados')):
                 return {'texto': texto, 'url_resultado': ''}
 
     return None

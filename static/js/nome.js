@@ -204,6 +204,15 @@ async function fazerConsultaNome() {
 
         const data = await response.json();
 
+        if (response.status === 404 || data.status === 'not_found') {
+            const aviso = data.message || 'Nenhum resultado encontrado para este termo.';
+            resultMeta.innerHTML = `<div class='badge badge-warning' style='font-size: 1em; padding: 12px; display: block; text-align: center; white-space: pre-wrap;'>⚠️ ${aviso}</div>`;
+            renderizarResultadosNome([]);
+            btn.disabled = false;
+            resultContainer.style.display = 'block';
+            return;
+        }
+
         if (data.sucesso) {
             const total = Array.isArray(data.resultados) ? data.resultados.length : 0;
             const fonte = (data.fonte || 'chat').toUpperCase();

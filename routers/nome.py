@@ -87,6 +87,13 @@ async def consultar_nome(nome_buscado: str, request: Request):
             if not retorno:
                 return {'sucesso': False, 'erro': 'O sistema central demorou para responder. Tente novamente.'}
 
+            if retorno.get('status') == 'not_found':
+                return {
+                    'sucesso': False,
+                    'status': 'not_found',
+                    'message': 'Nenhum resultado encontrado para este termo.'
+                }
+
             resultados = []
             fonte = 'chat'
 
@@ -96,6 +103,27 @@ async def consultar_nome(nome_buscado: str, request: Request):
 
             if not resultados:
                 texto_retorno = retorno.get('texto', '')
+                texto_retorno_normalizado = re.sub(r'\s+', ' ', texto_retorno or '').strip().lower()
+                texto_retorno_normalizado = (
+                    texto_retorno_normalizado
+                    .replace('ã', 'a')
+                    .replace('â', 'a')
+                    .replace('á', 'a')
+                    .replace('é', 'e')
+                    .replace('ê', 'e')
+                    .replace('í', 'i')
+                    .replace('ó', 'o')
+                    .replace('ô', 'o')
+                    .replace('õ', 'o')
+                    .replace('ú', 'u')
+                    .replace('ç', 'c')
+                )
+                if 'nome nao encontrado' in texto_retorno_normalizado:
+                    return {
+                        'sucesso': False,
+                        'status': 'not_found',
+                        'message': 'Nenhum resultado encontrado para este termo.'
+                    }
                 resultados = parse_resultados_nome(texto_retorno)
                 if resultados:
                     fonte = 'chat'
