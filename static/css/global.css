@@ -136,7 +136,7 @@ body { background-color: #0e1621; color: #fff; display: flex; justify-content: c
 .premium-overlay {
     backdrop-filter: blur(18px);
     -webkit-backdrop-filter: blur(18px);
-    background: rgba(1, 4, 8, 0.97);
+    background: rgba(1, 4, 8, 0.985);
     align-items: center;
     justify-content: center;
 }
@@ -146,7 +146,7 @@ body { background-color: #0e1621; color: #fff; display: flex; justify-content: c
     box-shadow: 0 28px 78px rgba(0, 0, 0, 0.78), 0 0 34px rgba(255, 179, 69, 0.2);
     border-radius: 18px;
     width: 92%;
-    max-width: 680px;
+    max-width: 980px;
     overflow: hidden;
     display: flex;
     flex-direction: column;
@@ -201,11 +201,12 @@ body { background-color: #0e1621; color: #fff; display: flex; justify-content: c
     text-align: center;
     color: #ffb346;
     font-family: 'Consolas', 'Courier New', monospace;
-    font-size: clamp(2.6rem, 8vw, 5.2rem);
+    font-size: clamp(2.4rem, 6.8vw, 5rem);
     font-weight: 900;
-    letter-spacing: 2px;
+    letter-spacing: 1px;
     line-height: 1.06;
     padding: 10px 8px;
+    white-space: nowrap;
     border-radius: 12px;
     background: linear-gradient(180deg, rgba(255, 177, 62, 0.08) 0%, rgba(255, 177, 62, 0.03) 100%);
     border: 1px solid rgba(255, 182, 77, 0.22);
