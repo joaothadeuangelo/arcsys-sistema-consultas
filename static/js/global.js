@@ -75,7 +75,7 @@ function atualizarFinalCountdown() {
     const minutos = Math.floor((diferenca % 3600000) / 60000);
     const segundos = Math.floor((diferenca % 60000) / 1000);
 
-    finalCountdownEl.textContent = `${formatarDoisDigitos(dias)} : ${formatarDoisDigitos(horas)} : ${formatarDoisDigitos(minutos)} : ${formatarDoisDigitos(segundos)}`;
+    finalCountdownEl.textContent = `${dias}d:${formatarDoisDigitos(horas)}h:${formatarDoisDigitos(minutos)}min:${formatarDoisDigitos(segundos)}s`;
 
     if (diferenca <= 0 && finalCountdownInterval) {
         clearInterval(finalCountdownInterval);
