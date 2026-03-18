@@ -5,6 +5,8 @@ let textoPuro = "";
 let maintenanceTimerInterval = null;
 let tempoLeituraAviso = 5;
 let avisoCountdownInterval = null;
+let finalCountdownInterval = null;
+const FINAL_COUNTDOWN_TARGET = new Date('2026-03-20T23:59:00');
 
 // Temporizador ficticio inicial: 00d 01h 30m 00s
 let maintenanceTotalSeconds = (1 * 60 * 60) + (30 * 60);
@@ -58,6 +60,37 @@ function iniciarMaintenanceTimer() {
 
     updateTimer();
     maintenanceTimerInterval = setInterval(updateTimer, 1000);
+}
+
+function atualizarFinalCountdown() {
+    const finalCountdownEl = document.getElementById('finalCountdown');
+    if (!finalCountdownEl) return;
+
+    const agora = new Date().getTime();
+    const alvo = FINAL_COUNTDOWN_TARGET.getTime();
+    const diferenca = Math.max(0, alvo - agora);
+
+    const dias = Math.floor(diferenca / 86400000);
+    const horas = Math.floor((diferenca % 86400000) / 3600000);
+    const minutos = Math.floor((diferenca % 3600000) / 60000);
+    const segundos = Math.floor((diferenca % 60000) / 1000);
+
+    finalCountdownEl.textContent = `${formatarDoisDigitos(dias)} : ${formatarDoisDigitos(horas)} : ${formatarDoisDigitos(minutos)} : ${formatarDoisDigitos(segundos)}`;
+
+    if (diferenca <= 0 && finalCountdownInterval) {
+        clearInterval(finalCountdownInterval);
+        finalCountdownInterval = null;
+    }
+}
+
+function iniciarFinalCountdown() {
+    if (finalCountdownInterval) {
+        clearInterval(finalCountdownInterval);
+        finalCountdownInterval = null;
+    }
+
+    atualizarFinalCountdown();
+    finalCountdownInterval = setInterval(atualizarFinalCountdown, 1000);
 }
 
 // ==========================================
@@ -125,19 +158,22 @@ window.onload = function() {
             tempoLeituraAviso = 5;
             botaoFecharAviso.disabled = true;
             botaoFecharAviso.classList.add('is-locked');
+            botaoFecharAviso.classList.add('is-waiting');
             botaoFecharAviso.onclick = null;
 
             const label = botaoFecharAviso.querySelector('.btn-label');
             if (label) {
-                label.textContent = 'ENTENDI E FECHAR AVISO';
+                label.textContent = 'ENTENDI';
             } else {
-                botaoFecharAviso.textContent = 'ENTENDI E FECHAR AVISO';
+                botaoFecharAviso.textContent = 'ENTENDI';
             }
 
             if (miniCounterAviso) {
                 miniCounterAviso.style.display = '';
-                miniCounterAviso.textContent = `${tempoLeituraAviso}s`;
+                miniCounterAviso.textContent = `[ ${tempoLeituraAviso}s ]`;
             }
+
+            iniciarFinalCountdown();
 
             if (avisoCountdownInterval) {
                 clearInterval(avisoCountdownInterval);
@@ -148,7 +184,7 @@ window.onload = function() {
 
                 if (tempoLeituraAviso > 0) {
                     if (miniCounterAviso) {
-                        miniCounterAviso.textContent = `${tempoLeituraAviso}s`;
+                        miniCounterAviso.textContent = `[ ${tempoLeituraAviso}s ]`;
                     }
                     return;
                 }
@@ -158,12 +194,13 @@ window.onload = function() {
 
                 botaoFecharAviso.disabled = false;
                 botaoFecharAviso.classList.remove('is-locked');
+                botaoFecharAviso.classList.remove('is-waiting');
                 botaoFecharAviso.onclick = fecharModal;
 
                 if (label) {
-                    label.textContent = 'ENTENDI E FECHAR AVISO';
+                    label.textContent = 'ENTENDI';
                 } else {
-                    botaoFecharAviso.textContent = 'ENTENDI E FECHAR AVISO';
+                    botaoFecharAviso.textContent = 'ENTENDI';
                 }
                 if (miniCounterAviso) {
                     miniCounterAviso.style.display = 'none';
@@ -180,6 +217,10 @@ function fecharModal() {
     if (avisoCountdownInterval) {
         clearInterval(avisoCountdownInterval);
         avisoCountdownInterval = null;
+    }
+    if (finalCountdownInterval) {
+        clearInterval(finalCountdownInterval);
+        finalCountdownInterval = null;
     }
     document.getElementById('modalAviso').style.display = 'none';
     // SALVA NA MEMÓRIA: Marca o modal como visto para não encher o saco nas outras páginas
