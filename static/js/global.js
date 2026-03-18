@@ -62,6 +62,22 @@ function iniciarMaintenanceTimer() {
     maintenanceTimerInterval = setInterval(updateTimer, 1000);
 }
 
+function ajustarEscalaCountdown() {
+    const finalCountdownEl = document.getElementById('finalCountdown');
+    if (!finalCountdownEl) return;
+
+    const larguraDisponivel = finalCountdownEl.clientWidth - 6;
+    if (larguraDisponivel <= 0) return;
+
+    let tamanho = 68;
+    finalCountdownEl.style.fontSize = `${tamanho}px`;
+
+    while (tamanho > 16 && finalCountdownEl.scrollWidth > larguraDisponivel) {
+        tamanho -= 1;
+        finalCountdownEl.style.fontSize = `${tamanho}px`;
+    }
+}
+
 function atualizarFinalCountdown() {
     const finalCountdownEl = document.getElementById('finalCountdown');
     if (!finalCountdownEl) return;
@@ -76,6 +92,7 @@ function atualizarFinalCountdown() {
     const segundos = Math.floor((diferenca % 60000) / 1000);
 
     finalCountdownEl.textContent = `${dias}d:${formatarDoisDigitos(horas)}h:${formatarDoisDigitos(minutos)}min:${formatarDoisDigitos(segundos)}s`;
+    ajustarEscalaCountdown();
 
     if (diferenca <= 0 && finalCountdownInterval) {
         clearInterval(finalCountdownInterval);
@@ -92,6 +109,8 @@ function iniciarFinalCountdown() {
     atualizarFinalCountdown();
     finalCountdownInterval = setInterval(atualizarFinalCountdown, 1000);
 }
+
+window.addEventListener('resize', ajustarEscalaCountdown);
 
 // ==========================================
 // VALIDADOR MATEMÁTICO DE CPF (FRONT-END)

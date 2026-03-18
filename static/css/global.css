@@ -201,14 +201,14 @@ body { background-color: #0e1621; color: #fff; display: flex; justify-content: c
     text-align: center;
     color: #ffb346;
     font-family: 'Consolas', 'Courier New', monospace;
-    font-size: clamp(1.6rem, 5.3vw, 4.4rem);
+    font-size: 4.2rem;
     font-weight: 900;
-    letter-spacing: 0.4px;
+    letter-spacing: 0.15px;
     line-height: 1.06;
-    padding: 10px 8px;
+    padding: 10px 6px;
     white-space: nowrap;
-    overflow: hidden;
-    text-overflow: clip;
+    overflow: visible;
+    font-variant-numeric: tabular-nums;
     border-radius: 12px;
     background: linear-gradient(180deg, rgba(255, 177, 62, 0.08) 0%, rgba(255, 177, 62, 0.03) 100%);
     border: 1px solid rgba(255, 182, 77, 0.22);
@@ -318,7 +318,7 @@ body { background-color: #0e1621; color: #fff; display: flex; justify-content: c
     .premium-warning-icon .warning-mark { font-size: 2.4em; transform: translateY(1px); }
     .premium-title-warning { font-size: 1.35em; }
     .countdown-lead { font-size: 0.78em; letter-spacing: 0.45px; }
-    .countdown-massive { font-size: clamp(1.45rem, 8.2vw, 2.4rem); letter-spacing: 0.2px; padding: 10px 6px; }
+    .countdown-massive { font-size: 2.05rem; letter-spacing: 0; padding: 10px 4px; }
 }
 
 /* ========================================= */
