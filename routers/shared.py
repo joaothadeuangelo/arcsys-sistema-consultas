@@ -64,16 +64,18 @@ def mascarar_tokens_em_texto(texto: str) -> str:
 # ==========================================
 def obter_ip_real(request: Request) -> str:
     # 1º Tenta pegar o IP real carimbado pelo Cloudflare (Seguro contra spoofing)
-    ip_cloudflare = request.headers.get("CF-Connecting-IP")
+    ip_cloudflare = (request.headers.get("CF-Connecting-IP") or "").strip()
     if ip_cloudflare:
         return ip_cloudflare
 
-    # 2º Fallback padrão se não passar pelo Cloudflare
-    ip_proxy = request.headers.get("X-Forwarded-For")
-    if ip_proxy:
-        return ip_proxy.split(",")[0].strip()
+    # 2º Railway/outros proxies: pode vir lista "ip_cliente, ip_proxy1, ip_proxy2"
+    x_forwarded_for = (request.headers.get("X-Forwarded-For") or "").strip()
+    if x_forwarded_for:
+        primeiro_ip = x_forwarded_for.split(",", 1)[0].strip()
+        if primeiro_ip:
+            return primeiro_ip
 
-    return request.client.host
+    return request.client.host if request.client and request.client.host else "anonimo"
 
 
 # ==========================================
