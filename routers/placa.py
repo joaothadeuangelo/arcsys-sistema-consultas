@@ -1,7 +1,6 @@
 import os
 import time
 import json
-import itertools
 
 import httpx
 from fastapi import APIRouter, Request
@@ -19,19 +18,13 @@ from .shared import (
 
 router = APIRouter(prefix='/api')
 
-tokens_str = os.getenv('GONZALES_API_TOKENS', '')
-lista_tokens = [t.strip() for t in tokens_str.split(',') if t.strip()]
+token_principal = os.getenv('GONZALES_API_TOKEN', '').strip()
 
-# Fallback seguro: mantém compatibilidade com o token antigo (singular).
-if not lista_tokens:
-    token_legado = os.getenv('GONZALES_API_TOKEN', '').strip()
-    if token_legado:
-        lista_tokens = [token_legado]
-    else:
-        # Evita crash no startup caso o env ainda não esteja configurado.
-        lista_tokens = ['']
-
-token_cycle = itertools.cycle(lista_tokens)
+# Compatibilidade: se apenas GONZALES_API_TOKENS estiver definido, usa o ultimo token nao vazio como principal.
+if not token_principal:
+    tokens_str = os.getenv('GONZALES_API_TOKENS', '')
+    lista_tokens = [t.strip() for t in tokens_str.split(',') if t.strip()]
+    token_principal = lista_tokens[-1] if lista_tokens else ''
 
 
 @router.get('/consultar/{placa}')
@@ -77,7 +70,7 @@ async def consultar_placa(placa: str, request: Request):
             'Connection': 'keep-alive'
         }
 
-        current_token = next(token_cycle)
+        current_token = token_principal
 
         # 🚀 REQUISIÇÃO DIRETA À API GONZALES
         async with httpx.AsyncClient(timeout=15.0) as client:
