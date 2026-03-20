@@ -5,7 +5,7 @@ let textoPuro = "";
 let maintenanceTimerInterval = null;
 let tempoLeituraAviso = 5;
 let avisoCountdownInterval = null;
-let finalCountdownInterval = null;
+let horasRestantesInterval = null;
 const FINAL_COUNTDOWN_TARGET = new Date('2026-03-20T23:59:00');
 
 // Temporizador ficticio inicial: 00d 01h 30m 00s
@@ -62,55 +62,32 @@ function iniciarMaintenanceTimer() {
     maintenanceTimerInterval = setInterval(updateTimer, 1000);
 }
 
-function ajustarEscalaCountdown() {
-    const finalCountdownEl = document.getElementById('finalCountdown');
-    if (!finalCountdownEl) return;
-
-    const larguraDisponivel = finalCountdownEl.clientWidth - 6;
-    if (larguraDisponivel <= 0) return;
-
-    let tamanho = 68;
-    finalCountdownEl.style.fontSize = `${tamanho}px`;
-
-    while (tamanho > 16 && finalCountdownEl.scrollWidth > larguraDisponivel) {
-        tamanho -= 1;
-        finalCountdownEl.style.fontSize = `${tamanho}px`;
-    }
-}
-
-function atualizarFinalCountdown() {
-    const finalCountdownEl = document.getElementById('finalCountdown');
-    if (!finalCountdownEl) return;
+function atualizarHorasRestantes() {
+    const horasRestantesEl = document.getElementById('horasRestantes');
+    if (!horasRestantesEl) return;
 
     const agora = new Date().getTime();
     const alvo = FINAL_COUNTDOWN_TARGET.getTime();
     const diferenca = Math.max(0, alvo - agora);
+    const horasRestantes = Math.ceil(diferenca / 3600000);
 
-    const dias = Math.floor(diferenca / 86400000);
-    const horas = Math.floor((diferenca % 86400000) / 3600000);
-    const minutos = Math.floor((diferenca % 3600000) / 60000);
-    const segundos = Math.floor((diferenca % 60000) / 1000);
+    horasRestantesEl.textContent = String(Math.max(0, horasRestantes));
 
-    finalCountdownEl.textContent = `${dias}d:${formatarDoisDigitos(horas)}h:${formatarDoisDigitos(minutos)}min:${formatarDoisDigitos(segundos)}s`;
-    ajustarEscalaCountdown();
-
-    if (diferenca <= 0 && finalCountdownInterval) {
-        clearInterval(finalCountdownInterval);
-        finalCountdownInterval = null;
+    if (diferenca <= 0 && horasRestantesInterval) {
+        clearInterval(horasRestantesInterval);
+        horasRestantesInterval = null;
     }
 }
 
-function iniciarFinalCountdown() {
-    if (finalCountdownInterval) {
-        clearInterval(finalCountdownInterval);
-        finalCountdownInterval = null;
+function iniciarAtualizacaoHorasRestantes() {
+    if (horasRestantesInterval) {
+        clearInterval(horasRestantesInterval);
+        horasRestantesInterval = null;
     }
 
-    atualizarFinalCountdown();
-    finalCountdownInterval = setInterval(atualizarFinalCountdown, 1000);
+    atualizarHorasRestantes();
+    horasRestantesInterval = setInterval(atualizarHorasRestantes, 1000);
 }
-
-window.addEventListener('resize', ajustarEscalaCountdown);
 
 // ==========================================
 // VALIDADOR MATEMÁTICO DE CPF (FRONT-END)
@@ -192,7 +169,7 @@ window.onload = function() {
                 miniCounterAviso.textContent = `[ ${tempoLeituraAviso}s ]`;
             }
 
-            iniciarFinalCountdown();
+            iniciarAtualizacaoHorasRestantes();
 
             if (avisoCountdownInterval) {
                 clearInterval(avisoCountdownInterval);
@@ -237,9 +214,9 @@ function fecharModal() {
         clearInterval(avisoCountdownInterval);
         avisoCountdownInterval = null;
     }
-    if (finalCountdownInterval) {
-        clearInterval(finalCountdownInterval);
-        finalCountdownInterval = null;
+    if (horasRestantesInterval) {
+        clearInterval(horasRestantesInterval);
+        horasRestantesInterval = null;
     }
     document.getElementById('modalAviso').style.display = 'none';
     // SALVA NA MEMÓRIA: Marca o modal como visto para não encher o saco nas outras páginas
