@@ -54,6 +54,7 @@ def iniciar_banco() -> None:
     cursor.execute("INSERT OR IGNORE INTO configuracoes (chave, valor) VALUES ('manutencao', '0')")
     cursor.execute("INSERT OR IGNORE INTO configuracoes (chave, valor) VALUES ('manutencao_placa', '0')")
     cursor.execute("INSERT OR IGNORE INTO configuracoes (chave, valor) VALUES ('manutencao_cnh', '0')")
+    cursor.execute("INSERT OR IGNORE INTO configuracoes (chave, valor) VALUES ('manutencao_fotocnhsp', '0')")
     cursor.execute("INSERT OR IGNORE INTO configuracoes (chave, valor) VALUES ('manutencao_cpf', '0')")
     cursor.execute("INSERT OR IGNORE INTO configuracoes (chave, valor) VALUES ('manutencao_nome', '0')")
     cursor.execute("INSERT OR IGNORE INTO configuracoes (chave, valor) VALUES ('manutencao_comparador', '0')")

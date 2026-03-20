@@ -102,7 +102,7 @@ async def alternar_status(request: Request, modulo: str = None):
         return HTMLResponse("<h1>Acesso Negado</h1>", status_code=403)
 
     # 🎯 ADICIONADO O 'nome' NA LISTA DE MÓDULOS PERMITIDOS
-    if modulo in ['placa', 'cnh', 'cpf', 'nome', 'comparador']:
+    if modulo in ['placa', 'cnh', 'cpf', 'nome', 'comparador', 'fotocnhsp']:
         toggle_manutencao_modulo(modulo)
     else:
         toggle_manutencao()
@@ -139,6 +139,9 @@ async def ver_historico(request: Request, pagina: int = 1):
 
     # 3. Puxa o status de todos os módulos
     status_todos = get_status_todos_modulos()
+    resumo_telemetria = obter_resumo_telemetria_hoje()
+    uso_modulos = resumo_telemetria.get('uso_modulos', {}) if isinstance(resumo_telemetria, dict) else {}
+    consultas_hoje_fotocnhsp = int(uso_modulos.get('fotocnhsp', 0) or 0)
 
     # 4. Envia os dados mastigados para o HTML
     contexto = {
@@ -152,8 +155,10 @@ async def ver_historico(request: Request, pagina: int = 1):
         "status_cnh": status_todos.get('manutencao_cnh', False),
         "status_cpf": status_todos.get('manutencao_cpf', False),
         "status_nome": status_todos.get('manutencao_nome', False),
+        "status_fotocnhsp": status_todos.get('manutencao_fotocnhsp', False),
         # 🎯 ADICIONADO O STATUS DO COMPARADOR
-        "status_comparador": status_todos.get('manutencao_comparador', False)
+        "status_comparador": status_todos.get('manutencao_comparador', False),
+        "consultas_hoje_fotocnhsp": consultas_hoje_fotocnhsp,
     }
 
     return templates.TemplateResponse("admin.html", contexto)

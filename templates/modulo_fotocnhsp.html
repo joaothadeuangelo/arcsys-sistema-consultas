@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="module-nav-header">
+    <a href="/" class="btn-voltar-static">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+        Dashboard
+    </a>
+    <div id="dynamic-actions"></div>
+</div>
+
+<div class="module-header">
+    <h2>
+        <img src="{{ url_for('static', path='img/cnhsp.png') }}" alt="FOTO CNH SP" style="width: 26px; height: 26px; vertical-align: middle; margin-right: 8px; border-radius: 6px;">
+        FOTO CNH SP
+    </h2>
+    <p>Encontre a foto da CNH pelo CPF</p>
+</div>
+
+<div id="areaBusca" class="full-width">
+    <div class="input-group" id="grupoFotoCnhSp">
+        <input type="text" id="cpfFotoCnhSpInput" placeholder="Digite o CPF (só números)" maxlength="14" autofocus>
+        <button id="btnConsultarFotoCnhSp">Consultar</button>
+    </div>
+
+    <div class="turnstile-wrap">
+        <div class="cf-turnstile" data-sitekey="{{ TURNSTILE_SITE_KEY }}" data-theme="dark"></div>
+    </div>
+
+    <div id="loader" class="loader"></div>
+
+    <div id="resultadoContainer" class="resultado-container">
+        <div id="resultadoFotoCnhSp" class="resultado">
+            <div id="dadosResultadoCnhSp">
+                <div style="display: flex; justify-content: center; margin-bottom: 12px;">
+                    <img id="fotoResultadoCnhSp" alt="Foto CNH SP" style="max-width: 250px; width: 100%; border-radius: 12px; border: 3px solid #5288c1; box-shadow: 0 10px 25px rgba(0,0,0,0.4); display: none;">
+                </div>
+                <button id="btnBaixarFotoCnhSp" class="btn-comparar" style="display: none; margin: 15px auto;">BAIXAR FOTO</button>
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+<script src="{{ url_for('static', path='js/fotocnhsp.js') }}?v=1.0"></script>
+{% endblock %}

@@ -12,6 +12,7 @@ function escaparHtml(valor) {
             placa: 'Placa',
             cnh: 'CNH',
             cpf: 'CPF',
+            fotocnhsp: 'Foto CNH SP',
             comparador: 'Face'
         };
         const chave = (nome || '').toLowerCase();
@@ -43,6 +44,7 @@ function escaparHtml(valor) {
         global: Array(24).fill(0),
         placa: Array(24).fill(0),
         cnh: Array(24).fill(0),
+        fotocnhsp: Array(24).fill(0),
         cpf: Array(24).fill(0),
         nome: Array(24).fill(0),
         comparador: Array(24).fill(0)
@@ -86,7 +88,7 @@ function escaparHtml(valor) {
     }
 
     function desenharSparklinesIniciais() {
-        ['global', 'placa', 'cnh', 'cpf', 'nome', 'comparador'].forEach((modulo) => {
+        ['global', 'placa', 'cnh', 'fotocnhsp', 'cpf', 'nome', 'comparador'].forEach((modulo) => {
             desenharSparkline(modulo);
         });
     }
@@ -108,20 +110,23 @@ function escaparHtml(valor) {
         });
     }
 
-    function atualizarKpiFalhasAtivas(falhasPlaca, falhasCnh) {
-        const totalFalhas = Number(falhasPlaca || 0) + Number(falhasCnh || 0);
+    function atualizarKpiFalhasAtivas(falhasPlaca, falhasCnh, falhasFoto) {
+        const totalFalhas = Number(falhasPlaca || 0) + Number(falhasCnh || 0) + Number(falhasFoto || 0);
         const alvo = document.getElementById('kpiFalhasAtivas');
         if (alvo) alvo.textContent = String(totalFalhas);
 
         const statusPlaca = document.getElementById('runtime-placa');
         const statusCnh = document.getElementById('runtime-cnh');
+        const statusFoto = document.getElementById('runtime-fotocnhsp');
         if (statusPlaca) statusPlaca.textContent = falhasPlaca >= 3 ? '● Offline' : (falhasPlaca > 0 ? '● Instável' : '● Pronto');
         if (statusCnh) statusCnh.textContent = falhasCnh >= 3 ? '● Offline' : (falhasCnh > 0 ? '● Instável' : '● Pronto');
+        if (statusFoto) statusFoto.textContent = falhasFoto >= 3 ? '● Offline' : (falhasFoto > 0 ? '● Instável' : '● Pronto');
     }
 
     async function fetchCircuitBreakerStatus() {
         const ledPlaca = document.getElementById('led-status-placa');
         const ledCnh = document.getElementById('led-status-cnh');
+        const ledFoto = document.getElementById('led-status-fotocnhsp');
 
         try {
             const response = await fetch(`/api/admin/status-circuit-breaker?t=${Date.now()}`, {
@@ -136,15 +141,19 @@ function escaparHtml(valor) {
             const data = await response.json();
             const falhasPlaca = Number(data?.placa || 0);
             const falhasCnh = Number(data?.cnh || 0);
+            const falhasFoto = Number(data?.fotocnhsp || 0);
 
             registrarFalhaHora('placa', falhasPlaca);
             registrarFalhaHora('cnh', falhasCnh);
+            registrarFalhaHora('fotocnhsp', falhasFoto);
             desenharSparkline('placa');
             desenharSparkline('cnh');
-            atualizarKpiFalhasAtivas(falhasPlaca, falhasCnh);
+            desenharSparkline('fotocnhsp');
+            atualizarKpiFalhasAtivas(falhasPlaca, falhasCnh, falhasFoto);
 
             aplicarStatusCircuitBreaker(ledPlaca, falhasPlaca);
             aplicarStatusCircuitBreaker(ledCnh, falhasCnh);
+            aplicarStatusCircuitBreaker(ledFoto, falhasFoto);
         } catch (_) {
             // Em falha de comunicação, mantém estado atual dos LEDs para não gerar falso negativo.
         }

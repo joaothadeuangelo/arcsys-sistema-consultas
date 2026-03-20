@@ -4,6 +4,38 @@
 
 // 1. TRATAMENTO EM TEMPO REAL (Impede letras e formata)
 const cpfInputField = document.getElementById('cpfInput');
+let timerCooldownCNH = null;
+
+function extrairSegundosCooldown(mensagem) {
+    const match = String(mensagem || '').match(/(\d+)\s*segundos?/i);
+    return match ? parseInt(match[1], 10) : 0;
+}
+
+function iniciarCooldownVisualCNH(segundos, btn, textoOriginal) {
+    if (!btn || !Number.isFinite(segundos) || segundos <= 0) return;
+
+    if (timerCooldownCNH) {
+        clearInterval(timerCooldownCNH);
+        timerCooldownCNH = null;
+    }
+
+    let restante = segundos;
+    btn.disabled = true;
+    btn.textContent = `Aguarde ${restante}s...`;
+
+    timerCooldownCNH = setInterval(() => {
+        restante -= 1;
+        if (restante <= 0) {
+            clearInterval(timerCooldownCNH);
+            timerCooldownCNH = null;
+            btn.disabled = false;
+            btn.textContent = textoOriginal;
+            return;
+        }
+        btn.textContent = `Aguarde ${restante}s...`;
+    }, 1000);
+}
+
 if (cpfInputField) {
     cpfInputField.addEventListener('input', function () {
         // Arranca tudo que não for número (letras, pontos, traços, espaços)
@@ -27,6 +59,8 @@ async function fazerConsultaCNH() {
     const resultContainer = document.getElementById('resultadoContainer');
     const resultBox = document.getElementById('resultado');
     const loader = document.getElementById('loader');
+    const textoOriginalBotao = btn.textContent;
+    let preservarEstadoBotao = false;
 
     // 🛡️ VALIDAÇÃO MATEMÁTICA DO CPF (PRIORIDADE #1 — ANTES DE TUDO)
     if (!validarCPF(cpfInput)) {
@@ -71,6 +105,19 @@ async function fazerConsultaCNH() {
         
         const data = await response.json();
 
+        if (response.status === 429) {
+            const mensagem429 = data.erro || 'Aguarde alguns segundos para consultar novamente.';
+            const segundos = extrairSegundosCooldown(mensagem429);
+            if (segundos > 0) {
+                iniciarCooldownVisualCNH(segundos, btn, textoOriginalBotao);
+                preservarEstadoBotao = true;
+            }
+            textoPuro = mensagem429;
+            resultBox.innerHTML = `<div class="badge badge-danger" style="font-size: 1.1em; padding: 15px; display: block; text-align: center; white-space: pre-wrap;">❌ ${mensagem429}</div>`;
+            resultContainer.style.display = 'block';
+            return;
+        }
+
         if (data.sucesso) {
             textoPuro = data.dados; 
             let htmlFormatado = formatarTexto(data.dados);
@@ -91,13 +138,21 @@ async function fazerConsultaCNH() {
             } else {
                 resultBox.innerHTML = htmlFormatado;
                 iniciarCooldown(120, 'btnConsultarCNH', 'Consultar CNH');
+                preservarEstadoBotao = true;
             }
             injetarAcoesResultado(resultBox, true);
             
         } else {
             textoPuro = data.erro || data.dados;
+            const segundos = extrairSegundosCooldown(textoPuro);
+            if (segundos > 0) {
+                iniciarCooldownVisualCNH(segundos, btn, textoOriginalBotao);
+                preservarEstadoBotao = true;
+            }
             resultBox.innerHTML = `<div class="badge badge-danger" style="font-size: 1.1em; padding: 15px; display: block; text-align: center; white-space: pre-wrap;">❌ ${textoPuro}</div>`;
-            btn.disabled = false; 
+            if (!preservarEstadoBotao) {
+                btn.disabled = false;
+            }
         }
         
         resultContainer.style.display = 'block';
@@ -109,6 +164,11 @@ async function fazerConsultaCNH() {
         // Encerramento limpo
         loader.style.display = 'none';
         
+        if (!preservarEstadoBotao) {
+            btn.disabled = false;
+            btn.textContent = textoOriginalBotao;
+        }
+
         // 🛡️ RESET DO CLOUDFLARE PARA A PRÓXIMA CONSULTA
         if (typeof turnstile !== 'undefined') {
             turnstile.reset();

@@ -163,7 +163,11 @@ async function iniciarComparacao() {
         exibirErro("❌ O servidor principal não respondeu a tempo.");
         loader.style.display = 'none';
         btn.disabled = false;
-    } 
+    } finally {
+        if (typeof turnstile !== 'undefined') {
+            turnstile.reset();
+        }
+    }
 }
 
 async function verificarStatusFila(taskId, btn, loader, resultContainer) {

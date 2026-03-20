@@ -37,6 +37,19 @@
     </a>
     {% endif %}
 
+    {% if manutencao_fotocnhsp or manutencao %}
+    <div class="modulo-card offline-card">
+        <div class="badge-offline">OFFLINE</div>
+        <img src="{{ url_for('static', path='img/cnhsp.png') }}" alt="FOTO CNH SP" class="modulo-icon">
+        <h3>FOTO CNH SP</h3><p>Em Manutenção</p>
+    </div>
+    {% else %}
+    <a href="/fotocnhsp" class="modulo-card">
+        <img src="{{ url_for('static', path='img/cnhsp.png') }}" alt="FOTO CNH SP" class="modulo-icon">
+        <h3>FOTO CNH SP</h3><p>Encontre a foto da CNH pelo CPF</p>
+    </a>
+    {% endif %}
+
     {% if manutencao_cpf or manutencao %}
     <div class="modulo-card offline-card">
         <div class="badge-offline">OFFLINE</div>

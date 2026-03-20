@@ -4,6 +4,38 @@
 
 // 1. TRATAMENTO EM TEMPO REAL (Impede letras e formata)
 const cpfDadosInputField = document.getElementById('cpfDadosInput');
+let timerCooldownCPF = null;
+
+function extrairSegundosCooldownCPF(mensagem) {
+    const match = String(mensagem || '').match(/(\d+)\s*segundos?/i);
+    return match ? parseInt(match[1], 10) : 0;
+}
+
+function iniciarCooldownVisualCPF(segundos, btn, textoOriginal) {
+    if (!btn || !Number.isFinite(segundos) || segundos <= 0) return;
+
+    if (timerCooldownCPF) {
+        clearInterval(timerCooldownCPF);
+        timerCooldownCPF = null;
+    }
+
+    let restante = segundos;
+    btn.disabled = true;
+    btn.textContent = `Aguarde ${restante}s...`;
+
+    timerCooldownCPF = setInterval(() => {
+        restante -= 1;
+        if (restante <= 0) {
+            clearInterval(timerCooldownCPF);
+            timerCooldownCPF = null;
+            btn.disabled = false;
+            btn.textContent = textoOriginal;
+            return;
+        }
+        btn.textContent = `Aguarde ${restante}s...`;
+    }, 1000);
+}
+
 if (cpfDadosInputField) {
     cpfDadosInputField.addEventListener('input', function () {
         // Arranca tudo que não for número (letras, pontos, traços, espaços)
@@ -27,6 +59,8 @@ async function fazerConsultaDadosCPF() {
     const resultContainer = document.getElementById('resultadoContainer');
     const resultBox = document.getElementById('resultado');
     const loader = document.getElementById('loader');
+    const textoOriginalBotao = btn.textContent;
+    let preservarEstadoBotao = false;
 
     // 🛡️ VALIDAÇÃO MATEMÁTICA DO CPF (PRIORIDADE #1 — ANTES DE TUDO)
     if (!validarCPF(cpfInput)) {
@@ -71,6 +105,19 @@ async function fazerConsultaDadosCPF() {
         
         const data = await response.json();
 
+        if (response.status === 429) {
+            const mensagem429 = data.erro || 'Aguarde alguns segundos para consultar novamente.';
+            const segundos = extrairSegundosCooldownCPF(mensagem429);
+            if (segundos > 0) {
+                iniciarCooldownVisualCPF(segundos, btn, textoOriginalBotao);
+                preservarEstadoBotao = true;
+            }
+            textoPuro = mensagem429;
+            resultBox.innerHTML = `<div class="badge badge-danger" style="font-size: 1.1em; padding: 15px; display: block; text-align: center; white-space: pre-wrap;">❌ ${mensagem429}</div>`;
+            resultContainer.style.display = 'block';
+            return;
+        }
+
         if (data.sucesso) {
             textoPuro = data.dados; 
             let htmlFormatado = formatarTexto(data.dados);
@@ -81,13 +128,21 @@ async function fazerConsultaDadosCPF() {
             } else {
                 resultBox.innerHTML = htmlFormatado;
                 iniciarCooldown(120, 'btnConsultarDadosCPF', 'Consultar Dados');
+                preservarEstadoBotao = true;
             }
             injetarAcoesResultado(resultBox, true);
             
         } else {
             textoPuro = data.erro || data.dados;
+            const segundos = extrairSegundosCooldownCPF(textoPuro);
+            if (segundos > 0) {
+                iniciarCooldownVisualCPF(segundos, btn, textoOriginalBotao);
+                preservarEstadoBotao = true;
+            }
             resultBox.innerHTML = `<div class="badge badge-danger" style="font-size: 1.1em; padding: 15px; display: block; text-align: center; white-space: pre-wrap;">❌ ${textoPuro}</div>`;
-            btn.disabled = false; 
+            if (!preservarEstadoBotao) {
+                btn.disabled = false;
+            }
         }
         
         resultContainer.style.display = 'block';
@@ -98,6 +153,11 @@ async function fazerConsultaDadosCPF() {
     } finally {
         // Encerramento limpo
         loader.style.display = 'none';
+
+        if (!preservarEstadoBotao) {
+            btn.disabled = false;
+            btn.textContent = textoOriginalBotao;
+        }
         
         // 🛡️ RESET DO CLOUDFLARE PARA A PRÓXIMA CONSULTA
         if (typeof turnstile !== 'undefined') {

@@ -1,5 +1,6 @@
 import os
 import asyncio
+import time
 import urllib.request
 import urllib.parse
 import json
@@ -13,6 +14,7 @@ from fastapi import Request
 BOT_USERNAME = os.getenv('BOT_USERNAME', '')
 AMBIENTE = os.getenv('AMBIENTE', 'producao')
 TURNSTILE_SECRET_KEY = os.getenv('TURNSTILE_SECRET_KEY', '')
+TURNSTILE_SITE_KEY = os.getenv('TURNSTILE_SITE_KEY', '0x4AAAAAACl3rXFR93fDYsnj')
 TEMPO_COOLDOWN = 120
 
 # Estado Compartilhado
@@ -22,7 +24,18 @@ cooldowns_placa = {}
 cooldowns_cnh = {}
 cooldowns_cpf = {}
 cooldowns_nome = {}
+cooldowns_fotocnhsp = {}
 cooldown_comparador = {}
+
+
+def verificar_cooldown_ip(ip: str, cooldowns: dict, cooldown_segundos: int) -> tuple[bool, int]:
+    """Retorna (permitido, segundos_restantes)."""
+    agora = time.time()
+    ultimo = cooldowns.get(ip, 0)
+    restante = int(cooldown_segundos - (agora - ultimo))
+    if restante > 0:
+        return False, restante
+    return True, 0
 
 
 async def _resetar_falhas_modulo(request: Request, modulo: str):

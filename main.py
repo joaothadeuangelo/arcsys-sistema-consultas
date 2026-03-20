@@ -18,7 +18,7 @@ SESSOES_STRINGS = [
 ]
 
 # Circuit Breaker passivo: contador simples em memória por módulo crítico.
-falhas_consecutivas = {"placa": 0, "cnh": 0}
+falhas_consecutivas = {"placa": 0, "cnh": 0, "fotocnhsp": 0}
 
 
 async def notificar_admin_telegram(modulo: str, erros: int):
@@ -62,6 +62,7 @@ from routers.shared import fila_clientes
 from routers.placa import router as placa_router
 from routers.cnh import router as cnh_router
 from routers.cpf import router as cpf_router
+from routers.cnhsp import router as cnhsp_router
 from routers.nome import router as nome_router
 from routers.comparador import router as comparador_router
 from routers.monitoramento import router as monitoramento_router
@@ -119,6 +120,7 @@ app.include_router(views_router)
 app.include_router(placa_router)
 app.include_router(cnh_router)
 app.include_router(cpf_router)
+app.include_router(cnhsp_router)
 app.include_router(nome_router)
 app.include_router(comparador_router)
 app.include_router(monitoramento_router)

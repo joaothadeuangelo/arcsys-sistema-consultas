@@ -4,6 +4,38 @@
 
 // 1. TRATAMENTO EM TEMPO REAL (Impede caracteres inválidos e força maiúscula)
 const placaInputField = document.getElementById('placaInput');
+let timerCooldownPlaca = null;
+
+function extrairSegundosCooldownPlaca(mensagem) {
+    const match = String(mensagem || '').match(/(\d+)\s*segundos?/i);
+    return match ? parseInt(match[1], 10) : 0;
+}
+
+function iniciarCooldownVisualPlaca(segundos, btn, textoOriginal) {
+    if (!btn || !Number.isFinite(segundos) || segundos <= 0) return;
+
+    if (timerCooldownPlaca) {
+        clearInterval(timerCooldownPlaca);
+        timerCooldownPlaca = null;
+    }
+
+    let restante = segundos;
+    btn.disabled = true;
+    btn.textContent = `Aguarde ${restante}s...`;
+
+    timerCooldownPlaca = setInterval(() => {
+        restante -= 1;
+        if (restante <= 0) {
+            clearInterval(timerCooldownPlaca);
+            timerCooldownPlaca = null;
+            btn.disabled = false;
+            btn.textContent = textoOriginal;
+            return;
+        }
+        btn.textContent = `Aguarde ${restante}s...`;
+    }, 1000);
+}
+
 if (placaInputField) {
     placaInputField.addEventListener('input', function () {
         this.value = this.value.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
@@ -273,6 +305,8 @@ async function fazerConsulta() {
     const resultContainer = document.getElementById('resultadoContainer');
     const resultBox = document.getElementById('resultado');
     const loader = document.getElementById('loader');
+    const textoOriginalBotao = btn.textContent;
+    let preservarEstadoBotao = false;
 
     const regexPlaca = /^[A-Z]{3}[0-9][A-Z0-9][0-9]{2}$/;
 
@@ -323,6 +357,19 @@ async function fazerConsulta() {
         
         const data = await response.json();
 
+        if (response.status === 429) {
+            const mensagem429 = data.erro || 'Aguarde alguns segundos para consultar novamente.';
+            const segundos = extrairSegundosCooldownPlaca(mensagem429);
+            if (segundos > 0) {
+                iniciarCooldownVisualPlaca(segundos, btn, textoOriginalBotao);
+                preservarEstadoBotao = true;
+            }
+            textoPuro = mensagem429;
+            resultBox.innerHTML = `<div class="badge badge-danger" style="font-size: 1.1em; padding: 15px; display: block; text-align: center; white-space: pre-wrap;">❌ ${mensagem429}</div>`;
+            resultContainer.style.display = 'block';
+            return;
+        }
+
         if (data.sucesso) {
             // Armazena texto limpo para cópia
             textoPuro = gerarTextoPlaca(data.dados);
@@ -333,12 +380,20 @@ async function fazerConsulta() {
             } else {
                 resultBox.innerHTML = renderizarDadosPlaca(data.dados);
                 iniciarCooldown(120, 'btnConsultarPlaca', 'Consultar');
+                preservarEstadoBotao = true;
             }
             injetarAcoesResultado(resultBox, true);
         } else {
             textoPuro = data.erro || "";
+            const segundos = extrairSegundosCooldownPlaca(textoPuro);
+            if (segundos > 0) {
+                iniciarCooldownVisualPlaca(segundos, btn, textoOriginalBotao);
+                preservarEstadoBotao = true;
+            }
             resultBox.innerHTML = `<div class="badge badge-danger" style="font-size: 1.1em; padding: 15px; display: block; text-align: center; white-space: pre-wrap;">❌ ${data.erro || "Erro desconhecido."}</div>`;
-            btn.disabled = false;
+            if (!preservarEstadoBotao) {
+                btn.disabled = false;
+            }
         }
         
         resultContainer.style.display = 'block';
@@ -348,6 +403,12 @@ async function fazerConsulta() {
         btn.disabled = false;
     } finally {
         loader.style.display = 'none';
+
+        if (!preservarEstadoBotao) {
+            btn.disabled = false;
+            btn.textContent = textoOriginalBotao;
+        }
+
         if (typeof turnstile !== 'undefined') {
             turnstile.reset();
         }

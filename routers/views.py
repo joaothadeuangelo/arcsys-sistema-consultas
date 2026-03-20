@@ -2,6 +2,7 @@ from fastapi import APIRouter, Request
 from fastapi.responses import RedirectResponse, HTMLResponse
 from fastapi.templating import Jinja2Templates
 from database import is_manutencao, is_manutencao_modulo, registrar_evento_telemetria_background
+from .shared import TURNSTILE_SITE_KEY
 
 router = APIRouter()
 templates = Jinja2Templates(directory="templates")
@@ -29,6 +30,7 @@ async def render_dashboard(request: Request):
         "manutencao": is_manutencao(),
         "manutencao_placa": is_manutencao_modulo('placa'),
         "manutencao_cnh": is_manutencao_modulo('cnh'),
+        "manutencao_fotocnhsp": is_manutencao_modulo('fotocnhsp'),
         "manutencao_cpf": is_manutencao_modulo('cpf'),
         "manutencao_nome": is_manutencao_modulo('nome'),
         # 🎯 ADICIONADO: Envia o status do Comparador para o Front-end
@@ -60,6 +62,25 @@ async def render_cnh(request: Request):
     return templates.TemplateResponse("modulo_cnh.html", {
         "request": request,
         "manutencao": is_manutencao()
+    })
+
+
+# ==========================================
+# ROTA VISUAL: MÓDULO FOTO CNH SP
+# ==========================================
+@router.get("/fotocnhsp", response_class=HTMLResponse)
+async def render_fotocnhsp(request: Request):
+    manutencao_global = is_manutencao()
+    manutencao_fotocnhsp = is_manutencao_modulo('fotocnhsp')
+
+    if manutencao_global or manutencao_fotocnhsp:
+        return RedirectResponse(url="/", status_code=303)
+
+    return templates.TemplateResponse("modulo_fotocnhsp.html", {
+        "request": request,
+        "manutencao": manutencao_global,
+        "manutencao_fotocnhsp": manutencao_fotocnhsp,
+        "TURNSTILE_SITE_KEY": TURNSTILE_SITE_KEY
     })
 
 # ==========================================

@@ -6,6 +6,37 @@ if (nomeInputField) {
 }
 
 let resultadosNomeAtuais = [];
+let timerCooldownNome = null;
+
+function extrairSegundosCooldownNome(mensagem) {
+    const match = String(mensagem || '').match(/(\d+)\s*segundos?/i);
+    return match ? parseInt(match[1], 10) : 0;
+}
+
+function iniciarCooldownVisualNome(segundos, btn, textoOriginal) {
+    if (!btn || !Number.isFinite(segundos) || segundos <= 0) return;
+
+    if (timerCooldownNome) {
+        clearInterval(timerCooldownNome);
+        timerCooldownNome = null;
+    }
+
+    let restante = segundos;
+    btn.disabled = true;
+    btn.textContent = `Aguarde ${restante}s...`;
+
+    timerCooldownNome = setInterval(() => {
+        restante -= 1;
+        if (restante <= 0) {
+            clearInterval(timerCooldownNome);
+            timerCooldownNome = null;
+            btn.disabled = false;
+            btn.textContent = textoOriginal;
+            return;
+        }
+        btn.textContent = `Aguarde ${restante}s...`;
+    }, 1000);
+}
 
 function normalizarTextoFiltro(valor) {
     return String(valor || '')
@@ -163,6 +194,8 @@ async function fazerConsultaNome() {
     const resultMeta = document.getElementById('resultadoNomeMeta');
     const filtroInput = document.getElementById('filtroResultadoNome');
     const avisoVazio = document.getElementById('resultadoNomeFiltroVazio');
+    const textoOriginalBotao = btn.textContent;
+    let preservarEstadoBotao = false;
 
     const nome = (input?.value || '').trim();
 
@@ -204,6 +237,19 @@ async function fazerConsultaNome() {
 
         const data = await response.json();
 
+        if (response.status === 429) {
+            const mensagem429 = data.erro || 'Aguarde alguns segundos para consultar novamente.';
+            const segundos = extrairSegundosCooldownNome(mensagem429);
+            if (segundos > 0) {
+                iniciarCooldownVisualNome(segundos, btn, textoOriginalBotao);
+                preservarEstadoBotao = true;
+            }
+            resultMeta.innerHTML = `<div class='badge badge-danger' style='font-size: 1em; padding: 12px; display: block; text-align: center; white-space: pre-wrap;'>❌ ${mensagem429}</div>`;
+            renderizarResultadosNome([]);
+            resultContainer.style.display = 'block';
+            return;
+        }
+
         if (response.status === 404 || data.status === 'not_found') {
             const aviso = data.message || 'Nenhum resultado encontrado para este termo.';
             resultMeta.innerHTML = `<div class='badge badge-warning' style='font-size: 1em; padding: 12px; display: block; text-align: center; white-space: pre-wrap;'>⚠️ ${aviso}</div>`;
@@ -223,14 +269,22 @@ async function fazerConsultaNome() {
 
             if (!data.cache) {
                 iniciarCooldown(120, 'btnConsultarNome', 'Consultar Nome');
+                preservarEstadoBotao = true;
             } else {
                 btn.disabled = false;
             }
         } else {
             const erro = data.erro || 'Não foi possível consultar este nome.';
+            const segundos = extrairSegundosCooldownNome(erro);
+            if (segundos > 0) {
+                iniciarCooldownVisualNome(segundos, btn, textoOriginalBotao);
+                preservarEstadoBotao = true;
+            }
             resultMeta.innerHTML = `<div class='badge badge-danger' style='font-size: 1em; padding: 12px; display: block; text-align: center; white-space: pre-wrap;'>❌ ${erro}</div>`;
             renderizarResultadosNome([]);
-            btn.disabled = false;
+            if (!preservarEstadoBotao) {
+                btn.disabled = false;
+            }
         }
 
         resultContainer.style.display = 'block';
@@ -241,6 +295,10 @@ async function fazerConsultaNome() {
         btn.disabled = false;
     } finally {
         loader.style.display = 'none';
+        if (!preservarEstadoBotao) {
+            btn.disabled = false;
+            btn.textContent = textoOriginalBotao;
+        }
         if (typeof turnstile !== 'undefined') {
             turnstile.reset();
         }

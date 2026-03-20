@@ -28,6 +28,8 @@
                     <span id="led-status-placa" class="status-led status-operacional" title="Operacional" aria-label="Status do módulo Placa"></span>
                 {% elif nome_modulo == 'cnh' %}
                     <span id="led-status-cnh" class="status-led status-operacional" title="Operacional" aria-label="Status do módulo CNH"></span>
+                {% elif nome_modulo == 'fotocnhsp' %}
+                    <span id="led-status-fotocnhsp" class="status-led status-operacional" title="Operacional" aria-label="Status do módulo Foto CNH SP"></span>
                 {% else %}
                     <span class="status-led status-operacional" aria-hidden="true"></span>
                 {% endif %}
@@ -85,6 +87,7 @@
                 {{ gerar_toggle("⚠️ SISTEMA GLOBAL", "", status_global) }}
                 {{ gerar_toggle("🔍 MÓDULO PLACA", "placa", status_placa) }}
                 {{ gerar_toggle("🪪 MÓDULO CNH", "cnh", status_cnh) }}
+                {{ gerar_toggle("📷 FOTO CNH SP", "fotocnhsp", status_fotocnhsp) }}
                 {{ gerar_toggle("📄 MÓDULO CPF", "cpf", status_cpf) }}
                 {{ gerar_toggle("🧾 CONSULTA DE NOME", "nome", status_nome) }}
                 {{ gerar_toggle("📸 SIMILAR FACE", "comparador", status_comparador) }}
@@ -124,9 +127,11 @@
                     <div class="token-chip">Global: <strong>{{ 'OFF' if status_global else 'ON' }}</strong></div>
                     <div class="token-chip">Placa: <strong>{{ 'OFF' if status_placa else 'ON' }}</strong></div>
                     <div class="token-chip">CNH: <strong>{{ 'OFF' if status_cnh else 'ON' }}</strong></div>
+                    <div class="token-chip">Foto: <strong>{{ 'OFF' if status_fotocnhsp else 'ON' }}</strong></div>
                     <div class="token-chip">CPF: <strong>{{ 'OFF' if status_cpf else 'ON' }}</strong></div>
                     <div class="token-chip">Nome: <strong>{{ 'OFF' if status_nome else 'ON' }}</strong></div>
                     <div class="token-chip">Face: <strong>{{ 'OFF' if status_comparador else 'ON' }}</strong></div>
+                    <div class="token-chip">Foto hoje: <strong>{{ consultas_hoje_fotocnhsp }}</strong></div>
                 </div>
                 <div class="telemetria-status">Área preparada para gestão avançada de tokens e novos controles.</div>
             </div>
@@ -158,6 +163,8 @@
                 {% set chave = row[0] or '' %}
                 {% if 'SIMILAR_FACE' in chave %}
                     <span class="tipo-badge biometria">📸 Biometria</span>
+                {% elif chave.startswith('FOTOCNHSP_') %}
+                    <span class="tipo-badge fotocnhsp">📷 Foto CNH SP</span>
                 {% elif chave.startswith('CPF_') %}
                     <span class="tipo-badge cnh">🪪 CNH</span>
                 {% elif chave.startswith('SISREG_') %}

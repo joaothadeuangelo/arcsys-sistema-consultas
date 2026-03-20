@@ -407,6 +407,7 @@
         .tipo-badge.biometria { background: rgba(155, 89, 182, 0.18); color: #d2a6f5; border-color: rgba(155, 89, 182, 0.35); }
         .tipo-badge.placa { background: rgba(52, 152, 219, 0.16); color: #8ecaf3; border-color: rgba(52, 152, 219, 0.35); }
         .tipo-badge.cnh { background: rgba(241, 196, 15, 0.16); color: #f6d778; border-color: rgba(241, 196, 15, 0.35); }
+        .tipo-badge.fotocnhsp { background: rgba(243, 156, 18, 0.2); color: #f7c67a; border-color: rgba(243, 156, 18, 0.35); }
         .tipo-badge.cpf { background: rgba(46, 204, 113, 0.16); color: #87e5ae; border-color: rgba(46, 204, 113, 0.35); }
         .tipo-badge.geral { background: rgba(149, 165, 166, 0.16); color: #c6d2d3; border-color: rgba(149, 165, 166, 0.35); }
         .chave-texto { display: block; color: #d9e5ef; font-size: 0.86em; word-break: break-word; }
