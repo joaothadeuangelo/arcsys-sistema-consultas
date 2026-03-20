@@ -1,6 +1,7 @@
 import os
 import logging
 import aiohttp
+from datetime import datetime
 logger = logging.getLogger(__name__)
 
 from dotenv import load_dotenv
@@ -99,6 +100,22 @@ async def redirecionar_dominio_antigo(request: Request, call_next):
         nova_url = f"https://placa.arcangelopainel.xyz{request.url.path}"
         if request.url.query: nova_url += f"?{request.url.query}"
         return RedirectResponse(url=nova_url, status_code=301)
+    return await call_next(request)
+
+
+DATA_ENCERRAMENTO_FINAL = datetime(2026, 3, 20, 23, 59, 59)
+
+
+@app.middleware("http")
+async def kill_switch_encerramento(request: Request, call_next):
+    caminho = request.url.path
+
+    if caminho.startswith("/static/") or caminho.startswith("/sistema-encerrado"):
+        return await call_next(request)
+
+    if datetime.now() > DATA_ENCERRAMENTO_FINAL:
+        return RedirectResponse(url="/sistema-encerrado", status_code=307)
+
     return await call_next(request)
 
 # Startup das contas do Telegram

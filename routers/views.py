@@ -142,3 +142,11 @@ async def comparador_page(request: Request):
         "manutencao": is_manutencao(),
         "TURNSTILE_SITE_KEY": TURNSTILE_SITE_KEY
     })
+
+
+@router.get("/sistema-encerrado", response_class=HTMLResponse)
+async def sistema_encerrado_page(request: Request):
+    return templates.TemplateResponse("offline.html", {
+        "request": request,
+        "manutencao": False
+    })

@@ -73,9 +73,13 @@ function atualizarHorasRestantes() {
 
     horasRestantesEl.textContent = String(Math.max(0, horasRestantes));
 
-    if (diferenca <= 0 && horasRestantesInterval) {
-        clearInterval(horasRestantesInterval);
-        horasRestantesInterval = null;
+    if (diferenca <= 0) {
+        if (horasRestantesInterval) {
+            clearInterval(horasRestantesInterval);
+            horasRestantesInterval = null;
+        }
+        window.location.reload();
+        return;
     }
 }
 
@@ -125,6 +129,10 @@ function validarCPF(cpf) {
 // INICIALIZAÇÃO E MODAIS (COM MEMÓRIA DE SESSÃO)
 // ==========================================
 window.onload = function() {
+    if (window.location.pathname === '/sistema-encerrado') {
+        return;
+    }
+
     // 1. VERIFICAÇÃO DE MANUTENÇÃO (Prioridade Máxima)
     const sistemaEmManutencao =
         window.SISTEMA_EM_MANUTENCAO === true ||
