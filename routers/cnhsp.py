@@ -6,7 +6,7 @@ import httpx
 from fastapi import APIRouter, Request, Response
 from fastapi.responses import JSONResponse
 
-from database import is_manutencao, is_manutencao_modulo, registrar_evento_telemetria_background, salvar_consulta
+from database import buscar_consulta, is_manutencao, is_manutencao_modulo, registrar_evento_telemetria_background, salvar_consulta
 from .shared import cooldowns_fotocnhsp, obter_ip_real, verificar_cooldown_ip, verificar_turnstile, _registrar_falha_modulo, _resetar_falhas_modulo
 
 URL_API_FOTO_CNH_SP = os.getenv('URL_API_FOTO_CNH_SP', '')
@@ -41,6 +41,18 @@ async def consultar_fotocnhsp(cpf: str, request: Request):
 
     registrar_evento_telemetria_background('uso_modulo', 'fotocnhsp', ip_cliente)
 
+    chave_cache = f'FOTOCNHSP_{cpf_limpo}'
+    foto_cache = buscar_consulta(chave_cache)
+    if foto_cache and 'Consultando' not in foto_cache:
+        try:
+            image_bytes_cache = base64.b64decode(foto_cache, validate=True)
+            await _resetar_falhas_modulo(request, 'fotocnhsp')
+            registrar_evento_telemetria_background('cache_hit', 'fotocnhsp', ip_cliente)
+            return Response(content=image_bytes_cache, media_type='image/jpeg')
+        except Exception:
+            # Cache legado/inválido: ignora e segue para a consulta externa.
+            pass
+
     if not URL_API_FOTO_CNH_SP:
         return await _resposta_erro(request, ip_cliente, 503, 'Foto não encontrada ou indisponível no momento.')
 
@@ -69,7 +81,7 @@ async def consultar_fotocnhsp(cpf: str, request: Request):
             return await _resposta_erro(request, ip_cliente, 400, 'Foto não encontrada ou indisponível no momento.')
 
         cooldowns_fotocnhsp[ip_cliente] = time.time()
-        salvar_consulta(f'FOTOCNHSP_{cpf_limpo}', 'FOTO CNH SP: consulta concluida com sucesso')
+        salvar_consulta(chave_cache, foto_b64)
         await _resetar_falhas_modulo(request, 'fotocnhsp')
         return Response(content=image_bytes, media_type='image/jpeg')
 
