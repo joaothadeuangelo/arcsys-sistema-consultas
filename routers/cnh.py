@@ -25,14 +25,14 @@ router = APIRouter(prefix='/api')
 
 @router.get('/consultar_cnh/{cpf}')
 async def consultar_cnh(cpf: str, request: Request):
+    ip_cliente = obter_ip_real(request)
+
     if is_manutencao() or is_manutencao_modulo('cnh'):
         return {'sucesso': False, 'erro': '🛠️ MÓDULO EM MANUTENÇÃO!'}
 
     cpf_limpo = ''.join(filter(str.isdigit, cpf))
     if len(cpf_limpo) != 11:
         return {'sucesso': False, 'erro': 'CPF inválido. Digite os 11 números corretamente.'}
-
-    ip_cliente = obter_ip_real(request)
 
     # 🛡️ BARREIRA DE SEGURANÇA (BOTS E SCRAPERS)
     token_turnstile = request.headers.get('X-Turnstile-Token')

@@ -7,7 +7,7 @@ from fastapi import APIRouter, Request, Response
 from fastapi.responses import JSONResponse
 
 from database import is_manutencao, is_manutencao_modulo, registrar_evento_telemetria_background, salvar_consulta
-from .shared import cooldowns_fotocnhsp, obter_ip_real, verificar_cooldown_ip, _registrar_falha_modulo, _resetar_falhas_modulo
+from .shared import cooldowns_fotocnhsp, obter_ip_real, verificar_cooldown_ip, verificar_turnstile, _registrar_falha_modulo, _resetar_falhas_modulo
 
 URL_API_FOTO_CNH_SP = os.getenv('URL_API_FOTO_CNH_SP', '')
 
@@ -30,6 +30,10 @@ async def consultar_fotocnhsp(cpf: str, request: Request):
     cpf_limpo = ''.join(filter(str.isdigit, cpf))
     if len(cpf_limpo) != 11:
         return await _resposta_erro(request, ip_cliente, 400, 'CPF inválido. Digite os 11 números corretamente.')
+
+    token_turnstile = request.headers.get('X-Turnstile-Token')
+    if not await verificar_turnstile(token_turnstile, ip_cliente):
+        return await _resposta_erro(request, ip_cliente, 403, '🤖 Bloqueado pela Segurança Cloudflare. Verifique se você é humano e tente novamente.')
 
     permitido, restante = verificar_cooldown_ip(ip_cliente, cooldowns_fotocnhsp, 120)
     if not permitido:

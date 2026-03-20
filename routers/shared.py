@@ -1,6 +1,7 @@
 import os
 import asyncio
 import time
+import logging
 import urllib.request
 import urllib.parse
 import json
@@ -16,6 +17,7 @@ AMBIENTE = os.getenv('AMBIENTE', 'producao')
 TURNSTILE_SECRET_KEY = os.getenv('TURNSTILE_SECRET_KEY', '')
 TURNSTILE_SITE_KEY = os.getenv('TURNSTILE_SITE_KEY', '0x4AAAAAACl3rXFR93fDYsnj')
 TEMPO_COOLDOWN = 120
+logger = logging.getLogger(__name__)
 
 # Estado Compartilhado
 fila_clientes = asyncio.Queue()
@@ -148,7 +150,7 @@ async def verificar_turnstile(token: str, ip: str) -> bool:
         resultado = await loop.run_in_executor(None, fetch)
         return resultado.get("success", False)
     except Exception as e:
-        print(f"Erro na validação do Turnstile: {e}")
+        logger.warning("Erro na validação do Turnstile: %s", e)
         return False
 
 

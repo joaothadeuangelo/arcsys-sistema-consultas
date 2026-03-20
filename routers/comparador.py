@@ -2,6 +2,7 @@ import os
 import re
 import json
 import time
+import logging
 
 import httpx
 from fastapi import APIRouter, Request
@@ -15,6 +16,7 @@ from .shared import (
 )
 
 router = APIRouter(prefix='/api')
+logger = logging.getLogger(__name__)
 
 
 @router.post('/comparar_facial')
@@ -90,7 +92,7 @@ async def comparar_facial(request: Request):
             if response.status_code != 200:
                 corpo_log = response.text[:500] if len(response.text) > 500 else response.text
                 corpo_log = mascarar_tokens_em_texto(corpo_log)
-                print(f'ERRO SIMILAR FACE STATUS: {response.status_code} - BODY: {corpo_log}')
+                logger.warning('ERRO SIMILAR FACE STATUS: %s - BODY: %s', response.status_code, corpo_log)
                 if ip_cliente in cooldown_comparador:
                     del cooldown_comparador[ip_cliente]
                 return {'sucesso': False, 'erro': 'O servidor de biometria está temporariamente indisponível ou sobrecarregado. Tente novamente.'}
@@ -123,7 +125,7 @@ async def comparar_facial(request: Request):
                     salvar_consulta(chave_log, payload_log)
                 except Exception as e:
                     # Falha de log não deve quebrar a resposta do usuário
-                    print(f'FALHA AO REGISTRAR LOG SIMILAR FACE: {mascarar_tokens_em_texto(e)}')
+                    logger.warning('FALHA AO REGISTRAR LOG SIMILAR FACE: %s', mascarar_tokens_em_texto(e))
 
             return {'sucesso': True, 'resultados': dados_retorno}
 

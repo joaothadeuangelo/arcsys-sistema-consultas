@@ -48,7 +48,8 @@ async def render_placa(request: Request):
 
     return templates.TemplateResponse("modulo_placa.html", {
         "request": request,
-        "manutencao": is_manutencao()
+        "manutencao": is_manutencao(),
+        "TURNSTILE_SITE_KEY": TURNSTILE_SITE_KEY
     })
 
 # ==========================================
@@ -61,7 +62,8 @@ async def render_cnh(request: Request):
 
     return templates.TemplateResponse("modulo_cnh.html", {
         "request": request,
-        "manutencao": is_manutencao()
+        "manutencao": is_manutencao(),
+        "TURNSTILE_SITE_KEY": TURNSTILE_SITE_KEY
     })
 
 
@@ -93,7 +95,8 @@ async def render_cpf(request: Request):
 
     return templates.TemplateResponse("modulo_cpf.html", {
         "request": request,
-        "manutencao": is_manutencao()
+        "manutencao": is_manutencao(),
+        "TURNSTILE_SITE_KEY": TURNSTILE_SITE_KEY
     })
 
 
@@ -107,7 +110,8 @@ async def render_nome(request: Request):
 
     return templates.TemplateResponse("modulo_nome.html", {
         "request": request,
-        "manutencao": is_manutencao()
+        "manutencao": is_manutencao(),
+        "TURNSTILE_SITE_KEY": TURNSTILE_SITE_KEY
     })
 
 # ==========================================
@@ -135,5 +139,6 @@ async def comparador_page(request: Request):
 
     return templates.TemplateResponse("modulo_comparador.html", {
         "request": request,
-        "manutencao": is_manutencao()
+        "manutencao": is_manutencao(),
+        "TURNSTILE_SITE_KEY": TURNSTILE_SITE_KEY
     })

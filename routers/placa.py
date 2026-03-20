@@ -1,6 +1,8 @@
 import os
 import time
 import json
+import logging
+import re
 
 import httpx
 from fastapi import APIRouter, Request
@@ -17,6 +19,7 @@ from .shared import (
 )
 
 router = APIRouter(prefix='/api')
+logger = logging.getLogger(__name__)
 
 token_principal = os.getenv('GONZALES_API_TOKEN', '').strip()
 
@@ -29,6 +32,8 @@ if not token_principal:
 
 @router.get('/consultar/{placa}')
 async def consultar_placa(placa: str, request: Request):
+    ip_cliente = obter_ip_real(request)
+
     if is_manutencao() or is_manutencao_modulo('placa'):
         return {'sucesso': False, 'erro': '🛠️ MÓDULO EM MANUTENÇÃO!'}
 
@@ -38,7 +43,9 @@ async def consultar_placa(placa: str, request: Request):
     if len(placa) > 10:
         return {'sucesso': False, 'erro': 'Formato de placa inválido.'}
 
-    ip_cliente = obter_ip_real(request)
+    regex_placa = re.compile(r'^[A-Z]{3}[0-9][A-Z0-9][0-9]{2}$')
+    if not regex_placa.fullmatch(placa):
+        return {'sucesso': False, 'erro': 'Formato de placa inválido.'}
 
     # 🛡️ BARREIRA DE SEGURANÇA (BOTS E SCRAPERS)
     token_turnstile = request.headers.get('X-Turnstile-Token')
@@ -86,18 +93,18 @@ async def consultar_placa(placa: str, request: Request):
         if response.status_code != 200:
             corpo_log = response.text[:500] if len(response.text) > 500 else response.text
             corpo_log = mascarar_tokens_em_texto(corpo_log)
-            print(f'ERRO GONZALES STATUS: {response.status_code} - BODY: {corpo_log}')
+            logger.warning('ERRO GONZALES STATUS: %s - BODY: %s', response.status_code, corpo_log)
             return {'sucesso': False, 'erro': 'Não foi possível consultar esta placa no momento. Tente novamente.'}
 
         dados_api = response.json()
 
         if isinstance(dados_api, dict) and dados_api.get('erro'):
-            print(f'ERRO GONZALES API: {mascarar_tokens_em_texto(dados_api)}')
+            logger.warning('ERRO GONZALES API: %s', mascarar_tokens_em_texto(dados_api))
             return {'sucesso': False, 'erro': 'Placa não encontrada ou indisponível no momento.'}
 
         # 🛡️ VALIDAÇÃO ESTRUTURAL: Só salva no cache se o retorno parecer dados reais de veículo
         if not isinstance(dados_api, dict) or not any(k in dados_api for k in ('chassi', 'placa_mercosul', 'placa_antiga', 'codigoRenavam', 'descricaoMarcaModelo')):
-            print(f'GONZALES RETORNO INESPERADO (não é dados de veículo): {str(dados_api)[:300]}')
+            logger.warning('GONZALES RETORNO INESPERADO (não é dados de veículo): %s', str(dados_api)[:300])
             return {'sucesso': False, 'erro': 'Resposta inválida do sistema de consulta. Tente novamente.'}
 
         # Salva o JSON integral no banco para cache futuro
@@ -111,5 +118,5 @@ async def consultar_placa(placa: str, request: Request):
         await _registrar_falha_modulo(request, 'placa')
         # 🛡️ Sanitiza a mensagem: exceções httpx podem conter a URL completa com o token na query string
         msg_erro = mascarar_tokens_em_texto(str(e))
-        print(f'EXCEÇÃO INTERNA ROTA PLACA: {msg_erro}')
+        logger.exception('EXCEÇÃO INTERNA ROTA PLACA: %s', msg_erro)
         return {'sucesso': False, 'erro': 'Erro interno no servidor. Tente novamente.'}

@@ -2,6 +2,7 @@ import re
 import time
 import json
 import asyncio
+import logging
 
 from fastapi import APIRouter, Request
 
@@ -21,10 +22,13 @@ from .shared import (
 )
 
 router = APIRouter(prefix='/api')
+logger = logging.getLogger(__name__)
 
 
 @router.get('/consultar/nome/{nome_buscado}')
 async def consultar_nome(nome_buscado: str, request: Request):
+    ip_cliente = obter_ip_real(request)
+
     if is_manutencao() or is_manutencao_modulo('nome'):
         return {'sucesso': False, 'erro': '🛠️ MÓDULO EM MANUTENÇÃO!'}
 
@@ -34,7 +38,6 @@ async def consultar_nome(nome_buscado: str, request: Request):
     if len(nome_limpo) > 80:
         return {'sucesso': False, 'erro': 'Nome muito longo para consulta.'}
 
-    ip_cliente = obter_ip_real(request)
     token_turnstile = request.headers.get('X-Turnstile-Token')
     if not await verificar_turnstile(token_turnstile, ip_cliente):
         return {'sucesso': False, 'erro': '🤖 Bloqueado pela Segurança Cloudflare. Verifique se você é humano e tente novamente.'}
@@ -141,5 +144,5 @@ async def consultar_nome(nome_buscado: str, request: Request):
             await fila_clientes.put(cliente_atual)
 
     except Exception as e:
-        print(f'EXCEÇÃO INTERNA ROTA NOME: {mascarar_tokens_em_texto(str(e))}')
+        logger.exception('EXCEÇÃO INTERNA ROTA NOME: %s', mascarar_tokens_em_texto(str(e)))
         return {'sucesso': False, 'erro': 'Erro interno no servidor. Tente novamente.'}

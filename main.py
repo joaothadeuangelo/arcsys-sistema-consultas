@@ -1,5 +1,8 @@
 import os
+import logging
 import aiohttp
+logger = logging.getLogger(__name__)
+
 from dotenv import load_dotenv
 from fastapi import FastAPI, Request
 from fastapi.responses import RedirectResponse, JSONResponse
@@ -27,7 +30,7 @@ async def notificar_admin_telegram(modulo: str, erros: int):
     admin_chat_id = os.getenv("TELEGRAM_ADMIN_CHAT_ID", "").strip()
 
     if not bot_token or not admin_chat_id:
-        print("[ALERTA TELEGRAM] TELEGRAM_BOT_TOKEN/TELEGRAM_ADMIN_CHAT_ID não configurados.")
+        logger.warning("[ALERTA TELEGRAM] TELEGRAM_BOT_TOKEN/TELEGRAM_ADMIN_CHAT_ID não configurados.")
         return
 
     texto_alerta = (
@@ -50,9 +53,9 @@ async def notificar_admin_telegram(modulo: str, erros: int):
             async with session.post(url, json=payload) as response:
                 if response.status != 200:
                     detalhe = await response.text()
-                    print(f"[ALERTA TELEGRAM] Falha no envio ({response.status}): {detalhe[:300]}")
+                    logger.warning("[ALERTA TELEGRAM] Falha no envio (%s): %s", response.status, detalhe[:300])
     except Exception as e:
-        print(f"[ALERTA TELEGRAM] Exceção ao notificar admin: {e}")
+        logger.exception("[ALERTA TELEGRAM] Exceção ao notificar admin: %s", e)
 
 # 2. SÓ DEPOIS: Importar os nossos módulos (Agora eles enxergam as senhas)
 from database import iniciar_banco
@@ -113,7 +116,7 @@ async def startup_event():
             if await client.is_user_authorized():
                 await fila_clientes.put(client)
         except Exception as e:
-            print(f"❌ Erro na conta {idx + 1}: {e}")
+            logger.exception("Erro na conta %s: %s", idx + 1, e)
 
 # Plugando as Rotas na Aplicação Principal
 app.include_router(views_router)
