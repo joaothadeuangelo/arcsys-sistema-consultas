@@ -15,7 +15,7 @@ from fastapi import Request
 BOT_USERNAME = os.getenv('BOT_USERNAME', '')
 AMBIENTE = os.getenv('AMBIENTE', 'producao')
 TURNSTILE_SECRET_KEY = os.getenv('TURNSTILE_SECRET_KEY', '')
-TURNSTILE_SITE_KEY = os.getenv('TURNSTILE_SITE_KEY', '0x4AAAAAACl3rXFR93fDYsnj')
+TURNSTILE_SITE_KEY = os.getenv('TURNSTILE_SITE_KEY', '')
 TEMPO_COOLDOWN = 120
 logger = logging.getLogger(__name__)
 

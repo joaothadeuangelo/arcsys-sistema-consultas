@@ -8,16 +8,17 @@ load_dotenv()
 api_id = int(os.getenv('API_ID'))
 api_hash = os.getenv('API_HASH')
 
-print("=== GERADOR DE SESSÃO DO TELEGRAM ===")
-print("Deixe o seu celular com o Telegram aberto em mãos.\n")
+def gerar_sessao() -> str:
+    with TelegramClient(StringSession(), api_id, api_hash) as client:
+        return client.session.save()
 
-# O StringSession() vazio indica que queremos criar um novo login
-with TelegramClient(StringSession(), api_id, api_hash) as client:
-    print("\n✅ LOGIN BEM SUCEDIDO!\n")
-    print("👇 COPIE O TEXTO GIGANTE ABAIXO E GUARDE COM CUIDADO 👇\n")
-    
-    # Isso aqui imprime a string gigante que é o seu "arquivo" de login
-    print(client.session.save())
-    
-    print("\n👆 COPIE O TEXTO GIGANTE ACIMA 👆")
-    print("ATENÇÃO: Quem tiver esse texto tem acesso à sua conta. Não compartilhe!")
+
+def salvar_sessao_em_arquivo(sessao: str) -> None:
+    caminho_saida = os.getenv('SESSAO_OUTPUT_FILE', 'sessao_gerada.txt')
+    with open(caminho_saida, 'w', encoding='utf-8') as arquivo:
+        arquivo.write(sessao)
+
+
+if __name__ == '__main__':
+    sessao = gerar_sessao()
+    salvar_sessao_em_arquivo(sessao)

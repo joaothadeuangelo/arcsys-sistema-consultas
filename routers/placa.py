@@ -22,6 +22,7 @@ router = APIRouter(prefix='/api')
 logger = logging.getLogger(__name__)
 
 token_principal = os.getenv('GONZALES_API_TOKEN', '').strip()
+API_GONZALES_URL = os.getenv('API_GONZALES_URL', '').strip()
 
 # Compatibilidade: se apenas GONZALES_API_TOKENS estiver definido, usa o ultimo token nao vazio como principal.
 if not token_principal:
@@ -77,11 +78,15 @@ async def consultar_placa(placa: str, request: Request):
             'Connection': 'keep-alive'
         }
 
+        if not API_GONZALES_URL:
+            logger.error('API_GONZALES_URL nao configurada no ambiente.')
+            return {'sucesso': False, 'erro': 'Servico de consulta indisponivel no momento.'}
+
         current_token = token_principal
 
         # 🚀 REQUISIÇÃO DIRETA À API GONZALES
         async with httpx.AsyncClient(timeout=15.0) as client:
-            response = await client.get('https://apis.gonzalesdev.shop/', params={
+            response = await client.get(API_GONZALES_URL, params={
                 'token': current_token,
                 'r': 'serpro',
                 'placa': placa
