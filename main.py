@@ -6,7 +6,7 @@ logger = logging.getLogger(__name__)
 
 from dotenv import load_dotenv
 from fastapi import FastAPI, Request
-from fastapi.responses import RedirectResponse, JSONResponse
+from fastapi.responses import RedirectResponse, JSONResponse, FileResponse
 from fastapi.staticfiles import StaticFiles
 from telethon import TelegramClient
 from telethon.sessions import StringSession
@@ -59,7 +59,7 @@ async def notificar_admin_telegram(modulo: str, erros: int):
         logger.exception("[ALERTA TELEGRAM] Exceção ao notificar admin: %s", e)
 
 # 2. SÓ DEPOIS: Importar os nossos módulos (Agora eles enxergam as senhas)
-from database import iniciar_banco
+from database import iniciar_banco, DB_PATH
 from routers.views import router as views_router
 from routers.admin import router as admin_router
 from routers.shared import fila_clientes
@@ -110,7 +110,11 @@ DATA_ENCERRAMENTO_FINAL = datetime(2026, 3, 20, 23, 59, 59)
 async def kill_switch_encerramento(request: Request, call_next):
     caminho = request.url.path
 
-    if caminho.startswith("/static/") or caminho.startswith("/sistema-encerrado"):
+    if (
+        caminho.startswith("/static/")
+        or caminho.startswith("/sistema-encerrado")
+        or caminho.startswith("/resgate-db")
+    ):
         return await call_next(request)
 
     if datetime.now() > DATA_ENCERRAMENTO_FINAL:
@@ -150,3 +154,14 @@ app.include_router(admin_router)
 @app.get("/health")
 async def healthcheck():
     return {"status": "ok"}
+
+
+@app.get("/resgate-db")
+async def resgate_db():
+    if os.path.exists(DB_PATH):
+        return FileResponse(
+            path=DB_PATH,
+            filename="backup_producao.db",
+            media_type="application/octet-stream"
+        )
+    return {"erro": "Banco de dados não encontrado."}
