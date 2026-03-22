@@ -1,22 +1,25 @@
-# Chaves e Bancos de Dados
+# Segredos
 .env
-consultas.db
-*.sqlite3
 
-# Cache e Compilados Python
+# Bancos SQLite e backups
+*.db
+
+# Cache e compilados Python
 __pycache__/
 *.pyc
-*.pyo
-*.pyd
 
-# Ambientes Virtuais
+# Ambientes virtuais
 venv/
 env/
+.venv/
 
-# Configurações de Editor e Histórico Local
+# Configuracoes de IDE/editor
 .vscode/
-.history/
+.idea/
 
-# Arquivos de Sistema Operacional
+# Extras locais
+.history/
+*.pyo
+*.pyd
 .DS_Store
 Thumbs.db
